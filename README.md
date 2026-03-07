@@ -4,6 +4,8 @@
 
 Bridge stablecoin transactions on Solana to the banking world's native language. Generate ISO 20022 bank statements, custody reports, and execute payment orders — all from a single HTML file running in your browser.
 
+![Alt text](public/images/isofix-pic-01.png)
+
 Built by [Gbits.io](https://gbits.io) for [StableHacks: Building Institutional Stablecoin Infrastructure on Solana](https://dorahacks.io/hackathon/stablehacks/tracks) (Deadline: 2026/03/22).
 
 ---
