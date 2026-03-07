@@ -1,4 +1,4 @@
-# isochain
+# isofix
 
 **Bidirectional Solana ↔ ISO 20022 Message Gateway**
 
