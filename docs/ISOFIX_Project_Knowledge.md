@@ -4,7 +4,7 @@
 > payments and ISO 20022 banking messages. It runs as a single-page web app at `iso.gbits.io`.
 > Part of the Gbits.io ecosystem, built for the **StableHacks 2026** hackathon on DoraHacks.
 
-**Owner:** Roman (romanix@gbits.io) · Koivu GmbH, Zürich
+**Owner:** Roman (romanix@gbits.io), Zürich
 **Last updated:** 2026-03-11
 **Repository/Deployment:** Hosted on Cloudflare Pages at `iso.gbits.io`
 
@@ -249,7 +249,6 @@ Full details in `ISOFIX_ServerSide_Plan.md`.
 |---------|-------------------|
 | **AlpenSign** | Solana Seeker hackathon — biometric payment authorization. Shares Helius RPC proxy and swiyu E-ID via same Worker |
 | **Gbits Pay** (`app.gbits.io`) | Stablecoin payment system for Swiss QR invoices. Will share swiyu E-ID integration |
-| **Koivu GmbH** (`koivu.network`) | Roman's fintech company — continuous payment monitoring for banks. ISOFIX is a complementary tool |
 | **verified-iban.sol** | SNS domain Roman owns — used for IBAN→Solana resolution in pain.001 execution |
 
 ---
