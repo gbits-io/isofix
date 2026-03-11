@@ -481,7 +481,16 @@
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                         Simulate Inbound Stablecoin Payment
                     </button>
+                    <button class="btn btn-accent" onclick="toggleRealtimeQR()" id="btn-show-qr" style="background:linear-gradient(135deg,rgba(167,139,250,0.15),rgba(167,139,250,0.08));color:#A78BFA;border:1px solid rgba(167,139,250,0.25);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="21" x2="21" y2="21"/></svg>
+                        Show Connected Address
+                    </button>
                     <span id="rt-status" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:#5A6B80;">No notifications yet</span>
+                </div>
+
+                <!-- QR Code Panel (hidden by default) -->
+                <div id="rt-qr-panel" style="display:none; margin-top:20px; padding:20px; background:rgba(0,0,0,0.2); border:1px solid rgba(167,139,250,0.15); border-radius:12px;">
+                    <div id="rt-qr-content"></div>
                 </div>
             </div>
         </div>
@@ -1697,6 +1706,304 @@ function generateFakeSig() {
     let sig = '';
     for (let i = 0; i < 88; i++) sig += chars[Math.floor(Math.random() * chars.length)];
     return sig;
+}
+
+function toggleRealtimeQR() {
+    const panel = document.getElementById('rt-qr-panel');
+    const content = document.getElementById('rt-qr-content');
+
+    if (panel.style.display !== 'none') {
+        panel.style.display = 'none';
+        return;
+    }
+
+    if (!walletState.connected) {
+        content.innerHTML = `
+            <div style="text-align:center;padding:16px;">
+                <p style="font-size:13px;color:#F59E0B;margin-bottom:8px;">No wallet connected.</p>
+                <p style="font-size:12px;color:#A0B3C8;">Connect your wallet in the "Generate Reports" tab first, then come back here to see your address QR code.</p>
+            </div>`;
+        panel.style.display = 'block';
+        return;
+    }
+
+    const addr = walletState.publicKey;
+    const solanaUri = 'solana:' + addr;
+
+    content.innerHTML = `
+        <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
+            <div style="background:white;padding:12px;border-radius:10px;display:inline-block;">
+                <canvas id="rt-qr-canvas" width="180" height="180" style="display:block;"></canvas>
+            </div>
+            <div style="flex:1;min-width:200px;">
+                <p style="font-size:13px;color:#B8C7D8;line-height:1.6;margin-bottom:12px;">
+                    To test the realtime webhook feature, send a stablecoin payment (USDC, EURC, VCHF, etc.) to your connected wallet address from another wallet or exchange.
+                </p>
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
+                    <code style="font-size:11px;color:#A78BFA;background:rgba(167,139,250,0.1);padding:6px 10px;border-radius:6px;border:1px solid rgba(167,139,250,0.15);font-family:'JetBrains Mono',monospace;word-break:break-all;flex:1;">${addr}</code>
+                    <button class="download-btn" onclick="navigator.clipboard.writeText('${addr}').then(()=>showToast('Address copied!'))" title="Copy address" style="flex-shrink:0;">📋</button>
+                </div>
+                <p style="font-size:11px;color:#6B7F99;line-height:1.5;">
+                    Scan the QR code with a Solana wallet app (Phantom, Solflare, etc.) or copy the address above. Once the payment confirms on-chain, a Helius webhook will trigger and the camt.054 notification will appear in real time.
+                </p>
+            </div>
+        </div>`;
+    panel.style.display = 'block';
+
+    // Render QR code on canvas
+    renderQR('rt-qr-canvas', solanaUri, 180);
+}
+
+// ── Minimal QR Code Generator (numeric mode, canvas rendering) ──
+// Generates a QR code on a canvas element. Uses a simplified approach
+// via an alphanumeric encoder suitable for solana: URIs.
+function renderQR(canvasId, text, size) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+
+    // Use qr-creator-like approach: encode as a matrix then draw
+    // For simplicity, we use the established technique of encoding via
+    // a data URL from a trusted QR generation service embedded as a
+    // self-contained SVG, but since we have no network, we'll build
+    // the QR matrix manually using a compact encoder.
+
+    // Fallback: generate QR using the compact bit-matrix approach
+    const matrix = generateQRMatrix(text);
+    if (!matrix || matrix.length === 0) return;
+
+    const modules = matrix.length;
+    const cellSize = Math.floor(size / (modules + 2)); // +2 for quiet zone
+    const offset = Math.floor((size - cellSize * modules) / 2);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#1A1A2E';
+
+    for (let r = 0; r < modules; r++) {
+        for (let c = 0; c < modules; c++) {
+            if (matrix[r][c]) {
+                ctx.fillRect(offset + c * cellSize, offset + r * cellSize, cellSize, cellSize);
+            }
+        }
+    }
+}
+
+// Compact QR code matrix generator (Version 3-6, byte mode, ECC-L)
+// Supports up to ~134 chars which is enough for solana: URIs
+function generateQRMatrix(text) {
+    // Encode data
+    const data = [];
+    for (let i = 0; i < text.length; i++) data.push(text.charCodeAt(i));
+    const dataLen = data.length;
+
+    // Pick version (1-6 for byte mode, ECC-L)
+    const caps = [0, 17, 32, 53, 78, 106, 134]; // max bytes per version at ECC-L
+    let version = 0;
+    for (let v = 1; v <= 6; v++) { if (dataLen <= caps[v]) { version = v; break; } }
+    if (version === 0) return null; // too long
+
+    const size = 17 + version * 4;
+    const matrix = Array.from({ length: size }, () => new Uint8Array(size));
+    const reserved = Array.from({ length: size }, () => new Uint8Array(size));
+
+    // Draw finder patterns
+    function drawFinder(row, col) {
+        for (let r = -1; r <= 7; r++) {
+            for (let c = -1; c <= 7; c++) {
+                const rr = row + r, cc = col + c;
+                if (rr < 0 || rr >= size || cc < 0 || cc >= size) continue;
+                const inOuter = r === 0 || r === 6 || c === 0 || c === 6;
+                const inInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+                const inSep = r === -1 || r === 7 || c === -1 || c === 7;
+                matrix[rr][cc] = (inOuter || inInner) && !inSep ? 1 : 0;
+                reserved[rr][cc] = 1;
+            }
+        }
+    }
+    drawFinder(0, 0);
+    drawFinder(0, size - 7);
+    drawFinder(size - 7, 0);
+
+    // Timing patterns
+    for (let i = 8; i < size - 8; i++) {
+        matrix[6][i] = matrix[i][6] = (i % 2 === 0) ? 1 : 0;
+        reserved[6][i] = reserved[i][6] = 1;
+    }
+
+    // Alignment pattern (versions 2+)
+    if (version >= 2) {
+        const pos = [6, size - 7];
+        for (const r of pos) {
+            for (const c of pos) {
+                if (reserved[r][c]) continue;
+                for (let dr = -2; dr <= 2; dr++) {
+                    for (let dc = -2; dc <= 2; dc++) {
+                        const rr = r + dr, cc = c + dc;
+                        matrix[rr][cc] = (Math.abs(dr) === 2 || Math.abs(dc) === 2 || (dr === 0 && dc === 0)) ? 1 : 0;
+                        reserved[rr][cc] = 1;
+                    }
+                }
+            }
+        }
+    }
+
+    // Dark module
+    matrix[size - 8][8] = 1;
+    reserved[size - 8][8] = 1;
+
+    // Reserve format info areas
+    for (let i = 0; i < 9; i++) {
+        if (i < size) { reserved[8][i] = 1; reserved[i][8] = 1; }
+    }
+    for (let i = 0; i < 8; i++) {
+        reserved[8][size - 1 - i] = 1;
+        reserved[size - 1 - i][8] = 1;
+    }
+
+    // Reserve version info (version >= 7 only, not needed here)
+
+    // Build data codewords: byte mode indicator (0100) + length + data + terminator + padding
+    const totalCodewords = [0, 26, 44, 70, 100, 134, 172][version]; // total codewords for ECC-L
+    const ecCodewords = [0, 7, 10, 15, 20, 26, 36][version]; // EC codewords
+    const dataCodewords = totalCodewords - ecCodewords;
+
+    const bits = [];
+    function pushBits(val, len) { for (let i = len - 1; i >= 0; i--) bits.push((val >> i) & 1); }
+
+    pushBits(0b0100, 4); // byte mode
+    pushBits(dataLen, version <= 1 ? 8 : 8); // character count (8 bits for versions 1-9)
+    for (const b of data) pushBits(b, 8);
+    pushBits(0, Math.min(4, dataCodewords * 8 - bits.length)); // terminator
+
+    while (bits.length % 8 !== 0) bits.push(0); // byte-align
+    const padBytes = [0xEC, 0x11];
+    let padIdx = 0;
+    while (bits.length < dataCodewords * 8) {
+        pushBits(padBytes[padIdx % 2], 8);
+        padIdx++;
+    }
+
+    // Convert bits to bytes
+    const dataBytes = [];
+    for (let i = 0; i < bits.length; i += 8) {
+        let byte = 0;
+        for (let j = 0; j < 8; j++) byte = (byte << 1) | (bits[i + j] || 0);
+        dataBytes.push(byte);
+    }
+
+    // Reed-Solomon error correction (GF(256) with polynomial 0x11D)
+    const gfExp = new Uint8Array(512);
+    const gfLog = new Uint8Array(256);
+    let x = 1;
+    for (let i = 0; i < 255; i++) { gfExp[i] = x; gfLog[x] = i; x = (x << 1) ^ (x >= 128 ? 0x11D : 0); }
+    for (let i = 255; i < 512; i++) gfExp[i] = gfExp[i - 255];
+
+    function gfMul(a, b) { return a === 0 || b === 0 ? 0 : gfExp[gfLog[a] + gfLog[b]]; }
+
+    // Generator polynomial
+    let gen = [1];
+    for (let i = 0; i < ecCodewords; i++) {
+        const ng = new Array(gen.length + 1).fill(0);
+        for (let j = 0; j < gen.length; j++) {
+            ng[j] ^= gen[j];
+            ng[j + 1] ^= gfMul(gen[j], gfExp[i]);
+        }
+        gen = ng;
+    }
+
+    // Polynomial division
+    const msgOut = new Array(dataBytes.length + ecCodewords).fill(0);
+    for (let i = 0; i < dataBytes.length; i++) msgOut[i] = dataBytes[i];
+    for (let i = 0; i < dataBytes.length; i++) {
+        const coef = msgOut[i];
+        if (coef !== 0) {
+            for (let j = 1; j < gen.length; j++) {
+                msgOut[i + j] ^= gfMul(gen[j], coef);
+            }
+        }
+    }
+    const ecBytes = msgOut.slice(dataBytes.length);
+
+    // Interleave (single block for versions 1-6 at ECC-L)
+    const allBytes = [...dataBytes, ...ecBytes];
+
+    // Place data bits in matrix
+    const allBits = [];
+    for (const b of allBytes) for (let i = 7; i >= 0; i--) allBits.push((b >> i) & 1);
+
+    let bitIdx = 0;
+    for (let col = size - 1; col >= 1; col -= 2) {
+        if (col === 6) col = 5; // skip timing column
+        for (let pass = 0; pass < size; pass++) {
+            for (let dc = 0; dc < 2; dc++) {
+                const c = col - dc;
+                const isUpward = ((Math.floor((size - 1 - col) / 2)) % 2 === 0);
+                const r = isUpward ? size - 1 - pass : pass;
+                if (r < 0 || r >= size || c < 0 || c >= size) continue;
+                if (reserved[r][c]) continue;
+                if (bitIdx < allBits.length) {
+                    matrix[r][c] = allBits[bitIdx];
+                    bitIdx++;
+                }
+                reserved[r][c] = 1;
+            }
+        }
+    }
+
+    // Apply mask (mask 0: (r+c)%2==0) and format info
+    const maskedMatrix = Array.from({ length: size }, (_, r) =>
+        Uint8Array.from(matrix[r], (v, c) => reserved[r] && !isFinderOrFormat(r, c, size) ? v ^ ((r + c) % 2 === 0 ? 1 : 0) : v)
+    );
+
+    // Recalculate with proper masking
+    for (let r = 0; r < size; r++) {
+        for (let c = 0; c < size; c++) {
+            if (isDataModule(r, c, size, version)) {
+                maskedMatrix[r][c] = matrix[r][c] ^ ((r + c) % 2 === 0 ? 1 : 0);
+            }
+        }
+    }
+
+    // Write format info (mask 0, ECC-L = format bits 0b01)
+    // ECC-L = 01, mask 0 = 000, combined = 01000
+    // After BCH: 0b111011111000100 = 0x77C4 (pre-computed for L/mask0)
+    const formatBits = 0x77C4;
+    const formatPositions1 = [[0,8],[1,8],[2,8],[3,8],[4,8],[5,8],[7,8],[8,8],[8,7],[8,5],[8,4],[8,3],[8,2],[8,1],[8,0]];
+    const formatPositions2 = [[8,size-1],[8,size-2],[8,size-3],[8,size-4],[8,size-5],[8,size-6],[8,size-7],[8,size-8],[size-7,8],[size-6,8],[size-5,8],[size-4,8],[size-3,8],[size-2,8],[size-1,8]];
+    for (let i = 0; i < 15; i++) {
+        const bit = (formatBits >> (14 - i)) & 1;
+        const [r1, c1] = formatPositions1[i];
+        const [r2, c2] = formatPositions2[i];
+        maskedMatrix[r1][c1] = bit;
+        maskedMatrix[r2][c2] = bit;
+    }
+
+    return maskedMatrix;
+}
+
+function isFinderOrFormat(r, c, size) {
+    // Top-left finder + format
+    if (r <= 8 && c <= 8) return true;
+    // Top-right finder + format
+    if (r <= 8 && c >= size - 8) return true;
+    // Bottom-left finder + format
+    if (r >= size - 8 && c <= 8) return true;
+    // Timing
+    if (r === 6 || c === 6) return true;
+    return false;
+}
+
+function isDataModule(r, c, size, version) {
+    if (isFinderOrFormat(r, c, size)) return false;
+    // Dark module
+    if (r === size - 8 && c === 8) return false;
+    // Alignment (version 2+)
+    if (version >= 2) {
+        const ac = size - 7;
+        if (r >= ac - 2 && r <= ac + 2 && c >= ac - 2 && c <= ac + 2) return false;
+    }
+    return true;
 }
 
 function simulateInboundPayment() {
