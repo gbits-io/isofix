@@ -1983,4 +1983,15 @@ async function sendPainPayment(idx) {
         const sig = result.signature || result;
         p.sendStatus = 'sent'; p.txSignature = typeof sig === 'string' ? sig : sig.toString();
         showToast(`Payment ${idx + 1} sent! TX: ${p.txSignature.substring(0, 8)}…`);
-        rend
+        renderPainTable();
+    } catch (e) {
+        console.error('sendPainPayment error:', e);
+        p.sendStatus = 'failed';
+        renderPainTable();
+        showToast('Payment failed: ' + (e.message || e));
+    }
+}
+
+</script>
+</body>
+</html>
