@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solana → camt.053 Field Mapping</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0B1120;
+    --bg-card: #111B2E;
+    --bg-row: #162236;
+    --bg-row-alt: #1A2840;
+    --bg-highlight: #1E3350;
+    --border: #2A3F5F;
+    --border-accent: #3A5A8A;
+    --text: #C8D6E5;
+    --text-muted: #7B8FA8;
+    --text-bright: #E8EEF4;
+    --accent-sol: #9945FF;
+    --accent-sol-dim: rgba(153, 69, 255, 0.15);
+    --accent-iso: #14F195;
+    --accent-iso-dim: rgba(20, 241, 149, 0.12);
+    --accent-logic: #F59E0B;
+    --accent-logic-dim: rgba(245, 158, 11, 0.12);
+    --accent-ui: #60A5FA;
+    --accent-ui-dim: rgba(96, 165, 250, 0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    line-height: 1.5;
+    padding: 32px 24px;
+    min-height: 100vh;
+  }
+
+  .container { max-width: 1280px; margin: 0 auto; }
+
+  header {
+    margin-bottom: 40px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+
+  h1 .sol { color: var(--accent-sol); }
+  h1 .arrow { color: var(--text-muted); font-weight: 300; margin: 0 6px; }
+  h1 .iso { color: var(--accent-iso); }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  .legend {
+    display: flex; gap: 20px; flex-wrap: wrap;
+    margin-bottom: 28px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 500; color: var(--text-muted);
+  }
+  .legend-dot {
+    width: 10px; height: 10px; border-radius: 3px;
+  }
+  .legend-dot.sol { background: var(--accent-sol); }
+  .legend-dot.iso { background: var(--accent-iso); }
+  .legend-dot.logic { background: var(--accent-logic); }
+  .legend-dot.ui { background: var(--accent-ui); }
+
+  /* Sections */
+  .section {
+    margin-bottom: 36px;
+  }
+  .section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-bright);
+    padding: 10px 16px;
+    background: var(--bg-highlight);
+    border-left: 3px solid var(--border-accent);
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 2px;
+    letter-spacing: 0.3px;
+  }
+
+  /* Table */
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: 13px;
+  }
+
+  thead th {
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  tbody tr {
+    transition: background 0.15s;
+  }
+  tbody tr:nth-child(odd) { background: var(--bg-row); }
+  tbody tr:nth-child(even) { background: var(--bg-row-alt); }
+  tbody tr:hover { background: var(--bg-highlight); }
+
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid rgba(42, 63, 95, 0.4);
+    vertical-align: top;
+  }
+
+  /* Typed badges */
+  .xpath {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-iso);
+    background: var(--accent-iso-dim);
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline;
+    word-break: break-all;
+    line-height: 1.7;
+  }
+  .solana-field {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-sol);
+    background: var(--accent-sol-dim);
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline;
+    word-break: break-all;
+    line-height: 1.7;
+  }
+  .logic {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    color: var(--accent-logic);
+    background: var(--accent-logic-dim);
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline;
+    line-height: 1.7;
+  }
+  .ui-field {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-ui);
+    background: var(--accent-ui-dim);
+    padding: 2px 7px;
+    border-radius: 4px;
+    display: inline;
+    line-height: 1.7;
+  }
+
+  .note {
+    color: var(--text-muted);
+    font-size: 11.5px;
+    margin-top: 3px;
+    line-height: 1.4;
+  }
+
+  .fixed-val {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: #A78BFA;
+    background: rgba(167, 139, 250, 0.1);
+    padding: 2px 7px;
+    border-radius: 4px;
+  }
+
+  .col-xpath { width: 30%; }
+  .col-source { width: 32%; }
+  .col-transform { width: 38%; }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+  footer a { color: var(--accent-iso); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 800px) {
+    body { padding: 16px 10px; }
+    table { font-size: 12px; }
+    td, th { padding: 7px 8px; }
+    h1 { font-size: 20px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1><span class="sol">Solana SPL Token</span><span class="arrow">→</span><span class="iso">camt.053.001.04</span></h1>
+    <div class="subtitle">Field mapping reference for the Gbits Pay camt.053 generator — how on-chain stablecoin transfer data maps into ISO 20022 BankToCustomerStatement XML.</div>
+  </header>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot sol"></div>Solana on-chain data</div>
+    <div class="legend-item"><div class="legend-dot" style="background: var(--accent-ui);"></div>UI input field</div>
+    <div class="legend-item"><div class="legend-dot" style="background: var(--accent-logic);"></div>Derived / computed</div>
+    <div class="legend-item"><div class="legend-dot" style="background: #A78BFA;"></div>Fixed constant</div>
+    <div class="legend-item"><div class="legend-dot iso"></div>camt.053 XML path</div>
+  </div>
+
+  <!-- ═══════ GROUP HEADER ═══════ -->
+  <div class="section">
+    <div class="section-title">Group Header — <code style="color:var(--accent-iso); background:none; font-size:13px;">BkToCstmrStmt/GrpHdr</code></div>
+    <table>
+      <thead><tr><th class="col-xpath">camt.053 XPath</th><th class="col-source">Source</th><th class="col-transform">Transformation &amp; Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="xpath">GrpHdr/MsgId</span></td>
+          <td><span class="logic">"GBITS" + currency + fromDt + Date.now()</span></td>
+          <td>Auto-generated unique message ID, truncated to 35 chars.<div class="note">e.g. <code>GBITSCHF20250301...</code></div></td>
+        </tr>
+        <tr>
+          <td><span class="xpath">GrpHdr/CreDtTm</span></td>
+          <td><span class="logic">new Date()</span></td>
+          <td>ISO 8601 datetime at moment of generation.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">GrpHdr/MsgPgntn/PgNb</span></td>
+          <td><span class="fixed-val">1</span></td>
+          <td>Always single page (no pagination).</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">GrpHdr/MsgPgntn/LastPgInd</span></td>
+          <td><span class="fixed-val">true</span></td>
+          <td>Always true — single report per currency.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">GrpHdr/AddtlInf</span></td>
+          <td><span class="fixed-val">SPS/1.7/PROD</span></td>
+          <td>Swiss Payment Standards version identifier.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════ STATEMENT LEVEL ═══════ -->
+  <div class="section">
+    <div class="section-title">Statement — <code style="color:var(--accent-iso); background:none; font-size:13px;">BkToCstmrStmt/Stmt</code></div>
+    <table>
+      <thead><tr><th class="col-xpath">camt.053 XPath</th><th class="col-source">Source</th><th class="col-transform">Transformation &amp; Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="xpath">Stmt/Id</span></td>
+          <td><span class="logic">"GBITS-STMT-" + currency + "-" + fromDt + "-" + ts</span></td>
+          <td>Unique statement ID per currency &amp; date range. Max 35 chars.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Stmt/ElctrncSeqNb</span></td>
+          <td><span class="fixed-val">1</span></td>
+          <td>Always 1 — single statement per generation run.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Stmt/CreDtTm</span></td>
+          <td><span class="logic">new Date()</span></td>
+          <td>Same as GrpHdr/CreDtTm.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Stmt/FrToDt/FrDtTm</span></td>
+          <td><span class="ui-field">#date-start</span></td>
+          <td>User-selected start date + <code>T00:00:00.000+01:00</code></td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Stmt/FrToDt/ToDtTm</span></td>
+          <td><span class="ui-field">#date-end</span></td>
+          <td>User-selected end date + <code>T23:59:59.999+01:00</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════ ACCOUNT ═══════ -->
+  <div class="section">
+    <div class="section-title">Account — <code style="color:var(--accent-iso); background:none; font-size:13px;">Stmt/Acct</code></div>
+    <table>
+      <thead><tr><th class="col-xpath">camt.053 XPath</th><th class="col-source">Source</th><th class="col-transform">Transformation &amp; Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="xpath">Acct/Id/IBAN</span></td>
+          <td><span class="ui-field">#iban</span></td>
+          <td>User-entered IBAN (whitespace stripped). Links camt.053 to Bexio bank account.<div class="note">If empty, falls back to <span class="xpath">Acct/Id/Othr/Id</span> = Solana wallet address (34 chars).</div></td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Acct/Ccy</span></td>
+          <td><span class="logic">currency</span> ← <span class="solana-field">STABLECOIN_CONFIG[].currency</span></td>
+          <td>Determined by stablecoin: USDC/USDT/PYUSD → <code>USD</code>, EURC/EUROe → <code>EUR</code>, VCHF → <code>CHF</code></td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Acct/Ownr/Nm</span></td>
+          <td><span class="solana-field">wallet address</span></td>
+          <td>The connected Solana wallet public key, truncated to 70 chars.<div class="note">e.g. <code>G1F...abc</code></div></td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Acct/Svcr/FinInstnId/BICFI</span></td>
+          <td><span class="fixed-val">SOLNCHZZXXX</span></td>
+          <td>Synthetic BIC for "Solana Network, Zurich". Not a real SWIFT code — placeholder for accounting software compatibility.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════ BALANCES ═══════ -->
+  <div class="section">
+    <div class="section-title">Balances — <code style="color:var(--accent-iso); background:none; font-size:13px;">Stmt/Bal</code></div>
+    <table>
+      <thead><tr><th class="col-xpath">camt.053 XPath</th><th class="col-source">Source</th><th class="col-transform">Transformation &amp; Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="xpath">Bal[OPBD]/Amt</span></td>
+          <td><span class="fixed-val">0.00</span></td>
+          <td>Opening booked balance — always zero (no carried-forward state from previous statements).</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Bal[OPBD]/CdtDbtInd</span></td>
+          <td><span class="fixed-val">CRDT</span></td>
+          <td>Always credit.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Bal[OPBD]/Dt</span></td>
+          <td><span class="ui-field">#date-start</span></td>
+          <td>Statement start date.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Bal[CLBD]/Amt</span></td>
+          <td><span class="logic">|totalCredit − totalDebit|</span></td>
+          <td>Closing booked balance = absolute net of all entries. Computed from <span class="solana-field">tokenTransfer.tokenAmount</span> sums.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Bal[CLBD]/CdtDbtInd</span></td>
+          <td><span class="logic">net ≥ 0 ? CRDT : DBIT</span></td>
+          <td>Direction derived from net balance sign.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Bal[CLBD]/Dt</span></td>
+          <td><span class="ui-field">#date-end</span></td>
+          <td>Statement end date.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════ TX SUMMARY ═══════ -->
+  <div class="section">
+    <div class="section-title">Transaction Summary — <code style="color:var(--accent-iso); background:none; font-size:13px;">Stmt/TxsSummry</code></div>
+    <table>
+      <thead><tr><th class="col-xpath">camt.053 XPath</th><th class="col-source">Source</th><th class="col-transform">Transformation &amp; Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="xpath">TtlNtries/NbOfNtries</span></td>
+          <td><span class="logic">entries.length</span></td>
+          <td>Total count of all SPL token transfers in selected currency &amp; date range.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">TtlNetNtry/Amt</span></td>
+          <td><span class="logic">|totalCredit − totalDebit|</span></td>
+          <td>Same as CLBD balance amount.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">TtlCdtNtries/NbOfNtries</span></td>
+          <td><span class="logic">count(direction === 'CRDT')</span></td>
+          <td>Number of incoming transfers (to wallet).</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">TtlCdtNtries/Sum</span></td>
+          <td><span class="logic">Σ amount where direction === 'CRDT'</span></td>
+          <td>Sum of all incoming <span class="solana-field">tokenAmount</span> values.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">TtlDbtNtries/NbOfNtries</span></td>
+          <td><span class="logic">count(direction === 'DBIT')</span></td>
+          <td>Number of outgoing transfers (from wallet).</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">TtlDbtNtries/Sum</span></td>
+          <td><span class="logic">Σ amount where direction === 'DBIT'</span></td>
+          <td>Sum of all outgoing <span class="solana-field">tokenAmount</span> values.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════ ENTRY LEVEL ═══════ -->
+  <div class="section">
+    <div class="section-title">Entry (per transfer) — <code style="color:var(--accent-iso); background:none; font-size:13px;">Stmt/Ntry</code></div>
+    <table>
+      <thead><tr><th class="col-xpath">camt.053 XPath</th><th class="col-source">Source</th><th class="col-transform">Transformation &amp; Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="xpath">Ntry/NtryRef</span></td>
+          <td><span class="logic">loop index + 1</span></td>
+          <td>Sequential 1-based entry number.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ntry/Amt @Ccy</span></td>
+          <td><span class="solana-field">tokenTransfer.tokenAmount</span> + <span class="logic">currency</span></td>
+          <td>Absolute transfer amount (2 decimal places). Currency code from stablecoin mapping.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ntry/CdtDbtInd</span></td>
+          <td><span class="solana-field">toUserAccount === wallet ?</span></td>
+          <td><code>CRDT</code> if wallet is the receiver, <code>DBIT</code> if sender. Determined by comparing <span class="solana-field">toUserAccount</span> / <span class="solana-field">toTokenAccount</span> to connected wallet address.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ntry/RvslInd</span></td>
+          <td><span class="fixed-val">false</span></td>
+          <td>No reversal support. Solana transactions are final.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ntry/Sts</span></td>
+          <td><span class="fixed-val">BOOK</span></td>
+          <td>Always booked — only confirmed on-chain transactions are fetched.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ntry/BookgDt/Dt</span></td>
+          <td><span class="solana-field">tx.timestamp</span></td>
+          <td>Block timestamp → <code>YYYY-MM-DD</code>. Same value used for ValDt.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ntry/ValDt/Dt</span></td>
+          <td><span class="solana-field">tx.timestamp</span></td>
+          <td>Same as BookgDt — Solana has instant settlement, no value-date distinction.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ntry/AcctSvcrRef</span></td>
+          <td><span class="solana-field">tx.signature</span></td>
+          <td>Solana transaction signature, truncated to 35 chars. The unique on-chain transaction ID.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ntry/BkTxCd/Domn/Cd</span></td>
+          <td><span class="fixed-val">PMNT</span></td>
+          <td>Domain: Payment.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ntry/BkTxCd/Domn/Fmly/Cd</span></td>
+          <td><span class="logic">CRDT → RCDT | DBIT → ICDT</span></td>
+          <td>Family code: <code>RCDT</code> (Received Credit Transfer) for incoming, <code>ICDT</code> (Issued Credit Transfer) for outgoing.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ntry/BkTxCd/Domn/Fmly/SubFmlyCd</span></td>
+          <td><span class="fixed-val">ESCT</span></td>
+          <td>Sub-family: European SEPA Credit Transfer. Used for Swiss accounting software compatibility.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ntry/AddtlNtryInf</span></td>
+          <td><span class="logic">conditional</span></td>
+          <td>If QR reference present: <code>"Gutschrift/Belastung QRR: {qrRef}"</code>. Otherwise: <code>"Solana {tokenLabel} via SPL Token"</code>. Max 140 chars.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════ TRANSACTION DETAILS ═══════ -->
+  <div class="section">
+    <div class="section-title">Transaction Details — <code style="color:var(--accent-iso); background:none; font-size:13px;">Ntry/NtryDtls/TxDtls</code></div>
+    <table>
+      <thead><tr><th class="col-xpath">camt.053 XPath</th><th class="col-source">Source</th><th class="col-transform">Transformation &amp; Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="xpath">Refs/AcctSvcrRef</span></td>
+          <td><span class="solana-field">tx.signature</span></td>
+          <td>Same as entry-level AcctSvcrRef. Truncated to 35 chars.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Refs/EndToEndId</span></td>
+          <td><span class="solana-field">tx.signature</span></td>
+          <td>Solana signature reused as end-to-end identifier (35 chars).</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">TxDtls/Amt @Ccy</span></td>
+          <td><span class="solana-field">tokenTransfer.tokenAmount</span></td>
+          <td>Repeated at detail level (same as Ntry/Amt).</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">TxDtls/CdtDbtInd</span></td>
+          <td><span class="logic">same as Ntry/CdtDbtInd</span></td>
+          <td>Repeated at detail level.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">RltdPties/Dbtr/Nm</span><div class="note">(when CRDT)</div></td>
+          <td><span class="solana-field">fromUserAccount</span></td>
+          <td>For incoming transfers: sender's Solana wallet address as debtor name. Truncated to 70 chars.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">RltdPties/Cdtr/Nm</span><div class="note">(when DBIT)</div></td>
+          <td><span class="solana-field">toUserAccount</span></td>
+          <td>For outgoing transfers: receiver's Solana wallet address as creditor name. Truncated to 70 chars.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">CdtrAcct/Id/Othr/Id</span><div class="note">(when DBIT)</div></td>
+          <td><span class="solana-field">toUserAccount</span></td>
+          <td>Creditor account ID — counterparty wallet (34 chars). Only present for outgoing (DBIT) entries.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════ REMITTANCE INFO ═══════ -->
+  <div class="section">
+    <div class="section-title">Remittance Information — <code style="color:var(--accent-iso); background:none; font-size:13px;">TxDtls/RmtInf</code></div>
+    <table>
+      <thead><tr><th class="col-xpath">camt.053 XPath</th><th class="col-source">Source</th><th class="col-transform">Transformation &amp; Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td colspan="3" style="background: var(--accent-logic-dim); color: var(--accent-logic); font-weight: 500; font-size: 12px; letter-spacing: 0.3px;">
+            Path A — QR Reference present: <code style="color:var(--accent-logic);">tx.memo</code> starts with <code style="color:var(--accent-logic);">"QRR:"</code>
+          </td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Strd/CdtrRefInf/Tp/CdOrPrtry/Prtry</span></td>
+          <td><span class="fixed-val">QRR</span></td>
+          <td>Proprietary reference type: Swiss QR-Reference.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Strd/CdtrRefInf/Ref</span></td>
+          <td><span class="solana-field">tx.memo</span></td>
+          <td>QR reference extracted from memo (strip <code>"QRR:"</code> prefix). Standard 27-digit Swiss QR reference.</td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Strd/AddtlRmtInf</span></td>
+          <td><span class="logic">"SOL-" + tokenLabel + " " + signature</span></td>
+          <td>Concatenated provenance string. Max 140 chars.</td>
+        </tr>
+        <tr>
+          <td colspan="3" style="background: var(--accent-ui-dim); color: var(--accent-ui); font-weight: 500; font-size: 12px; letter-spacing: 0.3px;">
+            Path B — No QR Reference: plain memo or no memo
+          </td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Ustrd</span></td>
+          <td><span class="logic">"SOL-" + tokenLabel + " " + signature</span></td>
+          <td>Unstructured remittance: stablecoin label + tx signature. Max 140 chars.<div class="note">e.g. <code>SOL-USDC 4sGjMW1sU...</code></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ═══════ STABLECOIN MAP ═══════ -->
+  <div class="section">
+    <div class="section-title">Appendix — Stablecoin → Currency Mapping</div>
+    <table>
+      <thead><tr><th>Token Label</th><th>SPL Mint Address</th><th>Decimals</th><th>ISO 4217 Ccy</th><th>Report Grouping</th></tr></thead>
+      <tbody>
+        <tr><td><span class="solana-field">USDC</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-muted);">EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v</td><td>6</td><td><span class="fixed-val">USD</span></td><td>One camt.053 per currency</td></tr>
+        <tr><td><span class="solana-field">USDT</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-muted);">Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB</td><td>6</td><td><span class="fixed-val">USD</span></td><td>Merged with USDC into USD report</td></tr>
+        <tr><td><span class="solana-field">PYUSD</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-muted);">2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo</td><td>6</td><td><span class="fixed-val">USD</span></td><td>Merged with USDC into USD report</td></tr>
+        <tr><td><span class="solana-field">EURC</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-muted);">HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr</td><td>6</td><td><span class="fixed-val">EUR</span></td><td>One camt.053 per currency</td></tr>
+        <tr><td><span class="solana-field">EUROe</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-muted);">2VhjJ9WxaGC3EZFwJG9BDUs9KxKCAjQY4vgd1qxgYWVg</td><td>6</td><td><span class="fixed-val">EUR</span></td><td>Merged with EURC into EUR report</td></tr>
+        <tr><td><span class="solana-field">VCHF</span></td><td style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--text-muted);">AhhdRu5YZdjVkKR3wbnUDaymVQL2ucjMQ63sZ3LFHsch</td><td>6</td><td><span class="fixed-val">CHF</span></td><td>Sole CHF stablecoin</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    Generated for the <a href="https://gbits.io">Gbits Pay</a> / isochain project — Solana ↔ ISO 20022 gateway. Schema: <code>urn:iso:std:iso:20022:tech:xsd:camt.053.001.04</code> · SPS 1.7 compliant structure.
+  </footer>
+</div>
+</body>
+</html>
