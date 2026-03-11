@@ -1362,27 +1362,82 @@ function showXmlModal(xml, filename) {
     }
 
     function highlightXml(formatted) {
-        return formatted
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;')
-            // XML declaration
-            .replace(/(&lt;\?xml.*?\?&gt;)/g, '<span style="color:#7C8DA0;font-style:italic;">$1</span>')
-            // Comments
-            .replace(/(&lt;!--.*?--&gt;)/g, '<span style="color:#5A6B80;">$1</span>')
-            // Closing tags
-            .replace(/(&lt;\/)([\w:.]+)(&gt;)/g, '<span style="color:#6B7F99;">$1</span><span style="color:#22D3EE;">$2</span><span style="color:#6B7F99;">$3</span>')
-            // Self-closing tags
-            .replace(/(&lt;)([\w:.]+)(\s)/g, '<span style="color:#6B7F99;">$1</span><span style="color:#22D3EE;">$2</span>$3')
-            // Opening tag start (no attributes)
-            .replace(/(&lt;)([\w:.]+)(&gt;)/g, '<span style="color:#6B7F99;">$1</span><span style="color:#22D3EE;">$2</span><span style="color:#6B7F99;">$3</span>')
-            // Attributes: name="value"
-            .replace(/([\w:]+)(=)(&quot;|")(.*?)(&quot;|")/g, '<span style="color:#F59E0B;">$1</span><span style="color:#6B7F99;">$2</span><span style="color:#A78BFA;">$3$4$5</span>')
-            // Attribute shorthand Ccy="USD" etc (already handled above)
-            // Namespace declarations
-            .replace(/(xmlns)([:=])/g, '<span style="color:#14F195;">$1</span><span style="color:#6B7F99;">$2</span>')
-            // Text content between tags (remaining bare text on its own line)
-            ;
+        // Token-based highlighter: process character by character to avoid
+        // regex chain corruption where spans match inside previously inserted spans
+        const esc = str => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        let result = '';
+        let i = 0;
+        const src = formatted;
+        const len = src.length;
+
+        while (i < len) {
+            // XML declaration <?xml ... ?>
+            if (src.startsWith('<?', i)) {
+                const end = src.indexOf('?>', i);
+                const chunk = end === -1 ? src.substring(i) : src.substring(i, end + 2);
+                result += '<span style="color:#7C8DA0;font-style:italic;">' + esc(chunk) + '</span>';
+                i += chunk.length;
+            }
+            // Comment <!-- ... -->
+            else if (src.startsWith('<!--', i)) {
+                const end = src.indexOf('-->', i);
+                const chunk = end === -1 ? src.substring(i) : src.substring(i, end + 3);
+                result += '<span style="color:#5A6B80;">' + esc(chunk) + '</span>';
+                i += chunk.length;
+            }
+            // Closing tag </Name>
+            else if (src.startsWith('</', i)) {
+                const end = src.indexOf('>', i);
+                if (end === -1) { result += esc(src.substring(i)); break; }
+                const tag = src.substring(i, end + 1);
+                const name = tag.substring(2, tag.length - 1);
+                result += '<span style="color:#6B7F99;">&lt;/</span><span style="color:#22D3EE;">' + esc(name) + '</span><span style="color:#6B7F99;">&gt;</span>';
+                i = end + 1;
+            }
+            // Opening tag <Name ...> or <Name/> or <Name>
+            else if (src[i] === '<' && i + 1 < len && /[a-zA-Z_]/.test(src[i + 1])) {
+                const end = src.indexOf('>', i);
+                if (end === -1) { result += esc(src.substring(i)); break; }
+                const tag = src.substring(i, end + 1);
+                const selfClose = tag.endsWith('/>');
+                const inner = selfClose ? tag.substring(1, tag.length - 2) : tag.substring(1, tag.length - 1);
+                // Split into tag name and attributes
+                const spaceIdx = inner.search(/\s/);
+                let tagName, attrs;
+                if (spaceIdx === -1) {
+                    tagName = inner;
+                    attrs = '';
+                } else {
+                    tagName = inner.substring(0, spaceIdx);
+                    attrs = inner.substring(spaceIdx);
+                }
+                result += '<span style="color:#6B7F99;">&lt;</span><span style="color:#22D3EE;">' + esc(tagName) + '</span>';
+                // Highlight attributes
+                if (attrs) {
+                    const attrHtml = esc(attrs).replace(
+                        /([\w:.-]+)(=)(&quot;)(.*?)(&quot;)/g,
+                        function(m, name, eq, q1, val, q2) {
+                            const nameColor = name === 'xmlns' || name.startsWith('xmlns:') ? '#14F195' : '#F59E0B';
+                            return '<span style="color:' + nameColor + ';">' + name + '</span><span style="color:#6B7F99;">=</span><span style="color:#A78BFA;">"' + val + '"</span>';
+                        }
+                    );
+                    result += attrHtml;
+                }
+                result += selfClose
+                    ? '<span style="color:#6B7F99;">/&gt;</span>'
+                    : '<span style="color:#6B7F99;">&gt;</span>';
+                i = end + 1;
+            }
+            // Plain text
+            else {
+                let next = src.indexOf('<', i);
+                if (next === -1) next = len;
+                const text = src.substring(i, next);
+                result += esc(text);
+                i = next;
+            }
+        }
+        return result;
     }
 
     const formatted = formatXml(xml);
