@@ -467,25 +467,34 @@
     </div>
 </section>
 
-<!-- How it Works CTA -->
+<!-- Documentation CTAs -->
 <div class="container" style="margin-bottom:28px;">
-    <a href="flows.html" target="_blank" style="text-decoration:none;display:block;">
-        <div style="background:var(--bg-card);border:1px solid var(--accent-border2);border-radius:14px;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent-border3)';this.style.boxShadow='0 4px 20px rgba(8,145,178,0.08)'" onmouseout="this.style.borderColor='';this.style.boxShadow=''">
-            <div style="display:flex;align-items:center;gap:14px;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <a href="flows.html" target="_blank" style="text-decoration:none;display:block;">
+            <div style="background:var(--bg-card);border:1px solid var(--accent-border2);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all 0.2s;cursor:pointer;height:100%;" onmouseover="this.style.borderColor='var(--accent-border3)';this.style.boxShadow='0 4px 20px rgba(8,145,178,0.08)'" onmouseout="this.style.borderColor='';this.style.boxShadow=''">
                 <div style="width:40px;height:40px;border-radius:10px;background:var(--accent-bg3);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 </div>
-                <div>
-                    <div style="font-size:15px;font-weight:600;color:var(--text-heading);margin-bottom:2px;">How ISOFIX Works — Message Flow</div>
-                    <div style="font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">See the animated architecture: Solana ↔ Helius ↔ ISOFIX ↔ Company/ERP</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:600;color:var(--text-heading);margin-bottom:2px;">Message Flow</div>
+                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Animated architecture diagram</div>
                 </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="flex-shrink:0;"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
             </div>
-            <div style="display:flex;align-items:center;gap:6px;color:var(--accent);font-size:13px;font-weight:500;font-family:'JetBrains Mono',monospace;white-space:nowrap;">
-                View flow
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+        </a>
+        <a href="camt053_field_mapping.html" target="_blank" style="text-decoration:none;display:block;">
+            <div style="background:var(--bg-card);border:1px solid var(--purple-border);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all 0.2s;cursor:pointer;height:100%;" onmouseover="this.style.borderColor='var(--accent-border3)';this.style.boxShadow='0 4px 20px rgba(124,58,237,0.08)'" onmouseout="this.style.borderColor='';this.style.boxShadow=''">
+                <div style="width:40px;height:40px;border-radius:10px;background:var(--purple-bg2);border:1px solid var(--purple-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:600;color:var(--text-heading);margin-bottom:2px;">Field Mapping</div>
+                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Solana → camt.053 XML reference</div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" style="flex-shrink:0;"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
             </div>
-        </div>
-    </a>
+        </a>
+    </div>
 </div>
 
 <!-- Main -->
@@ -740,7 +749,7 @@
                 <span class="footer-divider">·</span>
                 <span>camt.053 · camt.054 · semt.002 · pain.001</span>
                 <span class="footer-divider">·</span>
-                <a href="camt053_field_mapping.html" target="_blank" style="color:#22D3EE; text-decoration:none;" title="Solana → camt.053 field mapping reference">Field Mapping ↗</a>
+                <a href="camt053_field_mapping.html" target="_blank" style="color:var(--accent); text-decoration:none;" title="Solana → camt.053 field mapping reference">Field Mapping ↗</a>
             </div>
         </div>
         <div class="footer-disclaimer">
