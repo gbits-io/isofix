@@ -24,6 +24,15 @@ Connect your Solana wallet, select a date range, and generate XML reports that i
 
 - **pain.001.001.03** — CustomerCreditTransferInitiation (SPS 2009 Swiss flavor). Upload a standard Swiss payment order file. The gateway parses each payment, resolves the creditor's IBAN to a Solana address via [verified-iban.sol](https://www.sns.id/domain/verified-iban) SNS subdomains, and constructs SPL token transfers with memo.
 
+**Real-time camt.054 notifications**
+
+The Realtime tab demonstrates inbound payment monitoring: when a stablecoin payment arrives on-chain, ISOFIX generates a camt.054 debit/credit notification. Currently simulated in the browser; a Cloudflare Worker backend for live Helius webhook processing is planned.
+
+- Simulate inbound payments with randomized counterparty, stablecoin, and amount
+- Show your wallet address as a scannable Solana QR code for easy testing
+- View, download, copy, or email each notification
+- Syntax-highlighted XML viewer for inspecting generated messages
+
 ## Supported stablecoins
 
 | Token | Currency | Mint |
@@ -33,7 +42,7 @@ Connect your Solana wallet, select a date range, and generate XML reports that i
 | PYUSD | USD      | `2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo` |
 | EURC  | EUR      | `HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr` |
 | EUROe | EUR      | `2VhjJ9WxaGC3EZFwJG9BDUs9KxKCAjQY4vgd1qxgYWVg` |
-| VCHF  | CHF      | `AhhdRu5YZdjVkKR3wbnUDaymVQL2ucjMQ63sM3LFb4Mk` |
+| VCHF  | CHF      | `AhhdRu5YZdjVkKR3wbnUDaymVQL2ucjMQ63sZ3LFHsch` |
 
 The semt.002 custody report includes **all** SPL tokens in the wallet, not just stablecoins.
 
@@ -41,7 +50,7 @@ The semt.002 custody report includes **all** SPL tokens in the wallet, not just 
 
 ```
 ┌───────────────┐           ┌───────────────────────┐           ┌────────────────┐
-│  Solana       │  ──RPC──▶ │  isochain             │  ──XML──▶ │  Bexio / SAP   │
+│  Solana       │  ──RPC──▶ │  isofix               │  ──XML──▶ │  Bexio / SAP   │
 │  Blockchain   │           │  (single HTML file)   │           │  / Abacus      │
 └───────────────┘           └───────────┬───────────┘           └────────────────┘
                                         │
@@ -65,12 +74,13 @@ External dependencies loaded from CDN:
 
 ### Planned: thin server layer
 
-A minimal server component is planned for:
+A minimal Cloudflare Worker is planned for:
 - **Helius RPC proxy** — Move the API key server-side instead of embedding it in the client. Required for production use.
 - **Real-time notifications** — Helius Webhook → Cloudflare Worker → SSE → Browser for live camt.054 generation when payments arrive.
+- **ISOFIX REST API** — Companies fetch camt.053/054 reports programmatically via `GET /api/v1/reports/camt053?address={addr}&from={date}&to={date}`.
 - **Multi-chain extensibility** — The same relay pattern works with Infura/Alchemy webhooks for Ethereum L1/L2 stablecoins (USDC on Base, Arbitrum, etc.).
 
-The client remains a static HTML file. The server is a stateless relay (~50 lines of Cloudflare Worker).
+The client remains a static HTML file. The server is a stateless relay (~50 lines of Cloudflare Worker). See `docs/ISOFIX_ServerSide_Plan.md` for the full plan.
 
 ## IBAN → Solana resolution
 
@@ -91,7 +101,7 @@ The `verified-iban.sol` domain is owned by the project. IBAN subdomains are regi
 This is the key demo: a Swiss payment standard file goes in, a Solana transaction comes out, and a Swiss accounting import comes back.
 
 1. Creditor creates a QR-bill → encodes as pain.001
-2. Debtor uploads pain.001 to isochain → sends VCHF on Solana with `QRR:{ref}` memo
+2. Debtor uploads pain.001 to isofix → sends VCHF on Solana with `QRR:{ref}` memo
 3. Creditor connects wallet → generates camt.054 → imports into Bexio
 4. Bexio auto-matches the payment to the invoice via QR reference
 
@@ -108,13 +118,15 @@ All without touching a bank.
 
 ## Quick start
 
-1. Open `index.html` in a browser (or visit the hosted version)
+1. Open `index.html` in a browser (or visit [iso.gbits.io](https://iso.gbits.io))
 2. Connect your Solana wallet (Phantom, Solflare, Backpack)
 3. Verify wallet ownership (sign a message)
 4. Select a date range and report type
 5. Click Generate → download the XML → import into your accounting software
 
 For pain.001 execution: switch to the "Execute Payments" tab, upload a pain.001 XML file, review parsed payments, and send.
+
+For real-time notifications: switch to the "Realtime" tab, simulate an inbound payment or show your wallet QR code to receive a real one.
 
 ## Status
 
@@ -125,25 +137,47 @@ For pain.001 execution: switch to the "Execute Payments" tab, upload a pain.001 
 | semt.002 generation | ✅ Working |
 | pain.001 parsing | ✅ Working |
 | IBAN → Solana (SNS) | ✅ Working |
+| Syntax-highlighted XML viewer | ✅ Working |
+| Realtime camt.054 (simulated) | ✅ Working |
+| Wallet QR code for testing | ✅ Working |
+| Field mapping reference | ✅ Working |
+| Message flow animation | ✅ Working |
 | pain.001 → SPL transfer | ⚠️ Needs paid Helius key |
-| Real-time notifications | 🔲 Planned |
-| Helius RPC proxy | 🔲 Planned |
+| Real-time notifications (live) | 🔲 Planned (Cloudflare Worker) |
+| Helius RPC proxy | 🔲 Planned (Cloudflare Worker) |
+| ISOFIX REST API | 🔲 Planned |
 | Ethereum L1/L2 support | 🔲 Planned |
 
 ## Project structure
 
 ```
-isochain/
-├── public/                     # Deployable web root (Netlify publish directory)
-│   └── index.html              # The entire application
+isofix/
+├── public/                              # Deployable web root
+│   ├── index.html                       # The entire application (~130KB)
+│   ├── isofix_flow.html                 # Landing page message flow animation
+│   ├── camt053_field_mapping.html       # Solana → camt.053 field mapping reference
+│   └── images/
+│       └── isofix-pic-01.png
 ├── docs/
-│   └── PROJECT_KNOWLEDGE.md    # Detailed technical documentation
+│   ├── ISOFIX_Project_Knowledge.md      # Detailed technical documentation
+│   ├── ISOFIX_ServerSide_Plan.md        # Cloudflare Worker implementation plan
+│   └── roadmap.md                       # Milestone roadmap with timeline
 ├── llms.txt
 ├── README.md
 └── LICENSE
 ```
 
 Yes, the web app is one HTML file.
+
+## Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [Field Mapping](https://iso.gbits.io/camt053_field_mapping.html) | Interactive reference showing how each Solana on-chain field maps to camt.053 XML elements |
+| [Message Flow](https://iso.gbits.io/isofix_flow.html) | Animated diagram of the bidirectional Solana ↔ ISO 20022 architecture |
+| [Project Knowledge](docs/ISOFIX_Project_Knowledge.md) | Technical deep-dive: architecture, all three tabs, wallet integration, known issues, how to resume work |
+| [Server-Side Plan](docs/ISOFIX_ServerSide_Plan.md) | Cloudflare Worker implementation plan with route structure and TODO list |
+| [Roadmap](docs/roadmap.md) | Five milestones: server-side, live realtime, multi-chain, REST API, improvements |
 
 ## License
 
@@ -152,7 +186,7 @@ Business Source License 1.1
 **Parameters:**
 
 - **Licensor:** Roman Bischoff, Zürich
-- **Licensed Work:** isochain
+- **Licensed Work:** isofix
 - **Additional Use Grant:** You may use the Licensed Work for non-commercial, personal, academic, research, and development purposes, including use on Solana testnet and devnet. Production use for commercial payment processing services requires a separate commercial license.
 - **Change Date:** 2028-03-01
 - **Change License:** Apache License, Version 2.0
