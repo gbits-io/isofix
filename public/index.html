@@ -269,6 +269,10 @@
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        @keyframes rtSlideIn {
+            from { opacity: 0; transform: translateY(-8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
     <script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
 </head>
@@ -332,6 +336,11 @@
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
             Execute Payments
             <span class="tab-badge" style="color:#A78BFA;background:rgba(167,139,250,0.1);">pain</span>
+        </button>
+        <button class="tab-btn" onclick="switchTab('realtime')" id="tab-btn-realtime">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 010 8.49M7.76 16.24a6 6 0 010-8.49"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 19.07a10 10 0 010-14.14"/></svg>
+            Realtime
+            <span class="tab-badge" style="color:#34D399;background:rgba(52,211,153,0.1);">camt.054</span>
         </button>
     </div>
 
@@ -450,6 +459,41 @@
             Generated Reports
         </h2>
         <div id="reports-list"></div>
+    </div>
+    </div>
+
+    <!-- ═══ TAB 3: Realtime camt.054 Notifications ═══ -->
+    <div class="tab-panel" id="panel-realtime">
+    <div class="card card-tabbed">
+        <div class="section" style="border-bottom:none; padding-bottom:0;">
+            <div class="step-header">
+                <span class="step-num" style="background:rgba(52,211,153,0.1);color:#34D399;border-color:rgba(52,211,153,0.2);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 010 8.49M7.76 16.24a6 6 0 010-8.49"/></svg>
+                </span>
+                <span class="step-label">Realtime camt.054 — Inbound Payment Notifications</span>
+            </div>
+            <div style="margin-bottom:20px;">
+                <p style="font-size:13px;color:#A0B3C8;line-height:1.6;margin-bottom:16px;">
+                    When a stablecoin payment is received on Solana, ISOFIX generates a camt.054 debit/credit notification in real time via a Helius webhook. Each incoming SPL token transfer triggers a new ISO 20022 notification below.
+                </p>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <button class="btn btn-primary" onclick="simulateInboundPayment()" id="btn-simulate" style="background:linear-gradient(135deg,rgba(52,211,153,0.15),rgba(52,211,153,0.08));color:#34D399;border:1px solid rgba(52,211,153,0.25);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                        Simulate Inbound Stablecoin Payment
+                    </button>
+                    <span id="rt-status" style="font-size:11px;font-family:'JetBrains Mono',monospace;color:#5A6B80;">No notifications yet</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Realtime notifications list -->
+        <div id="rt-section" style="display:none;">
+            <h2 class="reports-title" style="color:#34D399;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2"><circle cx="12" cy="12" r="2"/><path d="M16.24 7.76a6 6 0 010 8.49M7.76 16.24a6 6 0 010-8.49"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 19.07a10 10 0 010-14.14"/></svg>
+                Inbound Notifications
+            </h2>
+            <div id="rt-list"></div>
+        </div>
     </div>
     </div>
 
@@ -1570,6 +1614,197 @@ function updatePainWalletStatus() {
     } else {
         el.innerHTML = `<span style="font-size:13px;color:#A0B3C8;">Connect your wallet in the "Generate Reports" tab first.</span>`;
     }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// REALTIME camt.054 — Inbound Payment Notifications
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let realtimeNotifications = [];
+
+// Sample counterparties for simulation
+const RT_COUNTERPARTIES = [
+    { name: 'CryptoTrade AG', addr: '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgHkV' },
+    { name: 'DeFi Solutions GmbH', addr: '3Kz9bFmDRNRmT8h7sGdehVSf9gE7NMVSKT2CCqh8pump' },
+    { name: 'Swiss Digital Assets', addr: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' },
+    { name: 'Helvetia Pay Ltd', addr: 'AhhdRu5YZdjVkKR3wbnUDaymVQL2ucjMQ63sZ3LFHsch' },
+    { name: 'Zug Blockchain Hub', addr: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB' },
+];
+
+const RT_STABLECOINS = [
+    { currency: 'CHF', label: 'VCHF', minAmt: 50, maxAmt: 25000 },
+    { currency: 'USD', label: 'USDC', minAmt: 100, maxAmt: 50000 },
+    { currency: 'EUR', label: 'EURC', minAmt: 75, maxAmt: 30000 },
+];
+
+function generateFakeSig() {
+    const chars = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    let sig = '';
+    for (let i = 0; i < 88; i++) sig += chars[Math.floor(Math.random() * chars.length)];
+    return sig;
+}
+
+function simulateInboundPayment() {
+    const btn = document.getElementById('btn-simulate');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-row"><span class="spinner"></span>Receiving inbound payment...</span>';
+
+    // Random delay to simulate "waiting for webhook"
+    const delay = 800 + Math.random() * 1500;
+
+    setTimeout(() => {
+        const now = new Date();
+        const coin = RT_STABLECOINS[Math.floor(Math.random() * RT_STABLECOINS.length)];
+        const counterparty = RT_COUNTERPARTIES[Math.floor(Math.random() * RT_COUNTERPARTIES.length)];
+        const amount = (coin.minAmt + Math.random() * (coin.maxAmt - coin.minAmt)).toFixed(2);
+        const sig = generateFakeSig();
+        const iban = document.getElementById('iban')?.value?.trim().replace(/\s/g, '') || 'LI21088100002324013AA';
+        const creDtTm = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
+        const dateStr = now.toISOString().substring(0, 10);
+        const ntfctnId = 'GBITS-RT-' + coin.currency + '-' + Date.now();
+        const address = walletState.publicKey || 'G1F8yoKQjnEqKj5EXAMPLE12345678901234';
+
+        const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.08" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:camt.054.001.08 camt.054.001.08.ch.02.xsd">
+    <BkToCstmrDbtCdtNtfctn>
+        <GrpHdr>
+            <MsgId>${ntfctnId}</MsgId>
+            <CreDtTm>${creDtTm}</CreDtTm>
+            <MsgPgntn><PgNb>1</PgNb><LastPgInd>true</LastPgInd></MsgPgntn>
+            <AddtlInf>SPS/2.1/PROD</AddtlInf>
+        </GrpHdr>
+        <Ntfctn>
+            <Id>${ntfctnId}</Id>
+            <CreDtTm>${creDtTm}</CreDtTm>
+            <FrToDt>
+                <FrDtTm>${creDtTm}</FrDtTm>
+                <ToDtTm>${creDtTm}</ToDtTm>
+            </FrToDt>
+            <Acct>
+                <Id><IBAN>${escXml(iban)}</IBAN></Id>
+                <Ccy>${coin.currency}</Ccy>
+                <Ownr><Nm>${escXml(trunc(address, 70))}</Nm></Ownr>
+                <Svcr><FinInstnId><BICFI>SOLNCHZZXXX</BICFI></FinInstnId></Svcr>
+            </Acct>
+            <Ntry>
+                <Amt Ccy="${coin.currency}">${amount}</Amt>
+                <CdtDbtInd>CRDT</CdtDbtInd>
+                <Sts><Cd>BOOK</Cd></Sts>
+                <BookgDt><DtTm>${creDtTm}</DtTm></BookgDt>
+                <ValDt><Dt>${dateStr}</Dt></ValDt>
+                <AcctSvcrRef>${sig.substring(0, 35)}</AcctSvcrRef>
+                <BkTxCd>
+                    <Domn><Cd>PMNT</Cd><Fmly><Cd>RCDT</Cd><SubFmlyCd>ESCT</SubFmlyCd></Fmly></Domn>
+                </BkTxCd>
+                <NtryDtls>
+                    <TxDtls>
+                        <Refs><EndToEndId>${sig.substring(0, 35)}</EndToEndId></Refs>
+                        <AmtDtls><TxAmt><Amt Ccy="${coin.currency}">${amount}</Amt></TxAmt></AmtDtls>
+                        <RltdPties>
+                            <Dbtr><Pty><Nm>${escXml(counterparty.name)}</Nm></Pty></Dbtr>
+                            <DbtrAcct><Id><Othr><Id>${counterparty.addr.substring(0, 34)}</Id></Othr></Id></DbtrAcct>
+                        </RltdPties>
+                        <RmtInf><Ustrd>SOL-${coin.label} ${sig.substring(0, 44)}</Ustrd></RmtInf>
+                    </TxDtls>
+                </NtryDtls>
+                <AddtlNtryInf>Solana ${coin.label} via SPL Token — Helius Webhook</AddtlNtryInf>
+            </Ntry>
+        </Ntfctn>
+    </BkToCstmrDbtCdtNtfctn>
+</Document>`;
+
+        const filename = `camt054_${coin.currency}_realtime_${dateStr}.xml`;
+        const blob = new Blob([xml], { type: 'application/xml' });
+        const url = URL.createObjectURL(blob);
+
+        const notification = {
+            id: ntfctnId,
+            xml, filename, url,
+            currency: coin.currency,
+            stablecoin: coin.label,
+            amount: parseFloat(amount),
+            counterparty: counterparty.name,
+            counterpartyAddr: counterparty.addr,
+            signature: sig,
+            timestamp: now,
+        };
+
+        realtimeNotifications.unshift(notification);
+        if (realtimeNotifications.length > 20) realtimeNotifications = realtimeNotifications.slice(0, 20);
+
+        renderRealtimeList();
+
+        // Reset button
+        btn.disabled = false;
+        btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px"><polygon points="5 3 19 12 5 21 5 3"/></svg>Simulate Inbound Stablecoin Payment`;
+
+        showToast(`Inbound ${coin.label} ${amount} ${coin.currency} from ${counterparty.name}`);
+    }, delay);
+}
+
+function renderRealtimeList() {
+    const section = document.getElementById('rt-section');
+    const list = document.getElementById('rt-list');
+    const status = document.getElementById('rt-status');
+
+    if (realtimeNotifications.length === 0) {
+        section.style.display = 'none';
+        status.textContent = 'No notifications yet';
+        return;
+    }
+
+    section.style.display = 'block';
+    status.innerHTML = `<span style="color:#34D399;">${realtimeNotifications.length} notification${realtimeNotifications.length !== 1 ? 's' : ''} received</span>`;
+
+    list.innerHTML = realtimeNotifications.map((n, idx) => {
+        const dotClass = n.currency === 'USD' ? 'currency-dot-usd' : n.currency === 'EUR' ? 'currency-dot-eur' : 'currency-dot-chf';
+        const timeStr = n.timestamp.toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const shortSig = n.signature.substring(0, 8) + '…' + n.signature.substring(n.signature.length - 4);
+        return `<div class="report-item" style="animation: rtSlideIn 0.35s ease-out both; animation-delay: ${idx * 0.03}s;">
+            <div class="report-left">
+                <div class="report-currency">
+                    <span class="currency-dot ${dotClass}"></span>
+                    <span style="color:#34D399;">+${n.amount.toFixed(2)}</span>
+                    <span style="color:#A0B3C8;font-size:12px;">${n.currency}</span>
+                    <span style="font-size:10px;color:#34D399;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);border-radius:4px;padding:2px 6px;font-family:'JetBrains Mono',monospace;">054</span>
+                    <span style="font-size:10px;color:#F59E0B;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:4px;padding:2px 6px;font-family:'JetBrains Mono',monospace;">${n.stablecoin}</span>
+                </div>
+                <div class="report-filename">${n.filename}</div>
+                <div class="report-meta">
+                    <span title="${n.counterpartyAddr}">${n.counterparty}</span> · ${timeStr} · <span title="${n.signature}" style="cursor:help;">${shortSig}</span>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+                <button class="download-btn" onclick="rtViewXml(${idx})" title="View formatted XML">&lt;/&gt; View</button>
+                <a href="${n.url}" download="${n.filename}" class="download-btn">↓ Download</a>
+                <button class="download-btn" onclick="rtCopyXml(${idx})" title="Copy XML">📋 Copy</button>
+                <button class="download-btn" onclick="rtEmailXml(${idx})" title="Send via email">✉ Email</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function rtViewXml(idx) {
+    const n = realtimeNotifications[idx];
+    if (n) showXmlModal(n.xml, n.filename);
+}
+
+function rtCopyXml(idx) {
+    const n = realtimeNotifications[idx];
+    if (!n) return;
+    navigator.clipboard.writeText(n.xml).then(() => {
+        showToast(`${n.filename} copied to clipboard.`);
+    }).catch(() => {
+        showXmlModal(n.xml, n.filename);
+    });
+}
+
+function rtEmailXml(idx) {
+    const n = realtimeNotifications[idx];
+    if (!n) return;
+    const subject = encodeURIComponent(`ISOFIX Realtime camt.054 — ${n.filename}`);
+    const body = encodeURIComponent(`Realtime camt.054 notification received at ${n.timestamp.toISOString()}.\n\nFrom: ${n.counterparty}\nAmount: ${n.amount.toFixed(2)} ${n.currency} (${n.stablecoin})\n\n--- XML START ---\n${n.xml}\n--- XML END ---`);
+    window.location.href = `mailto:?subject=${subject}&body=${body}`;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
