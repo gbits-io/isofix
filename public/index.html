@@ -1711,15 +1711,20 @@ function generateFakeSig() {
 function toggleRealtimeQR() {
     const panel = document.getElementById('rt-qr-panel');
     const content = document.getElementById('rt-qr-content');
+    const btn = document.getElementById('btn-show-qr');
 
     if (panel.style.display !== 'none') {
         panel.style.display = 'none';
+        btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="3" height="3"/><line x1="21" y1="14" x2="21" y2="21"/><line x1="14" y1="21" x2="21" y2="21"/></svg>Show Connected Address';
         return;
     }
 
     if (!walletState.connected) {
         content.innerHTML = `
-            <div style="text-align:center;padding:16px;">
+            <div style="display:flex;justify-content:flex-end;margin-bottom:4px;">
+                <button onclick="toggleRealtimeQR()" style="background:none;border:none;color:#6B7F99;font-size:1.2rem;cursor:pointer;padding:0 4px;line-height:1;" title="Close">×</button>
+            </div>
+            <div style="text-align:center;padding:8px 16px 16px;">
                 <p style="font-size:13px;color:#F59E0B;margin-bottom:8px;">No wallet connected.</p>
                 <p style="font-size:12px;color:#A0B3C8;">Connect your wallet in the "Generate Reports" tab first, then come back here to see your address QR code.</p>
             </div>`;
@@ -1731,6 +1736,12 @@ function toggleRealtimeQR() {
     const solanaUri = 'solana:' + addr;
 
     content.innerHTML = `
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+            <button onclick="toggleRealtimeQR()" style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:#A0B3C8;font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer;padding:4px 12px;border-radius:6px;display:flex;align-items:center;gap:6px;transition:background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                Hide QR
+            </button>
+        </div>
         <div style="display:flex;gap:24px;align-items:center;flex-wrap:wrap;">
             <div style="background:white;padding:12px;border-radius:10px;display:inline-block;">
                 <canvas id="rt-qr-canvas" width="180" height="180" style="display:block;"></canvas>
@@ -1749,6 +1760,7 @@ function toggleRealtimeQR() {
             </div>
         </div>`;
     panel.style.display = 'block';
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:8px"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Hide Address';
 
     // Render QR code on canvas
     renderQR('rt-qr-canvas', solanaUri, 180);
