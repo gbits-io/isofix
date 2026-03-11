@@ -13,60 +13,8 @@
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         html { scroll-behavior: smooth; }
 
-        /* ── Theme Variables ── */
+        /* ── Theme Variables (Light = default) ── */
         body {
-            --bg-body: linear-gradient(175deg, #060D18 0%, #0A1628 40%, #0D1B30 100%);
-            --bg-card: linear-gradient(180deg, rgba(15,26,46,0.9), rgba(10,22,40,0.95));
-            --bg-card-solid: rgba(15,26,46,0.9);
-            --bg-header: rgba(6,13,24,0.85);
-            --bg-input: rgba(0,0,0,0.3);
-            --bg-overlay: rgba(0,0,0,0.2);
-            --bg-option: #0F1A2E;
-            --border-card: rgba(34,211,238,0.08);
-            --border-subtle: rgba(255,255,255,0.04);
-            --border-input: rgba(255,255,255,0.08);
-            --border-token: rgba(255,255,255,0.06);
-            --text-primary: #DEE5EF;
-            --text-heading: #E8EDF5;
-            --text-secondary: #B8C7D8;
-            --text-label: #A0B3C8;
-            --text-muted: #7A8BA0;
-            --text-dim: #6A7B90;
-            --text-faint: #5A6B80;
-            --accent: #22D3EE;
-            --accent-bg: rgba(34,211,238,0.06);
-            --accent-bg2: rgba(34,211,238,0.08);
-            --accent-bg3: rgba(34,211,238,0.1);
-            --accent-border: rgba(34,211,238,0.15);
-            --accent-border2: rgba(34,211,238,0.2);
-            --accent-border3: rgba(34,211,238,0.25);
-            --purple: #A78BFA;
-            --purple-bg: rgba(167,139,250,0.08);
-            --purple-bg2: rgba(167,139,250,0.1);
-            --purple-border: rgba(167,139,250,0.25);
-            --green: #34D399;
-            --green-bg: rgba(52,211,153,0.08);
-            --green-border: rgba(52,211,153,0.2);
-            --amber: #F59E0B;
-            --amber-bg: rgba(245,158,11,0.08);
-            --amber-border: rgba(245,158,11,0.2);
-            --red: #F87171;
-            --red-bg: rgba(248,113,113,0.08);
-            --red-border: rgba(248,113,113,0.2);
-            --spinner-border: rgba(6,13,24,0.2);
-            --spinner-top: #060D18;
-            --btn-generate-bg: linear-gradient(135deg, #22D3EE, #0EA5E9);
-            --btn-generate-text: #060D18;
-            --noise-opacity: 0.03;
-            --logo-bg: #0A1628;
-            --calendar-filter: invert(0.7);
-            --token-bg: rgba(255,255,255,0.03);
-            --tab-bg: rgba(15,26,46,0.5);
-            --tab-hover-bg: rgba(15,26,46,0.7);
-            --pain-hover: rgba(34,211,238,0.02);
-        }
-
-        body[data-theme="light"] {
             --bg-body: linear-gradient(175deg, #F0F4F8 0%, #E8EDF5 40%, #F5F7FA 100%);
             --bg-card: linear-gradient(180deg, #FFFFFF, #FAFBFC);
             --bg-card-solid: #FFFFFF;
@@ -102,6 +50,8 @@
             --amber: #D97706;
             --amber-bg: rgba(217,119,6,0.06);
             --amber-border: rgba(217,119,6,0.15);
+            --amber-text: #92400E;
+            --amber-text-strong: #78350F;
             --red: #DC2626;
             --red-bg: rgba(220,38,38,0.06);
             --red-border: rgba(220,38,38,0.15);
@@ -116,6 +66,60 @@
             --tab-bg: rgba(0,0,0,0.02);
             --tab-hover-bg: rgba(0,0,0,0.04);
             --pain-hover: rgba(8,145,178,0.03);
+        }
+
+        body[data-theme="dark"] {
+            --bg-body: linear-gradient(175deg, #060D18 0%, #0A1628 40%, #0D1B30 100%);
+            --bg-card: linear-gradient(180deg, rgba(15,26,46,0.9), rgba(10,22,40,0.95));
+            --bg-card-solid: rgba(15,26,46,0.9);
+            --bg-header: rgba(6,13,24,0.85);
+            --bg-input: rgba(0,0,0,0.3);
+            --bg-overlay: rgba(0,0,0,0.2);
+            --bg-option: #0F1A2E;
+            --border-card: rgba(34,211,238,0.08);
+            --border-subtle: rgba(255,255,255,0.04);
+            --border-input: rgba(255,255,255,0.08);
+            --border-token: rgba(255,255,255,0.06);
+            --text-primary: #DEE5EF;
+            --text-heading: #E8EDF5;
+            --text-secondary: #B8C7D8;
+            --text-label: #A0B3C8;
+            --text-muted: #7A8BA0;
+            --text-dim: #6A7B90;
+            --text-faint: #5A6B80;
+            --accent: #22D3EE;
+            --accent-bg: rgba(34,211,238,0.06);
+            --accent-bg2: rgba(34,211,238,0.08);
+            --accent-bg3: rgba(34,211,238,0.1);
+            --accent-border: rgba(34,211,238,0.15);
+            --accent-border2: rgba(34,211,238,0.2);
+            --accent-border3: rgba(34,211,238,0.25);
+            --purple: #A78BFA;
+            --purple-bg: rgba(167,139,250,0.08);
+            --purple-bg2: rgba(167,139,250,0.1);
+            --purple-border: rgba(167,139,250,0.25);
+            --green: #34D399;
+            --green-bg: rgba(52,211,153,0.08);
+            --green-border: rgba(52,211,153,0.2);
+            --amber: #F59E0B;
+            --amber-bg: rgba(245,158,11,0.08);
+            --amber-border: rgba(245,158,11,0.2);
+            --amber-text: #F5D78E;
+            --amber-text-strong: #F59E0B;
+            --red: #F87171;
+            --red-bg: rgba(248,113,113,0.08);
+            --red-border: rgba(248,113,113,0.2);
+            --spinner-border: rgba(6,13,24,0.2);
+            --spinner-top: #060D18;
+            --btn-generate-bg: linear-gradient(135deg, #22D3EE, #0EA5E9);
+            --btn-generate-text: #060D18;
+            --noise-opacity: 0.03;
+            --logo-bg: #0A1628;
+            --calendar-filter: invert(0.7);
+            --token-bg: rgba(255,255,255,0.03);
+            --tab-bg: rgba(15,26,46,0.5);
+            --tab-hover-bg: rgba(15,26,46,0.7);
+            --pain-hover: rgba(34,211,238,0.02);
         }
 
         body {
@@ -401,7 +405,7 @@
         <div class="header-inner">
             <div class="logo-group">
                 <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-                    <rect width="36" height="36" rx="8" fill="#0A1628"/>
+                    <rect width="36" height="36" rx="8" fill="#E8EDF5"/>
                     <path d="M8 18h6l3-8 4 16 3-8h4" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                     <circle cx="28" cy="10" r="3" fill="#22D3EE" opacity="0.6"/>
                 </svg>
@@ -416,8 +420,8 @@
                     StableHacks 2026
                 </div>
                 <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark theme" id="theme-toggle-btn">
-                    <svg id="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-                    <svg id="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
+                    <svg id="theme-icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+                    <svg id="theme-icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none;"><path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/></svg>
                 </button>
             </div>
         </div>
@@ -426,9 +430,9 @@
 
 <!-- WIP Banner -->
 <div class="container" style="padding-top:16px;">
-    <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.2);border-radius:10px;padding:12px 20px;font-size:13px;color:#F5D78E;display:flex;align-items:center;gap:10px;">
+    <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:10px;padding:12px 20px;font-size:13px;color:var(--amber-text);display:flex;align-items:center;gap:10px;">
         <span style="font-size:18px;">⚠</span>
-        <span><strong style="color:#F59E0B;">Work in progress</strong> — This gateway is under active development. The pain.001 payment execution feature is experimental. Use at your own risk and with small amounts only.</span>
+        <span><strong style="color:var(--amber-text-strong);">Work in progress</strong> — This gateway is under active development. The pain.001 payment execution feature is experimental. Use at your own risk and with small amounts only.</span>
     </div>
 </div>
 
@@ -445,6 +449,27 @@
         <span class="token-badge">VCHF → CHF</span>
     </div>
 </section>
+
+<!-- How it Works CTA -->
+<div class="container" style="margin-bottom:28px;">
+    <a href="flows.html" target="_blank" style="text-decoration:none;display:block;">
+        <div style="background:var(--bg-card);border:1px solid var(--accent-border2);border-radius:14px;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;transition:all 0.2s;cursor:pointer;" onmouseover="this.style.borderColor='var(--accent-border3)';this.style.boxShadow='0 4px 20px rgba(8,145,178,0.08)'" onmouseout="this.style.borderColor='';this.style.boxShadow=''">
+            <div style="display:flex;align-items:center;gap:14px;">
+                <div style="width:40px;height:40px;border-radius:10px;background:var(--accent-bg3);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                </div>
+                <div>
+                    <div style="font-size:15px;font-weight:600;color:var(--text-heading);margin-bottom:2px;">How ISOFIX Works — Message Flow</div>
+                    <div style="font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">See the animated architecture: Solana ↔ Helius ↔ ISOFIX ↔ Company/ERP</div>
+                </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;color:var(--accent);font-size:13px;font-weight:500;font-family:'JetBrains Mono',monospace;white-space:nowrap;">
+                View flow
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </div>
+        </div>
+    </a>
+</div>
 
 <!-- Main -->
 <main class="container">
@@ -707,7 +732,7 @@
             for informational and integration purposes only.
         </div>
         <div class="footer-disclaimer" style="margin-top:10px;">
-            Want to contribute? Contact us at <a href="mailto:romanix@gbits.io" style="color:#22D3EE;">romanix@gbits.io</a>
+            Want to contribute? Contact us at <a href="mailto:romanix@gbits.io" style="color:var(--accent);">romanix@gbits.io</a>
         </div>
     </div>
 </footer>
@@ -752,34 +777,33 @@ let allReports = [];
 
 function toggleTheme() {
     const body = document.body;
-    const isLight = body.getAttribute('data-theme') === 'light';
-    const newTheme = isLight ? 'dark' : 'light';
-    body.setAttribute('data-theme', newTheme === 'light' ? 'light' : '');
-    if (newTheme === 'light') {
-        body.setAttribute('data-theme', 'light');
+    const isDark = body.getAttribute('data-theme') === 'dark';
+    const newTheme = isDark ? 'light' : 'dark';
+    if (newTheme === 'dark') {
+        body.setAttribute('data-theme', 'dark');
     } else {
         body.removeAttribute('data-theme');
     }
-    // Toggle icons
-    document.getElementById('theme-icon-sun').style.display = newTheme === 'light' ? 'block' : 'none';
-    document.getElementById('theme-icon-moon').style.display = newTheme === 'light' ? 'none' : 'block';
+    // Toggle icons: sun = light active (click to go dark), moon = dark active (click to go light)
+    document.getElementById('theme-icon-sun').style.display = newTheme === 'dark' ? 'none' : 'block';
+    document.getElementById('theme-icon-moon').style.display = newTheme === 'dark' ? 'block' : 'none';
     // Update logo SVG background
     const logoRect = document.querySelector('.logo-group svg rect');
-    if (logoRect) logoRect.setAttribute('fill', newTheme === 'light' ? '#E8EDF5' : '#0A1628');
+    if (logoRect) logoRect.setAttribute('fill', newTheme === 'dark' ? '#0A1628' : '#E8EDF5');
     // Persist preference
     try { localStorage.setItem('isofix-theme', newTheme); } catch(e) {}
 }
 
-// Restore saved theme on load
+// Restore saved theme on load (light is default, only apply if saved=dark)
 (function() {
     try {
         const saved = localStorage.getItem('isofix-theme');
-        if (saved === 'light') {
-            document.body.setAttribute('data-theme', 'light');
-            document.getElementById('theme-icon-sun').style.display = 'block';
-            document.getElementById('theme-icon-moon').style.display = 'none';
+        if (saved === 'dark') {
+            document.body.setAttribute('data-theme', 'dark');
+            document.getElementById('theme-icon-sun').style.display = 'none';
+            document.getElementById('theme-icon-moon').style.display = 'block';
             const logoRect = document.querySelector('.logo-group svg rect');
-            if (logoRect) logoRect.setAttribute('fill', '#E8EDF5');
+            if (logoRect) logoRect.setAttribute('fill', '#0A1628');
         }
     } catch(e) {}
 })();
