@@ -384,7 +384,10 @@
             <div class="field-row">
                 <div class="field-group">
                     <label class="label">IBAN (must match Bexio bank account)</label>
-                    <input type="text" class="input" id="iban" placeholder="e.g. CH93 0070 0110 0009 5590 0" />
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="text" class="input" id="iban" placeholder="e.g. CH93 0070 0110 0009 5590 0" style="flex:1;" />
+                        <button type="button" onclick="document.getElementById('iban').value='LI21088100002324013AA';" style="white-space:nowrap; padding:8px 12px; background:#2A3A4E; color:#A0B3C8; border:1px solid #3A4F6A; border-radius:6px; cursor:pointer; font-size:12px; transition:background 0.2s;" onmouseover="this.style.background='#3A4F6A'" onmouseout="this.style.background='#2A3A4E'" title="Use demo IBAN: LI21088100002324013AA">Use Demo IBAN</button>
+                    </div>
                 </div>
                 <div class="field-group" style="display:flex; align-items:flex-end;">
                     <span style="font-size:11px; color:#A0B3C8; line-height:1.4;">The IBAN links the generated camt.053 to your Bexio bank account. Create a bank account in Bexio first, then enter the same IBAN here.</span>
@@ -423,6 +426,9 @@
             </select>
             <div id="semt-hint" style="display:none;font-size:11px;color:#A78BFA;margin-top:8px;line-height:1.5;">
                 ℹ The semt.002 report generates a custody statement of all SPL token holdings in your wallet at the current moment. Date range and IBAN are not required.
+            </div>
+            <div id="camt053-hint" style="font-size:11px;color:#A0B3C8;margin-top:8px;line-height:1.5;">
+                📄 <a href="camt053_field_mapping.html" target="_blank" style="color:#22D3EE; text-decoration:none; border-bottom:1px dotted #22D3EE;">View field mapping</a> — how Solana on-chain data maps to each camt.053 XML element.
             </div>
         </div>
 
@@ -515,6 +521,8 @@
                 <span>Built for StableHacks 2026 on DoraHacks</span>
                 <span class="footer-divider">·</span>
                 <span>camt.053 · camt.054 · semt.002 · pain.001</span>
+                <span class="footer-divider">·</span>
+                <a href="camt053_field_mapping.html" target="_blank" style="color:#22D3EE; text-decoration:none;" title="Solana → camt.053 field mapping reference">Field Mapping ↗</a>
             </div>
         </div>
         <div class="footer-disclaimer">
@@ -523,12 +531,12 @@
             for informational and integration purposes only.
         </div>
         <div class="footer-disclaimer" style="margin-top:10px;">
-            Want to contribute? Contact us at <a href="mailto:romanix@gbits.io" style="color:#22D3EE;">romanix@gbits.io</a>
+            Want to contribute? Contact us at <a href="/cdn-cgi/l/email-protection#afddc0c2cec1c6d7efc8cdc6dbdc81c6c0" style="color:#22D3EE;"><span class="__cf_email__" data-cfemail="c4b6aba9a5aaadbc84a3a6adb0b7eaadab">[email&#160;protected]</span></a>
         </div>
     </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1397,6 +1405,7 @@ function generateCamt054(address, currency, entries, startDate, endDate, ntfctnI
 function onMsgTypeChange() {
     const v = document.getElementById('msg-type').value;
     document.getElementById('semt-hint').style.display = v === 'semt.002.001.11' ? 'block' : 'none';
+    document.getElementById('camt053-hint').style.display = v === 'semt.002.001.11' ? 'none' : 'block';
 }
 
 async function fetchTokenBalances(address) {
@@ -1672,12 +1681,4 @@ async function sendPainPayment(idx) {
         const result = await provider.signAndSendTransaction(tx);
         const sig = result.signature || result;
         p.sendStatus = 'sent'; p.txSignature = typeof sig === 'string' ? sig : sig.toString();
-        showToast(`Payment ${idx + 1} sent! TX: ${shortAddr(p.txSignature)}`);
-    } catch (e) { p.sendStatus = 'error'; console.error('Send error:', e); showToast(`Payment ${idx + 1} failed: ${e.message || e}`); }
-    renderPainTable(); renderPainSummary();
-}
-
--e 
-</script>
-</body>
-</html>
+        showToast(`Payment ${idx + 1} sent! TX: ${short
