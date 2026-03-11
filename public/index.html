@@ -531,12 +531,12 @@
             for informational and integration purposes only.
         </div>
         <div class="footer-disclaimer" style="margin-top:10px;">
-            Want to contribute? Contact us at <a href="mailto:romanix@gbits.io" style="color:#22D3EE;">romanix@gbits.io</a>
+            Want to contribute? Contact us at <a href="/cdn-cgi/l/email-protection#dba9b4b6bab5b2a39bbcb9b2afa8f5b2b4" style="color:#22D3EE;"><span class="__cf_email__" data-cfemail="394b565458575041795e5b504d4a175056">[email&#160;protected]</span></a>
         </div>
     </div>
 </footer>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -1228,6 +1228,7 @@ function renderReports() {
             </div>
             <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
                 <a href="${r.url}" download="${r.filename}" class="download-btn" onclick="return tryDownload(event, ${idx})">↓ Download</a>
+                <button class="download-btn" onclick="viewXml(${idx})" title="View formatted XML">&lt;/&gt; View</button>
                 <button class="download-btn" onclick="copyXml(${idx})" title="Copy XML to clipboard">📋 Copy</button>
                 <button class="download-btn" onclick="emailXml(${idx})" title="Send via email">✉ Email</button>
             </div>
@@ -1301,21 +1302,86 @@ function showXmlModal(xml, filename) {
     const existing = document.getElementById('xml-modal');
     if (existing) existing.remove();
 
+    // Format & syntax-highlight the XML
+    function formatXml(raw) {
+        let formatted = '';
+        let indent = 0;
+        const lines = raw.replace(/>\s*</g, '>\n<').split('\n');
+        lines.forEach(line => {
+            line = line.trim();
+            if (!line) return;
+            if (line.startsWith('</')) indent = Math.max(0, indent - 1);
+            formatted += '  '.repeat(indent) + line + '\n';
+            if (line.startsWith('<') && !line.startsWith('</') && !line.startsWith('<?') && !line.endsWith('/>') && !/<\/[^>]+>$/.test(line)) indent++;
+        });
+        return formatted.trim();
+    }
+
+    function highlightXml(formatted) {
+        return formatted
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            // XML declaration
+            .replace(/(&lt;\?xml.*?\?&gt;)/g, '<span style="color:#7C8DA0;font-style:italic;">$1</span>')
+            // Comments
+            .replace(/(&lt;!--.*?--&gt;)/g, '<span style="color:#5A6B80;">$1</span>')
+            // Closing tags
+            .replace(/(&lt;\/)([\w:.]+)(&gt;)/g, '<span style="color:#6B7F99;">$1</span><span style="color:#22D3EE;">$2</span><span style="color:#6B7F99;">$3</span>')
+            // Self-closing tags
+            .replace(/(&lt;)([\w:.]+)(\s)/g, '<span style="color:#6B7F99;">$1</span><span style="color:#22D3EE;">$2</span>$3')
+            // Opening tag start (no attributes)
+            .replace(/(&lt;)([\w:.]+)(&gt;)/g, '<span style="color:#6B7F99;">$1</span><span style="color:#22D3EE;">$2</span><span style="color:#6B7F99;">$3</span>')
+            // Attributes: name="value"
+            .replace(/([\w:]+)(=)(&quot;|")(.*?)(&quot;|")/g, '<span style="color:#F59E0B;">$1</span><span style="color:#6B7F99;">$2</span><span style="color:#A78BFA;">$3$4$5</span>')
+            // Attribute shorthand Ccy="USD" etc (already handled above)
+            // Namespace declarations
+            .replace(/(xmlns)([:=])/g, '<span style="color:#14F195;">$1</span><span style="color:#6B7F99;">$2</span>')
+            // Text content between tags (remaining bare text on its own line)
+            ;
+    }
+
+    const formatted = formatXml(xml);
+    const highlighted = highlightXml(formatted);
+    const lineCount = formatted.split('\n').length;
+    const lineNums = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
+
     const modal = document.createElement('div');
     modal.id = 'xml-modal';
-    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;backdrop-filter:blur(4px);';
+    modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
     modal.innerHTML = `
-        <div style="background:#0d1f3c;border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:20px;max-width:95vw;max-height:90vh;display:flex;flex-direction:column;gap:12px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <strong style="color:#22d3ee;">${filename}</strong>
-                <button onclick="document.getElementById('xml-modal').remove()" style="background:none;border:none;color:white;font-size:1.5rem;cursor:pointer;">×</button>
+        <div style="background:#0B1120;border:1px solid rgba(34,211,238,0.15);border-radius:16px;max-width:960px;width:100%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 24px 80px rgba(0,0,0,0.6);">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid rgba(255,255,255,0.06);">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                    <span style="font-size:13px;font-weight:600;color:#22D3EE;font-family:'JetBrains Mono',monospace;">${filename}</span>
+                    <span style="font-size:11px;color:#5A6B80;font-family:'JetBrains Mono',monospace;">${lineCount} lines</span>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button id="xml-modal-copy" onclick="navigator.clipboard.writeText(document.getElementById('xml-modal-raw').value).then(()=>{this.textContent='Copied!';setTimeout(()=>{this.textContent='Copy'},1500)})" style="padding:5px 12px;background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:6px;color:#22D3EE;font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer;">Copy</button>
+                    <button onclick="document.getElementById('xml-modal').remove()" style="background:none;border:none;color:#7C8DA0;font-size:1.4rem;cursor:pointer;padding:0 4px;line-height:1;" title="Close (Esc)">×</button>
+                </div>
             </div>
-            <p style="color:rgba(255,255,255,0.7);font-size:0.85rem;margin:0;">Select all → Copy → Paste into a text editor → Save as .xml</p>
-            <textarea readonly style="width:100%;height:60vh;background:#0a1525;color:#e2e8f0;border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:0.75rem;resize:none;">${xml.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+            <div style="overflow:auto;flex:1;position:relative;">
+                <div style="display:flex;min-height:100%;">
+                    <pre style="padding:16px 0;margin:0;text-align:right;user-select:none;color:#3A4F6A;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;min-width:44px;padding-right:12px;padding-left:12px;background:rgba(0,0,0,0.2);border-right:1px solid rgba(255,255,255,0.04);">${lineNums}</pre>
+                    <pre style="padding:16px;margin:0;flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:#DEE5EF;overflow-x:auto;white-space:pre;">${highlighted}</pre>
+                </div>
+            </div>
+            <textarea id="xml-modal-raw" style="position:absolute;left:-9999px;">${xml.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
         </div>`;
     document.body.appendChild(modal);
-    // Auto-select the textarea content
-    setTimeout(() => modal.querySelector('textarea').select(), 100);
+
+    // Close on Escape
+    function onKey(e) { if (e.key === 'Escape') { modal.remove(); document.removeEventListener('keydown', onKey); } }
+    document.addEventListener('keydown', onKey);
+}
+
+function viewXml(idx) {
+    const r = allReports[idx];
+    if (!r) return;
+    showXmlModal(r.xml, r.filename);
 }
 
 
@@ -1682,15 +1748,4 @@ async function sendPainPayment(idx) {
         const sig = result.signature || result;
         p.sendStatus = 'sent'; p.txSignature = typeof sig === 'string' ? sig : sig.toString();
         showToast(`Payment ${idx + 1} sent! TX: ${p.txSignature.substring(0, 8)}…`);
-        renderPainTable();
-    } catch (e) {
-        console.error('sendPainPayment error:', e);
-        p.sendStatus = 'failed';
-        renderPainTable();
-        showToast('Payment failed: ' + (e.message || e));
-    }
-}
-
-</script>
-</body>
-</html>
+        rend
