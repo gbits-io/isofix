@@ -2463,12 +2463,8 @@ function resetPainUpload() {
 }
 
 function showPainXml() {
-    const modal = document.getElementById('pain-xml-modal');
-    const content = document.getElementById('pain-xml-content');
-    const highlighted = painRawXml.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&lt;(\/?)([\w:.]+)/g, '&lt;<span style="color:#22D3EE;">$1$2</span>').replace(/([\w:-]+)=(&quot;|")(.*?)(&quot;|")/g, '<span style="color:#A78BFA;">$1</span>=<span style="color:#34D399;">"$3"</span>');
-    content.innerHTML = highlighted;
-    modal.style.display = 'block';
-    modal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    if (!painRawXml) return;
+    showXmlModal(painRawXml, 'pain.001.001.03 — Source XML');
 }
 
 function renderPainSummary() {
