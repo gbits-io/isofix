@@ -606,9 +606,13 @@
                 <option value="camt.053.001.04">camt.053.001.04 — BankToCustomerStatement</option>
                 <option value="camt.054.001.08">camt.054.001.08 — BankToCustomerDebitCreditNotification (SPS 2024)</option>
                 <option value="semt.002.001.11">semt.002.001.11 — SecuritiesBalanceCustodyReport</option>
+                <option value="bai2">BAI2 — Bank Administration Institute (United States)</option>
             </select>
             <div id="semt-hint" style="display:none;font-size:11px;color:#A78BFA;margin-top:8px;line-height:1.5;">
                 ℹ The semt.002 report generates a custody statement of all SPL token holdings in your wallet at the current moment. Date range and IBAN are not required.
+            </div>
+            <div id="bai2-hint" style="display:none;font-size:11px;color:var(--green);margin-top:8px;line-height:1.5;">
+                ℹ BAI2 is the standard bank statement format used by US accounting software (QuickBooks, NetSuite, Oracle, SAP). Generates a fixed-width text file from your stablecoin transactions.
             </div>
             <div id="camt053-hint" style="font-size:11px;color:#A0B3C8;margin-top:8px;line-height:1.5;">
                 📄 <a href="camt053_field_mapping.html" target="_blank" style="color:#22D3EE; text-decoration:none; border-bottom:1px dotted #22D3EE;">View field mapping</a> — how Solana on-chain data maps to each camt.053 XML element.
@@ -1369,7 +1373,7 @@ async function handleGenerate() {
         return;
     }
 
-    // ── camt.053 / camt.054 path ──
+    // ── camt.053 / camt.054 / bai2 path ──
     const startStr = document.getElementById('date-start').value;
     const endStr = document.getElementById('date-end').value;
     const iban = document.getElementById('iban').value.trim();
@@ -1396,7 +1400,7 @@ async function handleGenerate() {
             resetGenerateBtn(); return;
         }
 
-        btn.innerHTML = `<span class="spinner-row"><span class="spinner"></span>Found ${txns.length} transactions. Generating XML...</span>`;
+        btn.innerHTML = `<span class="spinner-row"><span class="spinner"></span>Found ${txns.length} transactions. Generating ${msgType === 'bai2' ? 'BAI2' : 'XML'}...</span>`;
 
         // Group by currency
         const byCurrency = { USD: [], EUR: [], CHF: [] };
@@ -1429,25 +1433,53 @@ async function handleGenerate() {
         const newReports = [];
         const ts = Date.now();
 
-        for (const [currency, entries] of Object.entries(byCurrency)) {
-            if (entries.length === 0) continue;
-            entries.sort((a, b) => a.timestamp - b.timestamp);
+        // ── BAI2 path ──
+        if (msgType === 'bai2') {
+            // BAI2 combines all currencies into one file
+            const allEntries = [];
+            for (const [currency, entries] of Object.entries(byCurrency)) {
+                entries.forEach(e => allEntries.push({ ...e, currency }));
+            }
+            if (allEntries.length === 0) { showError('error-box', 'No entries to generate.'); resetGenerateBtn(); return; }
+            allEntries.sort((a, b) => a.timestamp - b.timestamp);
 
-            const stmtId = `GBITS-STMT-${currency}-${fmtDate(startDate)}-${ts}`;
-            const xml = generateCamt053(address, currency, entries, startDate, endDate, stmtId, iban);
-            const filename = `camt053_${currency}_${fmtDate(startDate)}_${fmtDate(endDate)}.xml`;
-            const blob = new Blob([xml], { type: 'application/xml' });
+            const bai2Text = generateBAI2(address, allEntries, startDate, endDate, iban);
+            const filename = `bai2_${fmtDate(startDate)}_${fmtDate(endDate)}.bai2`;
+            const blob = new Blob([bai2Text], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
 
             newReports.push({
-                id: `${ts}-${currency}`,
-                filename, url, xml, currency,
-                entries: entries.length,
-                totalCredit: entries.filter(e => e.direction === 'CRDT').reduce((s, e) => s + e.amount, 0),
-                totalDebit: entries.filter(e => e.direction === 'DBIT').reduce((s, e) => s + e.amount, 0),
+                id: `${ts}-BAI2`,
+                filename, url, xml: bai2Text, currency: 'USD',
+                reportType: 'bai2',
+                entries: allEntries.length,
+                totalCredit: allEntries.filter(e => e.direction === 'CRDT').reduce((s, e) => s + e.amount, 0),
+                totalDebit: allEntries.filter(e => e.direction === 'DBIT').reduce((s, e) => s + e.amount, 0),
                 generated: new Date(),
                 dateRange: `${fmtDate(startDate)} — ${fmtDate(endDate)}`,
             });
+        } else {
+            // ── camt.053 / camt.054 path ──
+            for (const [currency, entries] of Object.entries(byCurrency)) {
+                if (entries.length === 0) continue;
+                entries.sort((a, b) => a.timestamp - b.timestamp);
+
+                const stmtId = `GBITS-STMT-${currency}-${fmtDate(startDate)}-${ts}`;
+
+                if (msgType === 'camt.054.001.08') {
+                    const xml = generateCamt054(address, currency, entries, startDate, endDate, stmtId, iban);
+                    const filename = `camt054_${currency}_${fmtDate(startDate)}_${fmtDate(endDate)}.xml`;
+                    const blob = new Blob([xml], { type: 'application/xml' });
+                    const url = URL.createObjectURL(blob);
+                    newReports.push({ id: `${ts}-${currency}`, filename, url, xml, currency, reportType: '054', entries: entries.length, totalCredit: entries.filter(e => e.direction === 'CRDT').reduce((s, e) => s + e.amount, 0), totalDebit: entries.filter(e => e.direction === 'DBIT').reduce((s, e) => s + e.amount, 0), generated: new Date(), dateRange: `${fmtDate(startDate)} — ${fmtDate(endDate)}` });
+                } else {
+                    const xml = generateCamt053(address, currency, entries, startDate, endDate, stmtId, iban);
+                    const filename = `camt053_${currency}_${fmtDate(startDate)}_${fmtDate(endDate)}.xml`;
+                    const blob = new Blob([xml], { type: 'application/xml' });
+                    const url = URL.createObjectURL(blob);
+                    newReports.push({ id: `${ts}-${currency}`, filename, url, xml, currency, entries: entries.length, totalCredit: entries.filter(e => e.direction === 'CRDT').reduce((s, e) => s + e.amount, 0), totalDebit: entries.filter(e => e.direction === 'DBIT').reduce((s, e) => s + e.amount, 0), generated: new Date(), dateRange: `${fmtDate(startDate)} — ${fmtDate(endDate)}` });
+                }
+            }
         }
 
         allReports = [...newReports, ...allReports].slice(0, 15);
@@ -1481,8 +1513,9 @@ function renderReports() {
         let typeBadge = '';
         if (r.reportType === 'semt') typeBadge = '<span style="font-size:10px;color:#A78BFA;background:rgba(167,139,250,0.1);border:1px solid rgba(167,139,250,0.2);border-radius:4px;padding:2px 6px;margin-left:6px;font-family:\'JetBrains Mono\',monospace;">semt</span>';
         else if (r.reportType === '054') typeBadge = '<span style="font-size:10px;color:#F59E0B;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);border-radius:4px;padding:2px 6px;margin-left:6px;font-family:\'JetBrains Mono\',monospace;">054</span>';
+        else if (r.reportType === 'bai2') typeBadge = '<span style="font-size:10px;color:var(--green);background:var(--green-bg);border:1px solid var(--green-border);border-radius:4px;padding:2px 6px;margin-left:6px;font-family:\'JetBrains Mono\',monospace;">BAI2</span>';
         else typeBadge = '<span style="font-size:10px;color:#22D3EE;background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:4px;padding:2px 6px;margin-left:6px;font-family:\'JetBrains Mono\',monospace;">053</span>';
-        const label = r.reportType === 'semt' ? 'CUSTODY' : r.currency;
+        const label = r.reportType === 'semt' ? 'CUSTODY' : r.reportType === 'bai2' ? 'BAI2' : r.currency;
         const metaLine = r.reportType === 'semt' ? `${r.entries} holdings · ${r.dateRange} · Total: ${r.totalCredit.toFixed(2)}` : `${r.entries} entries · ${r.dateRange} · ${r.totalCredit.toFixed(2)} CR / ${r.totalDebit.toFixed(2)} DR`;
         return `<div class="report-item">
             <div class="report-left">
@@ -1660,9 +1693,43 @@ function showXmlModal(xml, filename) {
         return result;
     }
 
-    const formatted = formatXml(xml);
-    const highlighted = highlightXml(formatted);
-    const lineCount = formatted.split('\n').length;
+    // BAI2 syntax highlighter: color-codes record types
+    function highlightBAI2(text) {
+        const esc = str => str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        const recordColors = {
+            '01': { color: '#7C8DA0', label: 'File Header' },
+            '02': { color: '#A78BFA', label: 'Group Header' },
+            '03': { color: '#22D3EE', label: 'Account Header' },
+            '16': { color: '#34D399', label: 'Transaction' },
+            '88': { color: '#F59E0B', label: 'Continuation' },
+            '49': { color: '#22D3EE', label: 'Account Trailer' },
+            '98': { color: '#A78BFA', label: 'Group Trailer' },
+            '99': { color: '#7C8DA0', label: 'File Trailer' },
+        };
+        return text.split('\n').map(line => {
+            const code = line.substring(0, 2);
+            const rc = recordColors[code];
+            if (!rc) return esc(line);
+            const escaped = esc(line);
+            // Highlight record code, then color commas as delimiters, values stay default
+            return '<span style="color:' + rc.color + ';font-weight:600;">' + esc(code) + '</span>'
+                 + '<span style="color:#5A6B80;">' + escaped.substring(2).replace(/,/g, '<span style="color:#3A4F6A;">,</span>') + '</span>'
+                 + '  <span style="color:#3A4F6A;font-style:italic;font-size:10px;">// ' + rc.label + '</span>';
+        }).join('\n');
+    }
+
+    // Detect format: BAI2 starts with "01," record, XML starts with "<?xml" or "<"
+    const isBAI2 = xml.trimStart().startsWith('01,');
+
+    let displayText, highlighted;
+    if (isBAI2) {
+        displayText = xml; // BAI2 is already formatted line-by-line
+        highlighted = highlightBAI2(xml);
+    } else {
+        displayText = formatXml(xml);
+        highlighted = highlightXml(displayText);
+    }
+    const lineCount = displayText.split('\n').length;
     const lineNums = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n');
 
     const modal = document.createElement('div');
@@ -1790,7 +1857,8 @@ function generateCamt054(address, currency, entries, startDate, endDate, ntfctnI
 function onMsgTypeChange() {
     const v = document.getElementById('msg-type').value;
     document.getElementById('semt-hint').style.display = v === 'semt.002.001.11' ? 'block' : 'none';
-    document.getElementById('camt053-hint').style.display = v === 'semt.002.001.11' ? 'none' : 'block';
+    document.getElementById('bai2-hint').style.display = v === 'bai2' ? 'block' : 'none';
+    document.getElementById('camt053-hint').style.display = (v === 'semt.002.001.11' || v === 'bai2') ? 'none' : 'block';
 }
 
 async function fetchTokenBalances(address) {
@@ -1866,6 +1934,96 @@ function generateSemt002(address, holdings, reportDate) {
         </BlckChainAdrOrWllt>${balBlocks}
     </SctiesBalCtdyRpt>
 </Document>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BAI2 GENERATOR — Bank Administration Institute v2 (United States)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function generateBAI2(address, entries, startDate, endDate, iban) {
+    // BAI2 format reference: https://www.bai.org/docs/default-source/libraries/site-general-downloads/cash_management_2005.pdf
+    // Record types: 01=file header, 02=group header, 03=account header, 16=transaction, 88=continuation, 49=account trailer, 98=group trailer, 99=file trailer
+
+    const acctId = iban ? iban.replace(/\s/g, '') : trunc(address, 23);
+    const now = new Date();
+    const fileDateYYMMDD = now.toISOString().substring(2, 10).replace(/-/g, '');
+    const fileTimeHHMM = now.toISOString().substring(11, 16).replace(':', '');
+    const stmtDateYYMMDD = startDate.toISOString().substring(2, 10).replace(/-/g, '');
+    const fileId = 'GBITS' + Date.now().toString().substring(5);
+    const senderId = 'GBITSISOFIX';
+    const receiverId = trunc(address, 14);
+
+    // Calculate totals
+    let totalCredit = 0, totalDebit = 0, numCredits = 0, numDebits = 0;
+    entries.forEach(e => {
+        const cents = Math.round(e.amount * 100);
+        if (e.direction === 'CRDT') { totalCredit += cents; numCredits++; }
+        else { totalDebit += cents; numDebits++; }
+    });
+    const closingBal = totalCredit - totalDebit;
+
+    // BAI2 type codes for stablecoin transactions
+    // Credits: 195 = Miscellaneous Credit, 175 = ACH Credit
+    // Debits:  495 = Miscellaneous Debit, 475 = ACH Debit
+    function baiTypeCode(direction, hasQrRef) {
+        if (direction === 'CRDT') return hasQrRef ? '175' : '195';
+        return hasQrRef ? '475' : '495';
+    }
+
+    const lines = [];
+
+    // 01 - File Header
+    // 01,SENDER_ID,RECEIVER_ID,FILE_DATE,FILE_TIME,FILE_ID,RECORD_LENGTH,BLOCK_SIZE,VERSION/
+    lines.push(`01,${senderId},${receiverId},${fileDateYYMMDD},${fileTimeHHMM},${fileId},,,2/`);
+
+    // 02 - Group Header
+    // 02,ORIGINATOR_ID,DESTINATION_ID,GROUP_STATUS,AS_OF_DATE,AS_OF_TIME,CURRENCY_CODE,AS_OF_DATE_MODIFIER/
+    lines.push(`02,SOLNCHZZXXX,${trunc(receiverId, 14)},1,${stmtDateYYMMDD},${fileTimeHHMM},USD,2/`);
+
+    // 03 - Account Header
+    // 03,ACCOUNT_NUMBER,CURRENCY_CODE,TYPE_CODE,AMOUNT,ITEM_COUNT,FUNDS_TYPE,...
+    // Type 010 = Opening Ledger, Type 015 = Closing Ledger
+    lines.push(`03,${trunc(acctId, 23)},USD,010,0,,,015,${Math.abs(closingBal)},,/`);
+
+    // 16 - Transaction Detail (one per entry)
+    entries.forEach((e, idx) => {
+        const cents = Math.round(e.amount * 100);
+        const typeCode = baiTypeCode(e.direction, !!e.qrRef);
+        const ref = trunc(e.signature, 35);
+        const dt = new Date(e.timestamp * 1000);
+        const valueDateYYMMDD = dt.toISOString().substring(2, 10).replace(/-/g, '');
+
+        // 16,TYPE_CODE,AMOUNT,FUNDS_TYPE,BANK_REF,CUSTOMER_REF,TEXT/
+        lines.push(`16,${typeCode},${cents},V,${valueDateYYMMDD},${ref},,SOL-${e.tokenLabel} ${e.currency}/`);
+
+        // 88 - Continuation: counterparty and memo
+        const counterText = e.direction === 'CRDT' ? `From: ${trunc(e.counterparty, 60)}` : `To: ${trunc(e.counterparty, 60)}`;
+        lines.push(`88,${counterText}/`);
+
+        if (e.qrRef) {
+            lines.push(`88,QRR: ${e.qrRef}/`);
+        } else if (e.memo) {
+            lines.push(`88,Memo: ${trunc(e.memo, 60)}/`);
+        }
+    });
+
+    // 49 - Account Trailer
+    // 49,ACCOUNT_CONTROL_TOTAL,NUMBER_OF_RECORDS/
+    const acctControlTotal = totalCredit + totalDebit;
+    const numAcctRecords = 1 + entries.length * 2 + entries.filter(e => e.qrRef || e.memo).length + 1; // 03 + (16+88)*n + extra 88s + 49
+    lines.push(`49,${acctControlTotal},${numAcctRecords}/`);
+
+    // 98 - Group Trailer
+    // 98,GROUP_CONTROL_TOTAL,NUMBER_OF_ACCOUNTS,NUMBER_OF_RECORDS/
+    const numGroupRecords = numAcctRecords + 2; // + 02 + 98
+    lines.push(`98,${acctControlTotal},1,${numGroupRecords}/`);
+
+    // 99 - File Trailer
+    // 99,FILE_CONTROL_TOTAL,NUMBER_OF_GROUPS,NUMBER_OF_RECORDS/
+    const numFileRecords = numGroupRecords + 2; // + 01 + 99
+    lines.push(`99,${acctControlTotal},1,${numFileRecords}/`);
+
+    return lines.join('\n');
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -2463,8 +2621,12 @@ function resetPainUpload() {
 }
 
 function showPainXml() {
-    if (!painRawXml) return;
-    showXmlModal(painRawXml, 'pain.001.001.03 — Source XML');
+    const modal = document.getElementById('pain-xml-modal');
+    const content = document.getElementById('pain-xml-content');
+    const highlighted = painRawXml.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/&lt;(\/?)([\w:.]+)/g, '&lt;<span style="color:#22D3EE;">$1$2</span>').replace(/([\w:-]+)=(&quot;|")(.*?)(&quot;|")/g, '<span style="color:#A78BFA;">$1</span>=<span style="color:#34D399;">"$3"</span>');
+    content.innerHTML = highlighted;
+    modal.style.display = 'block';
+    modal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
 function renderPainSummary() {
