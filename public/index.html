@@ -408,6 +408,24 @@
             from { opacity: 0; transform: translateY(-8px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
+        /* ── Demo Highlight (presentation mode) ── */
+        @keyframes demoGlow {
+            0%, 100% { border-color: rgba(245,158,11,0.5); box-shadow: 0 0 0 0 rgba(245,158,11,0); }
+            50% { border-color: rgba(245,158,11,0.8); box-shadow: 0 0 12px 2px rgba(245,158,11,0.12); }
+        }
+        .demo-highlight {
+            border: 2px solid rgba(245,158,11,0.5) !important;
+            border-radius: 14px !important;
+            animation: demoGlow 2s ease-in-out infinite;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .demo-highlight-brief {
+            border: 2px solid rgba(245,158,11,0.7) !important;
+            border-radius: 14px !important;
+            box-shadow: 0 0 16px 3px rgba(245,158,11,0.15);
+            transition: all 0.3s;
+        }
     </style>
     <script src="https://unpkg.com/@solana/web3.js@1.95.8/lib/index.iife.min.js"></script>
 </head>
@@ -424,8 +442,8 @@
                     <circle cx="28" cy="10" r="3" fill="#22D3EE" opacity="0.6"/>
                 </svg>
                 <div>
-                    <a href="https://gbits.io" target="_blank" class="logo-text" style="text-decoration:none;color:var(--text-heading);">Gbits.io</a>
-                    <div class="logo-sub"><a href="https://iso.gbits.io" style="color:inherit;text-decoration:none;">Solana ISO 20022 Message Gateway</a></div>
+                    <div class="logo-text">Gbits.io</div>
+                    <div class="logo-sub">Solana ISO 20022 Message Gateway</div>
                 </div>
             </div>
             <div class="header-right">
@@ -469,41 +487,29 @@
 
 <!-- Documentation CTAs -->
 <div class="container" style="margin-bottom:28px;">
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
-        <a href="flows.html" target="_blank" style="text-decoration:none;display:block;">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <a href="flows.html" target="_blank" style="text-decoration:none;display:block;" data-cta="flow">
             <div style="background:var(--bg-card);border:1px solid var(--accent-border2);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all 0.2s;cursor:pointer;height:100%;" onmouseover="this.style.borderColor='var(--accent-border3)';this.style.boxShadow='0 4px 20px rgba(8,145,178,0.08)'" onmouseout="this.style.borderColor='';this.style.boxShadow=''">
                 <div style="width:40px;height:40px;border-radius:10px;background:var(--accent-bg3);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 </div>
                 <div style="flex:1;min-width:0;">
                     <div style="font-size:14px;font-weight:600;color:var(--text-heading);margin-bottom:2px;">Message Flow</div>
-                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Animated architecture</div>
+                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Animated architecture diagram</div>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="flex-shrink:0;"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
             </div>
         </a>
-        <a href="camt053_field_mapping.html" target="_blank" style="text-decoration:none;display:block;">
+        <a href="camt053_field_mapping.html" target="_blank" style="text-decoration:none;display:block;" data-cta="mapping">
             <div style="background:var(--bg-card);border:1px solid var(--purple-border);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all 0.2s;cursor:pointer;height:100%;" onmouseover="this.style.borderColor='var(--accent-border3)';this.style.boxShadow='0 4px 20px rgba(124,58,237,0.08)'" onmouseout="this.style.borderColor='';this.style.boxShadow=''">
                 <div style="width:40px;height:40px;border-radius:10px;background:var(--purple-bg2);border:1px solid var(--purple-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
                 </div>
                 <div style="flex:1;min-width:0;">
                     <div style="font-size:14px;font-weight:600;color:var(--text-heading);margin-bottom:2px;">Field Mapping</div>
-                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Solana → camt.053 XML</div>
+                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Solana → camt.053 XML reference</div>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" style="flex-shrink:0;"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-            </div>
-        </a>
-        <a href="field-mapping-faq.html" target="_blank" style="text-decoration:none;display:block;">
-            <div style="background:var(--bg-card);border:1px solid var(--green-border);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all 0.2s;cursor:pointer;height:100%;" onmouseover="this.style.borderColor='var(--accent-border3)';this.style.boxShadow='0 4px 20px rgba(5,150,105,0.08)'" onmouseout="this.style.borderColor='';this.style.boxShadow=''">
-                <div style="width:40px;height:40px;border-radius:10px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                </div>
-                <div style="flex:1;min-width:0;">
-                    <div style="font-size:14px;font-weight:600;color:var(--text-heading);margin-bottom:2px;">FAQ</div>
-                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Solana ↔ ISO 20022</div>
-                </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="flex-shrink:0;"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
             </div>
         </a>
     </div>
@@ -535,7 +541,7 @@
     <div class="card card-tabbed">
 
         <!-- Step 1: Wallet -->
-        <div class="section">
+        <div class="section" data-step="1">
             <div class="step-header">
                 <span class="step-num">1</span>
                 <span class="step-label">Connect & Verify Wallet</span>
@@ -550,7 +556,7 @@
         </div>
 
         <!-- Step 2: Address -->
-        <div class="section">
+        <div class="section" data-step="2">
             <div class="step-header">
                 <span class="step-num">2</span>
                 <span class="step-label">Solana Address</span>
@@ -571,7 +577,7 @@
         </div>
 
         <!-- Step 3: IBAN for Bexio -->
-        <div class="section">
+        <div class="section" data-step="3">
             <div class="step-header">
                 <span class="step-num">3</span>
                 <span class="step-label">IBAN for Bank Statement</span>
@@ -591,7 +597,7 @@
         </div>
 
         <!-- Step 4: Account Owner -->
-        <div class="section">
+        <div class="section" data-step="4">
             <div class="step-header">
                 <span class="step-num">4</span>
                 <span class="step-label">Account Owner <span style="font-size:11px;font-weight:400;color:var(--text-muted);">(optional)</span></span>
@@ -629,7 +635,7 @@
         </div>
 
         <!-- Step 5: Date Range -->
-        <div class="section">
+        <div class="section" data-step="5">
             <div class="step-header">
                 <span class="step-num">5</span>
                 <span class="step-label">Statement Period</span>
@@ -653,7 +659,7 @@
         </div>
 
         <!-- Step 6: Message Type -->
-        <div class="section" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
+        <div class="section" data-step="6" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
             <div class="step-header">
                 <span class="step-num">6</span>
                 <span class="step-label">Report Type</span>
@@ -810,8 +816,6 @@
                 <span>camt.053 · camt.054 · semt.002 · pain.001</span>
                 <span class="footer-divider">·</span>
                 <a href="camt053_field_mapping.html" target="_blank" style="color:var(--accent); text-decoration:none;" title="Solana → camt.053 field mapping reference">Field Mapping ↗</a>
-                <span class="footer-divider">·</span>
-                <a href="field-mapping-faq.html" target="_blank" style="color:var(--accent); text-decoration:none;" title="Solana ↔ ISO 20022 FAQ">FAQ ↗</a>
             </div>
         </div>
         <div class="footer-disclaimer">
@@ -858,6 +862,39 @@ let walletState = {
 };
 
 let allReports = [];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DEMO HIGHLIGHT — visual focus indicator for presentations
+// ═══════════════════════════════════════════════════════════════════════════════
+
+(function initDemoHighlight() {
+    // Highlight step sections on any interaction inside them
+    document.addEventListener('focusin', function(e) {
+        const section = e.target.closest('.section[data-step]');
+        if (section) highlightSection(section);
+    });
+    document.addEventListener('click', function(e) {
+        const section = e.target.closest('.section[data-step]');
+        if (section) highlightSection(section);
+
+        // CTA cards: brief highlight on click
+        const cta = e.target.closest('[data-cta]');
+        if (cta) {
+            const inner = cta.querySelector('div');
+            if (inner) {
+                inner.classList.add('demo-highlight-brief');
+                setTimeout(() => inner.classList.remove('demo-highlight-brief'), 1200);
+            }
+        }
+    });
+})();
+
+function highlightSection(activeSection) {
+    document.querySelectorAll('.section[data-step]').forEach(s => {
+        s.classList.remove('demo-highlight');
+    });
+    activeSection.classList.add('demo-highlight');
+}
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // THEME
