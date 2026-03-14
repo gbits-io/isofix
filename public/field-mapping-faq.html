@@ -232,11 +232,41 @@
     <div class="subtitle">Frequently asked questions about how ISOFIX maps Solana blockchain data to ISO 20022 banking messages (camt.053, camt.054, pain.001, semt.002).</div>
   </header>
 
+  <!-- ═══ ISO 20022 ADOPTION ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">ISO 20022 Adoption</div>
+
+    <div class="faq-item open">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Which payment systems use ISO 20022?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>As of mid-2026, virtually every major payment rail worldwide has migrated to ISO 20022 or is in the final stages:</p>
+        <table>
+          <tr><th>System</th><th>Region</th><th>Status</th></tr>
+          <tr><td><strong>SWIFT CBPR+</strong></td><td>Global</td><td>Fully live since Nov 2025 — all cross-border interbank messages now use ISO 20022</td></tr>
+          <tr><td><strong>SIC / SIC IP</strong></td><td>Switzerland</td><td>Live since 2017 — one of the earliest adopters. Instant Payments included</td></tr>
+          <tr><td><strong>TARGET2</strong></td><td>Eurozone</td><td>Live since Mar 2023 — ECB's RTGS for high-value euro payments</td></tr>
+          <tr><td><strong>SEPA</strong></td><td>Europe</td><td>Live — the standard for all euro credit transfers and direct debits</td></tr>
+          <tr><td><strong>Fedwire</strong></td><td>USA</td><td>Live since Jul 2025 — Federal Reserve's high-value RTGS</td></tr>
+          <tr><td><strong>CHIPS</strong></td><td>USA</td><td>Live since Apr 2024 — US interbank clearing</td></tr>
+          <tr><td><strong>CHAPS</strong></td><td>UK</td><td>Live since Jun 2023 — Bank of England high-value payments</td></tr>
+          <tr><td><strong>Lynx</strong></td><td>Canada</td><td>Live since 2023 — Canada's high-value system</td></tr>
+          <tr><td><strong>RITS</strong></td><td>Australia</td><td>Live since early 2023 — Reserve Bank of Australia's RTGS</td></tr>
+        </table>
+        <p><strong>Coming next:</strong> Canada's Real-Time Rail (Q3 2026), Japan's Zengin 8th generation system, and Australia's BECS retirement in favor of the ISO-compliant NPP.</p>
+        <div class="highlight"><strong>Nov 2026 hard deadline:</strong> SWIFT, SIC, and SEPA will reject payments without structured postal addresses (Town + Country). This makes the CBPR+ structured address fields in ISOFIX's <code>Ownr/PstlAdr</code> forward-looking — they're required, not optional, for the next compliance milestone.</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══ TRANSACTION REFERENCES ═══ -->
   <div class="faq-section">
     <div class="faq-section-title">Transaction References &amp; Identifiers</div>
 
-    <div class="faq-item open">
+    <div class="faq-item">
       <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
         <span class="q-marker">Q</span>
         Why are Solana transaction signatures truncated to 35 characters?
