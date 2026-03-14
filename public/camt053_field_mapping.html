@@ -336,8 +336,13 @@
         </tr>
         <tr>
           <td><span class="xpath">Acct/Ownr/Nm</span></td>
-          <td><span class="solana-field">wallet address</span></td>
-          <td>The connected Solana wallet public key, truncated to 70 chars.<div class="note">e.g. <code>G1F...abc</code></div></td>
+          <td><span class="ui-field">#owner-name</span></td>
+          <td>User-entered account owner name. Falls back to Solana wallet address if empty.<div class="note">e.g. <code>Felix Muster</code> or <code>Muster AG</code></div></td>
+        </tr>
+        <tr>
+          <td><span class="xpath">Acct/Ownr/PstlAdr</span></td>
+          <td><span class="ui-field">#owner-street, #owner-bldg, #owner-zip, #owner-town, #owner-country</span></td>
+          <td>Optional CBPR+ structured postal address. Includes <code>StrtNm</code>, <code>BldgNb</code>, <code>PstCd</code>, <code>TwnNm</code>, <code>Ctry</code>. Only generated if at least one address field is filled.<div class="note">e.g. Hugo street 12, 8050 Zürich, CH</div></td>
         </tr>
         <tr>
           <td><span class="xpath">Acct/Svcr/FinInstnId/BICFI</span></td>

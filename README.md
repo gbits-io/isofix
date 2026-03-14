@@ -8,6 +8,14 @@ Bridge stablecoin transactions on Solana to the banking world's native language.
 
 Built by [Gbits.io](https://gbits.io) for [StableHacks: Building Institutional Stablecoin Infrastructure on Solana](https://dorahacks.io/hackathon/stablehacks/tracks) (Deadline: 2026/03/22).
 
+
+[![License: BSL 1.1](https://img.shields.io/badge/Code-BSL%201.1-green)](LICENSE)
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/Docs-CC%20BY--NC--SA%204.0-blue)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
+[![Solana](https://img.shields.io/badge/Solana-Devnet-9945ff)](https://explorer.solana.com/?cluster=devnet)
+[![Hackathon](https://img.shields.io/badge/Hackathon-Stablehacks%20Q1%202026-f59e0b)]()
+[![Zero Build](https://img.shields.io/badge/Zero_Dependencies-No_Build_Step-22c55e)]()
+
+
 ---
 
 ## What it does

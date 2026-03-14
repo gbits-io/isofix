@@ -578,10 +578,48 @@
             </div>
         </div>
 
-        <!-- Step 4: Date Range -->
+        <!-- Step 4: Account Owner -->
         <div class="section">
             <div class="step-header">
                 <span class="step-num">4</span>
+                <span class="step-label">Account Owner <span style="font-size:11px;font-weight:400;color:var(--text-muted);">(optional)</span></span>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:12px;flex-wrap:wrap;">
+                <span style="font-size:11px;color:var(--text-muted);line-height:1.4;">Appears as the account holder in generated reports. If empty, the Solana wallet address is used.</span>
+                <button type="button" onclick="fillDemoOwner()" style="white-space:nowrap;padding:6px 12px;background:var(--bg-input);color:var(--text-label);border:1px solid var(--border-input);border-radius:6px;cursor:pointer;font-size:11px;font-family:'JetBrains Mono',monospace;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--accent-border2)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border-input)';this.style.color='var(--text-label)'" title="Fill with: Felix Muster, Hugo street 12, 8050 Zürich, CH">Use Demo Name</button>
+            </div>
+            <div class="field-row">
+                <div class="field-group">
+                    <label class="label">Name</label>
+                    <input type="text" class="input" id="owner-name" placeholder="e.g. Felix Muster or Muster AG" />
+                </div>
+                <div class="field-group">
+                    <label class="label">Street &amp; Number</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" class="input" id="owner-street" placeholder="e.g. Hugo street" style="flex:3;" />
+                        <input type="text" class="input" id="owner-bldg" placeholder="12" style="flex:1;min-width:50px;" />
+                    </div>
+                </div>
+            </div>
+            <div class="field-row" style="margin-top:10px;">
+                <div class="field-group">
+                    <label class="label">Postal Code &amp; Town</label>
+                    <div style="display:flex;gap:8px;">
+                        <input type="text" class="input" id="owner-zip" placeholder="8050" style="flex:1;min-width:70px;" />
+                        <input type="text" class="input" id="owner-town" placeholder="Zürich" style="flex:3;" />
+                    </div>
+                </div>
+                <div class="field-group">
+                    <label class="label">Country (ISO 3166)</label>
+                    <input type="text" class="input" id="owner-country" placeholder="CH" maxlength="2" style="max-width:80px;text-transform:uppercase;" />
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Date Range -->
+        <div class="section">
+            <div class="step-header">
+                <span class="step-num">5</span>
                 <span class="step-label">Statement Period</span>
             </div>
             <div class="field-row">
@@ -602,10 +640,10 @@
             </div>
         </div>
 
-        <!-- Step 5: Message Type -->
+        <!-- Step 6: Message Type -->
         <div class="section" style="border-bottom:none; margin-bottom:0; padding-bottom:0;">
             <div class="step-header">
-                <span class="step-num">5</span>
+                <span class="step-num">6</span>
                 <span class="step-label">Report Type</span>
             </div>
             <select class="select" id="msg-type" onchange="onMsgTypeChange()">
@@ -910,6 +948,31 @@ function setDateRange(preset) {
     }
     document.getElementById('date-start').value = fmtDate(start);
     document.getElementById('date-end').value = fmtDate(end);
+}
+
+function fillDemoOwner() {
+    document.getElementById('owner-name').value = 'Felix Muster';
+    document.getElementById('owner-street').value = 'Hugo street';
+    document.getElementById('owner-bldg').value = '12';
+    document.getElementById('owner-zip').value = '8050';
+    document.getElementById('owner-town').value = 'Zürich';
+    document.getElementById('owner-country').value = 'CH';
+}
+
+// Returns owner info for XML generation. Falls back to wallet address if no name set.
+function getOwnerInfo(fallbackAddress) {
+    const name = document.getElementById('owner-name')?.value?.trim() || '';
+    const street = document.getElementById('owner-street')?.value?.trim() || '';
+    const bldg = document.getElementById('owner-bldg')?.value?.trim() || '';
+    const zip = document.getElementById('owner-zip')?.value?.trim() || '';
+    const town = document.getElementById('owner-town')?.value?.trim() || '';
+    const country = document.getElementById('owner-country')?.value?.trim().toUpperCase() || '';
+    return {
+        name: name || trunc(fallbackAddress, 70),
+        hasName: !!name,
+        street, bldg, zip, town, country,
+        hasAddress: !!(street || town || country),
+    };
 }
 
 function fmtDateTime(d) {
@@ -1234,12 +1297,13 @@ async function fetchStablecoinTxns(address, startDate, endDate) {
 // CAMT.053 XML GENERATOR
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function generateCamt053(address, currency, entries, startDate, endDate, stmtId, iban) {
+function generateCamt053(address, currency, entries, startDate, endDate, stmtId, iban, ownerInfo) {
     const now = new Date();
     const creDtTm = fmtDateTime(now);
     const fromDt = fmtDate(startDate);
     const toDt = fmtDate(endDate);
     const msgId = ('GBITS' + currency + fromDt.replace(/-/g,'') + Date.now()).substring(0, 35);
+    const ownr = ownerInfo || { name: trunc(address, 70), hasAddress: false };
 
     let totalCredit = 0, totalDebit = 0, numCredits = 0, numDebits = 0;
     entries.forEach(e => {
@@ -1371,7 +1435,14 @@ function generateCamt053(address, currency, entries, startDate, endDate, stmtId,
                 </Id>
                 <Ccy>${currency}</Ccy>
                 <Ownr>
-                    <Nm>${escXml(trunc(address, 70))}</Nm>
+                    <Nm>${escXml(ownr.name)}</Nm>${ownr.hasAddress ? `
+                    <PstlAdr>${ownr.street ? `
+                        <StrtNm>${escXml(ownr.street)}</StrtNm>` : ''}${ownr.bldg ? `
+                        <BldgNb>${escXml(ownr.bldg)}</BldgNb>` : ''}${ownr.zip ? `
+                        <PstCd>${escXml(ownr.zip)}</PstCd>` : ''}${ownr.town ? `
+                        <TwnNm>${escXml(ownr.town)}</TwnNm>` : ''}${ownr.country ? `
+                        <Ctry>${escXml(ownr.country)}</Ctry>` : ''}
+                    </PstlAdr>` : ''}
                 </Ownr>
                 <Svcr>
                     <FinInstnId>
@@ -1528,6 +1599,7 @@ async function handleGenerate() {
 
         const newReports = [];
         const ts = Date.now();
+        const ownerInfo = getOwnerInfo(address);
 
         if (msgType === 'bai2') {
             // BAI2: combine all currencies into one file
@@ -1538,7 +1610,7 @@ async function handleGenerate() {
             if (allEntries.length === 0) { showError('error-box', 'No entries to generate.'); resetGenerateBtn(); return; }
             allEntries.sort((a, b) => a.timestamp - b.timestamp);
 
-            const bai2Text = generateBAI2(address, allEntries, startDate, endDate, iban);
+            const bai2Text = generateBAI2(address, allEntries, startDate, endDate, iban, ownerInfo);
             const filename = `bai2_${fmtDate(startDate)}_${fmtDate(endDate)}.bai2`;
             const blob = new Blob([bai2Text], { type: 'text/plain' });
             const url = URL.createObjectURL(blob);
@@ -1562,13 +1634,13 @@ async function handleGenerate() {
                 const stmtId = `GBITS-STMT-${currency}-${fmtDate(startDate)}-${ts}`;
 
                 if (msgType === 'camt.054.001.08') {
-                    const xml = generateCamt054(address, currency, entries, startDate, endDate, stmtId, iban);
+                    const xml = generateCamt054(address, currency, entries, startDate, endDate, stmtId, iban, ownerInfo);
                     const filename = `camt054_${currency}_${fmtDate(startDate)}_${fmtDate(endDate)}.xml`;
                     const blob = new Blob([xml], { type: 'application/xml' });
                     const url = URL.createObjectURL(blob);
                     newReports.push({ id: `${ts}-${currency}`, filename, url, xml, currency, reportType: '054', entries: entries.length, totalCredit: entries.filter(e => e.direction === 'CRDT').reduce((s, e) => s + e.amount, 0), totalDebit: entries.filter(e => e.direction === 'DBIT').reduce((s, e) => s + e.amount, 0), generated: new Date(), dateRange: `${fmtDate(startDate)} — ${fmtDate(endDate)}` });
                 } else {
-                    const xml = generateCamt053(address, currency, entries, startDate, endDate, stmtId, iban);
+                    const xml = generateCamt053(address, currency, entries, startDate, endDate, stmtId, iban, ownerInfo);
                     const filename = `camt053_${currency}_${fmtDate(startDate)}_${fmtDate(endDate)}.xml`;
                     const blob = new Blob([xml], { type: 'application/xml' });
                     const url = URL.createObjectURL(blob);
@@ -1867,10 +1939,11 @@ function viewXml(idx) {
 // camt.054.001.08 GENERATOR
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function generateCamt054(address, currency, entries, startDate, endDate, ntfctnId, iban) {
+function generateCamt054(address, currency, entries, startDate, endDate, ntfctnId, iban, ownerInfo) {
     const now = new Date();
     const creationDateTime = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
     const useIban = iban.replace(/\s/g, '') || 'CH0000000000000000000';
+    const ownr = ownerInfo || { name: trunc(address, 70), hasAddress: false };
     const totalCredit = entries.filter(e => e.direction === 'CRDT').reduce((s, e) => s + e.amount, 0);
     const totalDebit = entries.filter(e => e.direction === 'DBIT').reduce((s, e) => s + e.amount, 0);
 
@@ -1936,6 +2009,21 @@ function generateCamt054(address, currency, entries, startDate, endDate, ntfctnI
             <Acct>
                 <Id><IBAN>${useIban}</IBAN></Id>
                 <Ccy>${currency}</Ccy>
+                <Ownr>
+                    <Nm>${escXml(ownr.name)}</Nm>${ownr.hasAddress ? `
+                    <PstlAdr>${ownr.street ? `
+                        <StrtNm>${escXml(ownr.street)}</StrtNm>` : ''}${ownr.bldg ? `
+                        <BldgNb>${escXml(ownr.bldg)}</BldgNb>` : ''}${ownr.zip ? `
+                        <PstCd>${escXml(ownr.zip)}</PstCd>` : ''}${ownr.town ? `
+                        <TwnNm>${escXml(ownr.town)}</TwnNm>` : ''}${ownr.country ? `
+                        <Ctry>${escXml(ownr.country)}</Ctry>` : ''}
+                    </PstlAdr>` : ''}
+                </Ownr>
+                <Svcr>
+                    <FinInstnId>
+                        <BICFI>SOLNCHZZXXX</BICFI>
+                    </FinInstnId>
+                </Svcr>
             </Acct>${entriesXml}
         </Ntfctn>
     </BkToCstmrDbtCdtNtfctn>
@@ -2032,15 +2120,16 @@ function generateSemt002(address, holdings, reportDate) {
 // BAI2 GENERATOR — Bank Administration Institute v2 (United States)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function generateBAI2(address, entries, startDate, endDate, iban) {
+function generateBAI2(address, entries, startDate, endDate, iban, ownerInfo) {
     const acctId = iban ? iban.replace(/\s/g, '') : trunc(address, 23);
+    const ownr = ownerInfo || { name: trunc(address, 14), hasAddress: false };
     const now = new Date();
     const fileDateYYMMDD = now.toISOString().substring(2, 10).replace(/-/g, '');
     const fileTimeHHMM = now.toISOString().substring(11, 16).replace(':', '');
     const stmtDateYYMMDD = startDate.toISOString().substring(2, 10).replace(/-/g, '');
     const fileId = 'GBITS' + Date.now().toString().substring(5);
     const senderId = 'GBITSISOFIX';
-    const receiverId = trunc(address, 14);
+    const receiverId = trunc(ownr.name.replace(/[^A-Za-z0-9 ]/g, '').replace(/\s+/g, '_'), 14);
 
     let totalCredit = 0, totalDebit = 0;
     entries.forEach(e => {
@@ -2482,6 +2571,7 @@ function simulateInboundPayment() {
         const dateStr = now.toISOString().substring(0, 10);
         const ntfctnId = 'GBITS-RT-' + coin.currency + '-' + Date.now();
         const address = walletState.publicKey || 'G1F8yoKQjnEqKj5EXAMPLE12345678901234';
+        const rtOwner = getOwnerInfo(address);
 
         const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.08" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:camt.054.001.08 camt.054.001.08.ch.02.xsd">
@@ -2502,7 +2592,7 @@ function simulateInboundPayment() {
             <Acct>
                 <Id><IBAN>${escXml(iban)}</IBAN></Id>
                 <Ccy>${coin.currency}</Ccy>
-                <Ownr><Nm>${escXml(trunc(address, 70))}</Nm></Ownr>
+                <Ownr><Nm>${escXml(rtOwner.name)}</Nm>${rtOwner.hasAddress ? `<PstlAdr>${rtOwner.street ? `<StrtNm>${escXml(rtOwner.street)}</StrtNm>` : ''}${rtOwner.bldg ? `<BldgNb>${escXml(rtOwner.bldg)}</BldgNb>` : ''}${rtOwner.zip ? `<PstCd>${escXml(rtOwner.zip)}</PstCd>` : ''}${rtOwner.town ? `<TwnNm>${escXml(rtOwner.town)}</TwnNm>` : ''}${rtOwner.country ? `<Ctry>${escXml(rtOwner.country)}</Ctry>` : ''}</PstlAdr>` : ''}</Ownr>
                 <Svcr><FinInstnId><BICFI>SOLNCHZZXXX</BICFI></FinInstnId></Svcr>
             </Acct>
             <Ntry>

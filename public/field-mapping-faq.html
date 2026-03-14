@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISOFIX FAQ — Solana ↔ ISO 20022 Mapping</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect width='36' height='36' rx='8' fill='%230A1628'/><path d='M8 18h6l3-8 4 16 3-8h4' stroke='%2322D3EE' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #0B1120;
+    --bg-card: #111B2E;
+    --bg-row: #162236;
+    --bg-highlight: #1E3350;
+    --border: #2A3F5F;
+    --border-accent: #3A5A8A;
+    --text: #C8D6E5;
+    --text-muted: #7B8FA8;
+    --text-bright: #E8EEF4;
+    --accent: #22D3EE;
+    --accent-dim: rgba(34,211,238,0.12);
+    --purple: #A78BFA;
+    --green: #14F195;
+    --amber: #F59E0B;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', 'Outfit', sans-serif;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .container { max-width: 920px; margin: 0 auto; padding: 32px 24px 60px; }
+
+  header {
+    margin-bottom: 40px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+  header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-bright);
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+  }
+  header h1 .accent { color: var(--accent); }
+  header .subtitle {
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* ── FAQ Items ── */
+  .faq-section {
+    margin-bottom: 40px;
+  }
+  .faq-section-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-bright);
+    padding: 10px 16px;
+    background: var(--bg-highlight);
+    border-left: 3px solid var(--border-accent);
+    border-radius: 0 6px 6px 0;
+    margin-bottom: 16px;
+    letter-spacing: 0.3px;
+  }
+
+  .faq-item {
+    margin-bottom: 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  .faq-q {
+    padding: 16px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--accent);
+    cursor: pointer;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    transition: background 0.2s;
+    user-select: none;
+  }
+  .faq-q:hover { background: rgba(34,211,238,0.03); }
+  .faq-q .q-marker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--bg-deep);
+    background: var(--accent);
+    border-radius: 4px;
+    padding: 1px 6px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+  .faq-q .chevron {
+    margin-left: auto;
+    flex-shrink: 0;
+    transition: transform 0.25s;
+    color: var(--text-muted);
+  }
+  .faq-item.open .faq-q .chevron { transform: rotate(180deg); }
+
+  .faq-a {
+    display: none;
+    padding: 0 20px 20px;
+    font-size: 13.5px;
+    color: var(--text);
+    line-height: 1.7;
+    border-top: 1px solid rgba(42,63,95,0.4);
+  }
+  .faq-item.open .faq-a { display: block; padding-top: 16px; }
+
+  .faq-a p { margin-bottom: 12px; }
+  .faq-a p:last-child { margin-bottom: 0; }
+
+  .faq-a code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    background: rgba(34,211,238,0.08);
+    color: var(--accent);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  .faq-a .xml-block {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(42,63,95,0.4);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    line-height: 1.6;
+    margin: 12px 0;
+    color: #B8C7D8;
+    white-space: pre;
+  }
+  .faq-a .xml-block .tag { color: var(--accent); }
+  .faq-a .xml-block .attr { color: var(--amber); }
+  .faq-a .xml-block .val { color: var(--purple); }
+  .faq-a .xml-block .cmt { color: var(--text-muted); font-style: italic; }
+
+  .faq-a .highlight {
+    background: rgba(34,211,238,0.06);
+    border-left: 3px solid var(--accent);
+    padding: 10px 14px;
+    border-radius: 0 6px 6px 0;
+    margin: 12px 0;
+    font-size: 13px;
+  }
+
+  .faq-a table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 12.5px;
+  }
+  .faq-a th {
+    text-align: left;
+    padding: 8px 12px;
+    background: var(--bg-highlight);
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .faq-a td {
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(42,63,95,0.3);
+    color: var(--text);
+  }
+  .faq-a tr:hover td { background: rgba(34,211,238,0.02); }
+
+  /* Footer */
+  footer {
+    margin-top: 48px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  footer a { color: var(--green); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .container { padding: 16px 12px 40px; }
+    header h1 { font-size: 20px; }
+    .faq-q { font-size: 13px; padding: 14px 16px; }
+    .faq-a { font-size: 13px; padding: 0 16px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation Header -->
+<div style="border-bottom:1px solid #2A3F5F;background:rgba(11,17,32,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:sticky;top:0;z-index:100;padding:0 24px;">
+  <div style="max-width:920px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 0;">
+    <a href="index.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;" title="Back to ISOFIX">
+      <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#0A1628"/><path d="M8 18h6l3-8 4 16 3-8h4" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="28" cy="10" r="3" fill="#22D3EE" opacity="0.6"/></svg>
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:#E8EEF4;letter-spacing:-0.02em;">Gbits.io</div>
+        <div style="font-size:11px;color:#7B8FA8;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;text-transform:uppercase;margin-top:1px;">ISOFIX</div>
+      </div>
+    </a>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <a href="camt053_field_mapping.html" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#7B8FA8;text-decoration:none;padding:6px 12px;border:1px solid #2A3F5F;border-radius:8px;transition:all 0.2s;" onmouseover="this.style.color='#14F195';this.style.borderColor='rgba(20,241,149,0.3)';this.style.background='rgba(20,241,149,0.05)'" onmouseout="this.style.color='#7B8FA8';this.style.borderColor='#2A3F5F';this.style.background=''">Field Mapping</a>
+      <a href="flows.html" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#7B8FA8;text-decoration:none;padding:6px 12px;border:1px solid #2A3F5F;border-radius:8px;transition:all 0.2s;" onmouseover="this.style.color='#14F195';this.style.borderColor='rgba(20,241,149,0.3)';this.style.background='rgba(20,241,149,0.05)'" onmouseout="this.style.color='#7B8FA8';this.style.borderColor='#2A3F5F';this.style.background=''">Message Flow</a>
+      <a href="index.html" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#7B8FA8;text-decoration:none;padding:6px 12px;border:1px solid #2A3F5F;border-radius:8px;transition:all 0.2s;" onmouseover="this.style.color='#14F195';this.style.borderColor='rgba(20,241,149,0.3)';this.style.background='rgba(20,241,149,0.05)'" onmouseout="this.style.color='#7B8FA8';this.style.borderColor='#2A3F5F';this.style.background=''">Open App</a>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+  <header>
+    <h1>Solana ↔ ISO 20022 — <span class="accent">FAQ</span></h1>
+    <div class="subtitle">Frequently asked questions about how ISOFIX maps Solana blockchain data to ISO 20022 banking messages (camt.053, camt.054, pain.001, semt.002).</div>
+  </header>
+
+  <!-- ═══ TRANSACTION REFERENCES ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Transaction References &amp; Identifiers</div>
+
+    <div class="faq-item open">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Why are Solana transaction signatures truncated to 35 characters?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>A Solana transaction signature is 88 characters long (base58-encoded). However, the ISO 20022 schema enforces a <strong>maximum of 35 characters</strong> for most identifier fields, including <code>MsgId</code>, <code>AcctSvcrRef</code>, and <code>EndToEndId</code>. This is a hard constraint in the XSD — any value longer than 35 characters would make the XML invalid.</p>
+        <p>ISOFIX truncates to the first 35 characters rather than hashing because:</p>
+        <p>• The first 35 characters of a base58 signature already have extremely low collision probability — base58 gives ~5.86 bits of entropy per character, so 35 chars ≈ 205 bits.<br>
+        • Truncation preserves a prefix that can be searched on block explorers (paste the 35 chars into Solscan and it will find the transaction).<br>
+        • A hash would be opaque — you couldn't trace it back to the on-chain transaction without a lookup table.</p>
+        <div class="xml-block"><span class="cmt">&lt;!-- Solana signature (88 chars) --&gt;</span>
+CmyC8a6EamKVQsBwxZqwMu44ML2TH8FWPCUvknY6Cqb3tjzZmtFp7h4iBmfQhrMKhecU56SY7RBHsSim8tBgAwx
+
+<span class="cmt">&lt;!-- Truncated to 35 chars for ISO 20022 --&gt;</span>
+<span class="tag">&lt;AcctSvcrRef&gt;</span>CmyC8a6EamKVQsBwxZqwMu44ML2TH8FWPCU<span class="tag">&lt;/AcctSvcrRef&gt;</span></div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Why is the Solana signature used for both AcctSvcrRef and EndToEndId?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>In traditional banking, these are two different references: the bank assigns its own reference (<code>AcctSvcrRef</code> — the account servicer's reference), while the originator's reference (<code>EndToEndId</code>) travels from sender to receiver.</p>
+        <p>On Solana, there is no bank assigning a separate reference. The transaction signature <strong>is</strong> the universal identifier — it serves as both the "bank's reference" and the "end-to-end reference." That's why ISOFIX uses the same value for both fields.</p>
+        <p>This is actually more transparent than traditional banking: one immutable, publicly verifiable reference instead of two separate IDs in different systems.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        What is GrpHdr/MsgId and why isn't it a Solana signature?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p><code>GrpHdr/MsgId</code> is the <strong>message</strong> identifier — it identifies the camt.053 file itself, not any individual transaction. A single camt.053 can contain dozens or hundreds of transactions, so it can't be a single Solana signature.</p>
+        <p>ISOFIX generates this as a synthetic ID combining the currency, date, and a timestamp: <code>GBITSCHF202501011710345678</code>. It's unique per generated file. The individual Solana signatures live at the entry level inside <code>Ntry/AcctSvcrRef</code> and <code>NtryDtls/TxDtls/Refs/EndToEndId</code>.</p>
+        <div class="highlight">Think of it this way: <code>MsgId</code> identifies the envelope. <code>AcctSvcrRef</code> identifies each letter inside the envelope.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ACCOUNT & INSTITUTION ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Account &amp; Institution Identification</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        What is SOLNCHZZXXX and why does it look like a SWIFT/BIC code?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p><code>SOLNCHZZXXX</code> is a <strong>synthetic BIC</strong> (Bank Identifier Code) that ISOFIX uses as the Account Servicer. It's not registered with SWIFT — no one can route a real payment to it. It exists because the ISO 20022 schema requires a <code>BICFI</code> element in the <code>Acct/Svcr/FinInstnId</code> block, and it must follow the valid BIC format.</p>
+        <p>Breaking it down following the SWIFT structure:</p>
+        <table>
+          <tr><th>Part</th><th>Value</th><th>Meaning</th></tr>
+          <tr><td>Institution</td><td><code>SOLN</code></td><td>Solana Network</td></tr>
+          <tr><td>Country</td><td><code>CH</code></td><td>Switzerland (Gbits.io is Zürich-based)</td></tr>
+          <tr><td>Location</td><td><code>ZZ</code></td><td>Default / unspecified</td></tr>
+          <tr><td>Branch</td><td><code>XXX</code></td><td>Head office</td></tr>
+        </table>
+        <p>The <code>CH</code> country code positions the report in a Swiss context, which matters for SPS compliance and Bexio import. For a US-focused deployment, you might use <code>SOLNUS33XXX</code> instead.</p>
+        <div class="highlight">Some strict ERP systems validate BICs against the SWIFT directory. If a system rejects <code>SOLNCHZZXXX</code>, the planned customization profiles would let the company override the servicer BIC.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Why does a Solana wallet address appear as the Account Owner name?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>By default, ISOFIX uses the Solana wallet address (e.g., <code>JBL2idfXZJpsaErVMYRut8fDdwXntJD7fUNJpnaUCmS6</code>) as the <code>Acct/Ownr/Nm</code> because that's the only on-chain identity available. Solana has no built-in name registry for wallet addresses.</p>
+        <p>Since v2025.03, ISOFIX provides an optional <strong>"Account Owner"</strong> field in the UI (Step 4) where you can enter a human-readable name and a structured CBPR+ postal address. When filled in, the generated XML includes:</p>
+        <div class="xml-block"><span class="tag">&lt;Ownr&gt;</span>
+    <span class="tag">&lt;Nm&gt;</span>Felix Muster<span class="tag">&lt;/Nm&gt;</span>
+    <span class="tag">&lt;PstlAdr&gt;</span>
+        <span class="tag">&lt;StrtNm&gt;</span>Hugo street<span class="tag">&lt;/StrtNm&gt;</span>
+        <span class="tag">&lt;BldgNb&gt;</span>12<span class="tag">&lt;/BldgNb&gt;</span>
+        <span class="tag">&lt;PstCd&gt;</span>8050<span class="tag">&lt;/PstCd&gt;</span>
+        <span class="tag">&lt;TwnNm&gt;</span>Zürich<span class="tag">&lt;/TwnNm&gt;</span>
+        <span class="tag">&lt;Ctry&gt;</span>CH<span class="tag">&lt;/Ctry&gt;</span>
+    <span class="tag">&lt;/PstlAdr&gt;</span>
+<span class="tag">&lt;/Ownr&gt;</span></div>
+        <p>Future integrations with <strong>swiyu E-ID</strong> or <strong>vLEI</strong> could populate this automatically from cryptographically attested identity credentials.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Why is the IBAN field optional? Can I use a Solana address instead?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>The IBAN field exists to <strong>link the generated statement to a specific bank account in your ERP</strong> (e.g., Bexio). When you import a camt.053, Bexio matches it to a bank account by IBAN. Without an IBAN, the import may fail or require manual assignment.</p>
+        <p>If you leave the IBAN empty, ISOFIX falls back to placing the Solana wallet address in <code>Acct/Id/Othr/Id</code> instead of <code>Acct/Id/IBAN</code>. This is schema-compliant but may not be recognized by all ERP systems.</p>
+        <div class="xml-block"><span class="cmt">&lt;!-- With IBAN --&gt;</span>
+<span class="tag">&lt;Acct&gt;&lt;Id&gt;&lt;IBAN&gt;</span>LI21088100002324013AA<span class="tag">&lt;/IBAN&gt;&lt;/Id&gt;&lt;/Acct&gt;</span>
+
+<span class="cmt">&lt;!-- Without IBAN (fallback) --&gt;</span>
+<span class="tag">&lt;Acct&gt;&lt;Id&gt;&lt;Othr&gt;&lt;Id&gt;</span>JBL2idfXZJpsaErVMYRut8fDdwXntJD7fUN<span class="tag">&lt;/Id&gt;&lt;/Othr&gt;&lt;/Id&gt;&lt;/Acct&gt;</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ BALANCES ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Balances</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Why is the opening balance always 0.00?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>The <code>OPBD</code> (Opening Booked Balance) represents the account balance at the start of the statement period. A real bank carries this over from the previous statement's closing balance.</p>
+        <p>ISOFIX doesn't carry state between statements — it has no record of your previous closing balance. Querying the historical token balance at a specific Solana slot is technically possible but most RPC providers don't retain this data affordably.</p>
+        <p>For Bexio import, this works fine — Bexio uses the individual entries and the closing balance, and doesn't cross-check the opening balance against a previous statement. But it's a known simplification.</p>
+        <div class="highlight">The closing balance (<code>CLBD</code>) is calculated correctly as the net of all credits minus debits in the statement period.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ TRANSACTION CODES ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Transaction Codes &amp; Classification</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        What do PMNT, ICDT, RCDT, and ESCT mean?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>These are the ISO 20022 <strong>Bank Transaction Codes</strong> that classify each entry. They tell the ERP what kind of transaction this is:</p>
+        <table>
+          <tr><th>Code</th><th>Level</th><th>Meaning</th></tr>
+          <tr><td><code>PMNT</code></td><td>Domain</td><td>Payment — this is a money transfer</td></tr>
+          <tr><td><code>ICDT</code></td><td>Family</td><td>Issued Credit Transfer — you sent a payment (debit)</td></tr>
+          <tr><td><code>RCDT</code></td><td>Family</td><td>Received Credit Transfer — you received a payment (credit)</td></tr>
+          <tr><td><code>ESCT</code></td><td>Sub-Family</td><td>European SEPA Credit Transfer</td></tr>
+        </table>
+        <p>ISOFIX automatically selects <code>ICDT</code> for outgoing (DBIT) and <code>RCDT</code> for incoming (CRDT) transactions. The <code>ESCT</code> sub-family is used because Swiss accounting software expects SEPA-style transaction codes for domestic and European payments.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Why is BookgDt always the same as ValDt?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>In traditional banking, the <strong>booking date</strong> (<code>BookgDt</code>) is when the transaction was recorded by the bank, and the <strong>value date</strong> (<code>ValDt</code>) is when the money was effectively transferred. These can differ by days (e.g., T+1 or T+2 settlement).</p>
+        <p>On Solana, settlement is instant — when a transaction is confirmed in a block, it's immediately final. There is no settlement delay. So both dates use the block timestamp, and they're always identical.</p>
+        <p>This is actually an advantage: Solana's instant finality means no ambiguity about when a payment "really" happened.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Why is RvslInd always false?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p><code>RvslInd</code> (Reversal Indicator) marks whether a transaction is a reversal of a previous one. In banking, a payment can be recalled or reversed under certain conditions (e.g., SEPA Direct Debit reversals).</p>
+        <p>On Solana, transactions are <strong>irreversible by design</strong>. Once a block is confirmed, it cannot be undone. There is no chargeback, no recall, no reversal mechanism at the protocol level. So this flag is always <code>false</code>.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ REMITTANCE & QR REFERENCES ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Remittance Information &amp; QR References</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        How does the Swiss QR reference get from Solana into the camt.053?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>When a payment is made via Gbits Pay against a Swiss QR invoice, the QR reference is embedded in the Solana transaction's <strong>SPL Memo</strong> with a <code>QRR:</code> prefix (e.g., <code>QRR:210000000003139471430009017</code>).</p>
+        <p>ISOFIX detects this prefix and maps it to the <strong>structured remittance information</strong> block:</p>
+        <div class="xml-block"><span class="tag">&lt;RmtInf&gt;</span>
+    <span class="tag">&lt;Strd&gt;</span>
+        <span class="tag">&lt;CdtrRefInf&gt;</span>
+            <span class="tag">&lt;Tp&gt;&lt;CdOrPrtry&gt;&lt;Prtry&gt;</span>QRR<span class="tag">&lt;/Prtry&gt;&lt;/CdOrPrtry&gt;&lt;/Tp&gt;</span>
+            <span class="tag">&lt;Ref&gt;</span>210000000003139471430009017<span class="tag">&lt;/Ref&gt;</span>
+        <span class="tag">&lt;/CdtrRefInf&gt;</span>
+    <span class="tag">&lt;/Strd&gt;</span>
+<span class="tag">&lt;/RmtInf&gt;</span></div>
+        <p>This is the standard location where Swiss ERP systems (Bexio, SAP, Abacus) look for the QR reference. When the camt.053 is imported, the ERP <strong>automatically matches the payment to the open invoice</strong> via this reference — no manual reconciliation needed.</p>
+        <div class="highlight">This is the key round-trip: QR invoice → stablecoin payment with memo → camt.053 with structured reference → automatic invoice matching in accounting software.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        What happens to the remittance info when there's no QR reference?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>When the memo doesn't start with <code>QRR:</code>, ISOFIX falls back to <strong>unstructured remittance information</strong>:</p>
+        <div class="xml-block"><span class="tag">&lt;RmtInf&gt;</span>
+    <span class="tag">&lt;Ustrd&gt;</span>SOL-VCHF CmyC8a6EamKVQsBwxZqwMu44ML2TH8FWPCU...<span class="tag">&lt;/Ustrd&gt;</span>
+<span class="tag">&lt;/RmtInf&gt;</span></div>
+        <p>This concatenates the stablecoin label (e.g., <code>SOL-VCHF</code>) with the full Solana transaction signature, providing a provenance trail even without a structured reference. The field is capped at 140 characters per the schema.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ STABLECOINS & CURRENCIES ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Stablecoins &amp; Currency Mapping</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        How does ISOFIX determine the currency from a stablecoin?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>Each stablecoin has a unique SPL token <strong>mint address</strong> on Solana. ISOFIX maintains a mapping from mint address to ISO 4217 currency code:</p>
+        <table>
+          <tr><th>Token</th><th>Mint (first 12 chars)</th><th>Currency</th></tr>
+          <tr><td>USDC</td><td><code>EPjFWdd5Aufq...</code></td><td>USD</td></tr>
+          <tr><td>USDT</td><td><code>Es9vMFrzaCER...</code></td><td>USD</td></tr>
+          <tr><td>PYUSD</td><td><code>2b1kV6DkPAnx...</code></td><td>USD</td></tr>
+          <tr><td>EURC</td><td><code>HzwqbKZw8HxM...</code></td><td>EUR</td></tr>
+          <tr><td>EUROe</td><td><code>2VhjJ9WxaGC3...</code></td><td>EUR</td></tr>
+          <tr><td>VCHF</td><td><code>AhhdRu5YZdjV...</code></td><td>CHF</td></tr>
+        </table>
+        <p>Multiple stablecoins with the same currency are grouped into a single camt.053 report. For example, USDC and USDT transactions both appear in the USD report.</p>
+        <div class="highlight">The stablecoin token mint is not currently included in the XML output. A future version may add it as a <code>&lt;Prtry&gt;</code> proprietary reference for full on-chain traceability.</div>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Why does one wallet generate multiple camt.053 files?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>ISOFIX generates <strong>one camt.053 per currency</strong>. If your wallet has both USDC (USD) and VCHF (CHF) transactions in the selected period, you'll get two files: <code>camt053_USD_...</code> and <code>camt053_CHF_...</code>.</p>
+        <p>This matches how traditional banks work — a CHF bank account produces a CHF statement, a USD account produces a USD statement. Each camt.053 has a single <code>Ccy</code> in its <code>Acct</code> block.</p>
+        <p>The BAI2 format works differently — it combines all currencies into one file.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PAIN.001 ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">pain.001 — Payment Execution</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        How does ISOFIX resolve an IBAN to a Solana address?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>ISOFIX uses <strong>Solana Name Service (SNS)</strong> subdomain lookups via the <code>verified-iban.sol</code> domain. Each verified IBAN is registered as a subdomain:</p>
+        <div class="xml-block"><span class="cmt">IBAN: CH5204835012345671000</span>
+  ↓ normalize to lowercase
+<span class="val">ch5204835012345671000</span>.verified-iban.sol
+  ↓ SNS resolution (Bonfida API)
+<span class="tag">Solana address: 4dcVxYLg8ofyC9tbUvS4JBV7nBMUsHN1hTHmzU1BJy7Y</span></div>
+        <p>The <code>verified-iban.sol</code> domain is owned by the project. IBAN subdomains are registered manually after the wallet owner verifies their IBAN ownership. This is a trust bottleneck in the current design — a future version could use swiyu E-ID or bank-issued verifiable credentials to automate the verification.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ COMPLIANCE & STANDARDS ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Compliance &amp; Standards</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Which ISO 20022 versions and Swiss Payment Standards does ISOFIX support?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <table>
+          <tr><th>Message</th><th>Schema</th><th>Standard</th><th>Note</th></tr>
+          <tr><td>camt.053</td><td>camt.053.001.04</td><td>SPS 2009 / 1.7</td><td>Bank-to-customer statement</td></tr>
+          <tr><td>camt.054</td><td>camt.054.001.08</td><td>SPS 2024 / 2.1</td><td>Debit/credit notification, instant payment structure</td></tr>
+          <tr><td>pain.001</td><td>pain.001.001.03</td><td>SPS 2009 Swiss</td><td>Supports SIX and ISO namespaces</td></tr>
+          <tr><td>semt.002</td><td>semt.002.001.11</td><td>ISO 2019</td><td>Uses <code>&lt;BlckChainAdrOrWllt&gt;</code> element</td></tr>
+          <tr><td>BAI2</td><td>BAI v2</td><td>BAI 2005</td><td>US bank statement format (non-ISO 20022)</td></tr>
+        </table>
+        <p>Bexio import has been validated for camt.053 and camt.054 (February 2026), including duplicate detection across message types.</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        What does SPS/1.7/PROD in AddtlInf mean?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>This is the <strong>Swiss Payment Standards version identifier</strong>. It tells the receiving system which SPS version the file conforms to:</p>
+        <p>• <code>SPS/1.7/PROD</code> — used in camt.053, meaning SPS version 1.7, production mode<br>
+        • <code>SPS/2.1/PROD</code> — used in camt.054, meaning SPS version 2.1 (the 2024 update with structured status codes and datetime booking dates)</p>
+        <p>Swiss banks and ERP systems use this to apply the correct parsing rules. The <code>PROD</code> suffix distinguishes production from test files (<code>TEST</code>).</p>
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Is ISOFIX "ISO 20022 compliant"?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>The generated XML validates against the official ISO 20022 XSD schemas. The Swiss Payment Standards compliance is followed for camt.053 (SPS 1.7), camt.054 (SPS 2.1), and pain.001 (SPS 2009 Swiss flavor). Import into Bexio has been tested successfully.</p>
+        <p>However, "compliance" is not a binary property. Some fields use synthetic values (<code>SOLNCHZZXXX</code> as BIC, wallet addresses as counterparty names) that are schema-valid but unconventional. A strict compliance audit by a Swiss bank would likely flag these as non-standard, which is expected — ISOFIX is translating between two fundamentally different financial systems.</p>
+        <div class="highlight">ISO 20022 compliance is an integration layer, not a blockchain property. ISOFIX provides that layer for Solana.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ COUNTERPARTIES ═══ -->
+  <div class="faq-section">
+    <div class="faq-section-title">Counterparties &amp; Related Parties</div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+        <span class="q-marker">Q</span>
+        Why does the creditor/debtor name show a Solana address?
+        <svg class="chevron" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+      <div class="faq-a">
+        <p>For outgoing payments, <code>RltdPties/Cdtr/Nm</code> shows the recipient's Solana wallet address. For incoming payments, <code>RltdPties/Dbtr/Nm</code> shows the sender's address. This is because Solana addresses are pseudonymous — there's no on-chain mapping from address to human name.</p>
+        <p>In the future, this could be enriched via:</p>
+        <p>• <strong>SNS reverse lookup</strong> — if the counterparty has a <code>.sol</code> domain, use it as the name<br>
+        • <strong>swiyu E-ID</strong> — if the counterparty has a verified identity, display their legal name<br>
+        • <strong>Company address book</strong> — a local mapping maintained by the user</p>
+        <p>For now, the address is functional if not pretty — and it's always verifiable on-chain.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <span>ISOFIX FAQ · <a href="https://gbits.io">Gbits.io</a> — Solana ↔ ISO 20022 gateway</span>
+    <span>Built for <a href="https://dorahacks.io/hackathon/stablehacks/tracks" target="_blank">StableHacks 2026</a> · <a href="https://github.com/gbits-io/isofix" target="_blank">GitHub</a></span>
+  </footer>
+</div>
+</body>
+</html>
