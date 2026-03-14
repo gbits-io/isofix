@@ -467,7 +467,7 @@
 <div class="container" style="padding-top:16px;">
     <div style="background:var(--amber-bg);border:1px solid var(--amber-border);border-radius:10px;padding:12px 20px;font-size:13px;color:var(--amber-text);display:flex;align-items:center;gap:10px;">
         <span style="font-size:18px;">⚠</span>
-        <span><strong style="color:var(--amber-text-strong);">Work in progress</strong> — This gateway is under active development. The pain.001 payment execution feature is experimental. Use at your own risk and with small amounts only.</span>
+        <span><strong style="color:var(--amber-text-strong);">Work in progress</strong> — The pain.001 payment execution feature is experimental. Use at your own risk and with small amounts only.</span>
     </div>
 </div>
 
@@ -487,29 +487,41 @@
 
 <!-- Documentation CTAs -->
 <div class="container" style="margin-bottom:28px;">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-        <a href="flows.html" target="_blank" style="text-decoration:none;display:block;" data-cta="flow">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;">
+        <a href="flows.html" style="text-decoration:none;display:block;" data-cta="flow">
             <div style="background:var(--bg-card);border:1px solid var(--accent-border2);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all 0.2s;cursor:pointer;height:100%;" onmouseover="this.style.borderColor='var(--accent-border3)';this.style.boxShadow='0 4px 20px rgba(8,145,178,0.08)'" onmouseout="this.style.borderColor='';this.style.boxShadow=''">
                 <div style="width:40px;height:40px;border-radius:10px;background:var(--accent-bg3);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                 </div>
                 <div style="flex:1;min-width:0;">
                     <div style="font-size:14px;font-weight:600;color:var(--text-heading);margin-bottom:2px;">Message Flow</div>
-                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Animated architecture diagram</div>
+                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Animated architecture</div>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" style="flex-shrink:0;"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
             </div>
         </a>
-        <a href="camt053_field_mapping.html" target="_blank" style="text-decoration:none;display:block;" data-cta="mapping">
+        <a href="camt053_field_mapping.html" style="text-decoration:none;display:block;" data-cta="mapping">
             <div style="background:var(--bg-card);border:1px solid var(--purple-border);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all 0.2s;cursor:pointer;height:100%;" onmouseover="this.style.borderColor='var(--accent-border3)';this.style.boxShadow='0 4px 20px rgba(124,58,237,0.08)'" onmouseout="this.style.borderColor='';this.style.boxShadow=''">
                 <div style="width:40px;height:40px;border-radius:10px;background:var(--purple-bg2);border:1px solid var(--purple-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="12" y2="17"/></svg>
                 </div>
                 <div style="flex:1;min-width:0;">
                     <div style="font-size:14px;font-weight:600;color:var(--text-heading);margin-bottom:2px;">Field Mapping</div>
-                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Solana → camt.053 XML reference</div>
+                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Solana → camt.053 XML</div>
                 </div>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2" style="flex-shrink:0;"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
+            </div>
+        </a>
+        <a href="field-mapping-faq.html" style="text-decoration:none;display:block;" data-cta="faq">
+            <div style="background:var(--bg-card);border:1px solid var(--green-border);border-radius:14px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all 0.2s;cursor:pointer;height:100%;" onmouseover="this.style.borderColor='var(--accent-border3)';this.style.boxShadow='0 4px 20px rgba(5,150,105,0.08)'" onmouseout="this.style.borderColor='';this.style.boxShadow=''">
+                <div style="width:40px;height:40px;border-radius:10px;background:var(--green-bg);border:1px solid var(--green-border);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                </div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:14px;font-weight:600;color:var(--text-heading);margin-bottom:2px;">FAQ</div>
+                    <div style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;">Solana ↔ ISO 20022</div>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2" style="flex-shrink:0;"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
             </div>
         </a>
     </div>
@@ -677,7 +689,7 @@
                 ℹ BAI2 is the standard bank statement format used by US accounting software (QuickBooks, NetSuite, Oracle, SAP). Generates a fixed-width text file from your stablecoin transactions.
             </div>
             <div id="camt053-hint" style="font-size:11px;color:#A0B3C8;margin-top:8px;line-height:1.5;">
-                📄 <a href="camt053_field_mapping.html" target="_blank" style="color:#22D3EE; text-decoration:none; border-bottom:1px dotted #22D3EE;">View field mapping</a> — how Solana on-chain data maps to each camt.053 XML element.
+                📄 <a href="camt053_field_mapping.html" style="color:#22D3EE; text-decoration:none; border-bottom:1px dotted #22D3EE;">View field mapping</a> — how Solana on-chain data maps to each camt.053 XML element.
             </div>
         </div>
 
@@ -693,7 +705,7 @@
     </div>
 
     <!-- Reports -->
-    <div id="reports-section" class="reports-card" style="display:none">
+    <div id="reports-section" class="reports-card" style="display:none" data-step="reports">
         <h2 class="reports-title">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22D3EE" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             Generated Reports
@@ -815,7 +827,9 @@
                 <span class="footer-divider">·</span>
                 <span>camt.053 · camt.054 · semt.002 · pain.001</span>
                 <span class="footer-divider">·</span>
-                <a href="camt053_field_mapping.html" target="_blank" style="color:var(--accent); text-decoration:none;" title="Solana → camt.053 field mapping reference">Field Mapping ↗</a>
+                <a href="camt053_field_mapping.html" style="color:var(--accent); text-decoration:none;" title="Solana → camt.053 field mapping reference">Field Mapping ↗</a>
+                <span class="footer-divider">·</span>
+                <a href="field-mapping-faq.html" style="color:var(--accent); text-decoration:none;" title="Solana ↔ ISO 20022 FAQ">FAQ ↗</a>
             </div>
         </div>
         <div class="footer-disclaimer">
@@ -1745,7 +1759,6 @@ function renderReports() {
                 <a href="${r.url}" download="${r.filename}" class="download-btn" onclick="return tryDownload(event, ${idx})">↓ Download</a>
                 <button class="download-btn" onclick="viewXml(${idx})" title="View formatted XML">&lt;/&gt; View</button>
                 <button class="download-btn" onclick="copyXml(${idx})" title="Copy XML to clipboard">📋 Copy</button>
-                <button class="download-btn" onclick="emailXml(${idx})" title="Send via email">✉ Email</button>
             </div>
         </div>`;
     }).join('');
