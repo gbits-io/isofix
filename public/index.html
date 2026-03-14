@@ -1204,19 +1204,21 @@ async function lookupDomainsForAddress(address) {
     try {
         let domains = [];
 
-        // Primary: SNS SDK proxy (new URL as of 2025)
+        // Primary: SNS API v2 — returns domain names directly
+        // Docs: https://docs.sns.id/dev/sns-api/users
         try {
-            const resp = await fetch(`https://sdk-proxy.sns.id/domains/${address}`);
+            const resp = await fetch(`https://sns-api.bonfida.com/v2/user/domains/${address}`);
             if (resp.ok) {
                 const data = await resp.json();
-                const result = data.result || data;
+                // Response format: { "address": ["domain1", "domain2"] }
+                const result = data[address];
                 if (Array.isArray(result)) {
                     domains = result.slice(0, 5);
                 }
             }
-        } catch(e) {}
+        } catch(e) { console.log('SNS API v2 error:', e); }
 
-        // Fallback: favourite-domain endpoint
+        // Fallback: SDK proxy favourite-domain
         if (domains.length === 0) {
             try {
                 const resp2 = await fetch(`https://sdk-proxy.sns.id/favourite-domain/${address}`);
@@ -1224,10 +1226,11 @@ async function lookupDomainsForAddress(address) {
                     const data2 = await resp2.json();
                     const d = data2.result;
                     if (d) {
-                        domains = [typeof d === 'string' ? d : (d.domain || '')].filter(Boolean);
+                        const name = typeof d === 'string' ? d : (d.domain || '');
+                        if (name) domains = [name];
                     }
                 }
-            } catch(e2) {}
+            } catch(e2) { console.log('SNS favourite-domain error:', e2); }
         }
 
         if (domains.length === 0) {
