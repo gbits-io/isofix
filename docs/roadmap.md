@@ -1,6 +1,6 @@
 # ISOFIX Roadmap
 
-**Last updated:** 2026-03-11
+**Last updated:** 2026-03-14
 
 ---
 
@@ -114,7 +114,7 @@
 | 5.11 | **Progress indicator for transaction fetching** | Large wallets with hundreds of transactions can take 30+ seconds. Show a progress bar or counter ("Fetching page 3/7...") instead of just a spinner |
 | 5.12 | **Persist generated reports across tab switches** | Reports disappear if the user switches tabs and comes back. Store in a JS variable (already done for `allReports`) but the re-render is lost. Ensure `renderReports()` is called on tab switch |
 | 5.13 | **QR code: add amount and SPL token parameters** | The current `solana:{address}` URI could include `?amount=100&spl-token={mint}` so the sender's wallet pre-fills the stablecoin and amount. Requires upgrading the QR encoder to handle longer URIs |
-| 5.14 | **Dark/light theme toggle** | Some users (especially in banking) may prefer a light theme for presentations or printing |
+| 5.14 | ~~**Dark/light theme toggle**~~ | ✅ DONE (2026-03-14). Light is default. CSS custom properties for all colors. Toggle in header. Persisted in localStorage |
 | 5.15 | **Keyboard shortcuts** | Escape already closes the XML modal. Add more: `Ctrl+G` to generate, `Ctrl+1/2/3` to switch tabs |
 
 ### Code Quality
@@ -147,6 +147,13 @@
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-03-14 | Add BAI2 report type | Broadens appeal beyond Swiss/European market. US companies use BAI2 for QuickBooks, NetSuite, Oracle, SAP |
+| 2026-03-14 | Add structured account owner (CBPR+) | Makes camt.053/054 output look professional. Includes PstlAdr with StrtNm/BldgNb/PstCd/TwnNm/Ctry |
+| 2026-03-14 | SNS API migration to sns-api.bonfida.com | Old proxy at sns-sdk-proxy.bonfida.workers.dev deprecated. SDK proxy moved to sdk-proxy.sns.id. Reverse lookup uses SNS API v2 which returns domain names directly |
+| 2026-03-14 | Demo highlight feature for presentations | Pulsing amber border follows user interaction through form sections. Helps observers during live demos |
+| 2026-03-14 | FAQ page (field-mapping-faq.html) | 16 questions covering ISO 20022 mapping decisions (truncation, BIC, balances, QR references, etc.) |
+| 2026-03-14 | Internal links open in same tab | Message Flow, Field Mapping, FAQ no longer open new browser tabs |
+| 2026-03-14 | Light theme as default | More professional for presentations and hackathon judges |
 | 2026-03-11 | Use Cloudflare Workers (not Netlify Functions) | Shared across ISOFIX, AlpenSign, Gbits Pay. Durable Objects for stateful SSE. Edge deployment |
 | 2026-03-11 | KV polling for hackathon, Durable Objects later | KV polling is trivially simple for a demo. Migrate to DO for production real-time |
 | 2026-03-11 | Keep vanilla JS, no framework | Auditability by bank compliance officers. No build step. Single-file deployment |

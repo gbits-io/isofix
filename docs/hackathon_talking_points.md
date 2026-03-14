@@ -31,7 +31,9 @@ Show `flows.html` briefly — point at the two directions, mention on-demand is 
 
 4. **Show semt.002 custody report** — switch report type, generate. "This uses ISO 20022's native `BlckChainAdrOrWllt` element from the 2019 release. The standard already anticipated blockchain custody reporting — we're using it as designed."
 
-5. **Show Realtime tab** — simulate 1-2 inbound payments. "In production, a Helius webhook triggers this automatically when a stablecoin payment arrives. The camt.054 notification appears in seconds."
+5. **Show BAI2 report** — switch to BAI2 in the dropdown. "For US companies using QuickBooks, NetSuite, or Oracle — we also generate BAI2, the standard US bank statement format. Same on-chain data, different output format."
+
+6. **Show Realtime tab** — simulate 1-2 inbound payments. "In production, a Helius webhook triggers this automatically when a stablecoin payment arrives. The camt.054 notification appears in seconds."
 
 6. **Show pain.001 direction** — upload a sample file. "A standard Swiss payment file goes in, each IBAN resolves to a Solana address via SNS subdomains, and ISOFIX constructs SPL token transfers. The banking world's payment instruction becomes a blockchain transaction."
 
@@ -103,9 +105,14 @@ The XRP/Ripple community has long claimed that Ripple is "ISO 20022 compliant" a
 
 - [ ] Wallet with real stablecoin transaction history on mainnet (preferably multiple currencies)
 - [ ] A sample pain.001 XML file ready for upload
-- [ ] `iso.gbits.io` loaded and tested in advance (check wallet connection works)
-- [ ] `iso.gbits.io/flows.html` loaded in a separate tab
+- [ ] `iso.gbits.io` loaded and tested in advance (check wallet connection works, .sol domain lookup resolves)
+- [ ] "Use Demo Name" and "Use Demo IBAN" buttons working
+- [ ] Quick date filters tested (click "2025" or "2026" for fast selection)
+- [ ] BAI2 report type tested — generates `.bai2` file with proper record types
+- [ ] `iso.gbits.io/flows.html` ready (same tab, not new window)
+- [ ] `iso.gbits.io/field-mapping-faq.html` ready
 - [ ] Solscan open in a tab (to verify a transaction signature if asked)
 - [ ] Screen recording of Bexio round-trip as backup (30 seconds)
 - [ ] Slide deck with: flow diagram, field mapping highlights, Solana meets ISO 20022 comparison, what's next
-- [ ] Backup: ISOFIX-only demo can run entirely offline once the page is loaded (transactions are already fetched)
+- [ ] Demo highlight feature working — amber border follows cursor through form sections
+- [ ] Theme toggle tested — light theme is default, dark theme available via moon icon

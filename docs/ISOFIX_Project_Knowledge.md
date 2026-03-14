@@ -5,8 +5,8 @@
 > Part of the Gbits.io ecosystem, built for the **StableHacks 2026** hackathon on DoraHacks.
 
 **Owner:** Roman (romanix@gbits.io), Zürich
-**Last updated:** 2026-03-11
-**Repository/Deployment:** Hosted on Cloudflare Pages at `iso.gbits.io`
+**Last updated:** 2026-03-14
+**Repository/Deployment:** Hosted on Cloudflare Pages at `iso.gbits.io`, GitHub at `github.com/gbits-io/isofix`
 
 ---
 
@@ -14,9 +14,10 @@
 
 ISOFIX does three things:
 
-1. **Generate bank statements** (camt.053, camt.054) from on-chain Solana stablecoin transactions
+1. **Generate bank statements** (camt.053, camt.054, BAI2) from on-chain Solana stablecoin transactions
 2. **Execute bank payments** (pain.001) as on-chain Solana SPL token transfers
 3. **Receive real-time notifications** (camt.054) when inbound stablecoin payments arrive (planned: Helius webhook; current: simulated)
+4. **Generate custody reports** (semt.002) showing all SPL token holdings
 
 Everything runs client-side in the browser. There is no backend yet (a Cloudflare Worker is planned — see `ISOFIX_ServerSide_Plan.md`).
 
@@ -49,14 +50,14 @@ Everything runs client-side in the browser. There is no backend yet (a Cloudflar
               │                  │                        │
               ▼                  ▼                        ▼
     ┌──────────────────┐  ┌───────────┐  ┌──────────────────────────────┐
-    │   Helius RPC     │  │  Helius   │  │  Bonfida SNS Proxy           │
-    │   (API key in    │  │  Webhook  │  │  sns-sdk-proxy.bonfida.      │
-    │    client JS!)   │  │  (planned)│  │  workers.dev                 │
+    │   Helius RPC     │  │  Helius   │  │  SNS API / SDK Proxy         │
+    │   (API key in    │  │  Webhook  │  │  sns-api.bonfida.com         │
+    │    client JS!)   │  │  (planned)│  │  sdk-proxy.sns.id            │
     │                  │  │           │  │                              │
     │  • getSignatures │  │  • POST   │  │  Resolves:                   │
     │    ForAddress    │  │    on SPL │  │  {iban}.verified-iban.sol     │
     │  • parseTransac- │  │    token  │  │  → Solana wallet address     │
-    │    tions (DAS)   │  │    xfer   │  │                              │
+    │    tions (DAS)   │  │    xfer   │  │  Reverse: address → domains  │
     └────────┬─────────┘  └─────┬─────┘  └──────────────────────────────┘
              │                  │
              ▼                  ▼
@@ -79,25 +80,30 @@ Everything runs client-side in the browser. There is no backend yet (a Cloudflar
 
 | File | Size | What it is |
 |------|------|------------|
-| `index.html` | ~130KB | The entire application: HTML + CSS + JS in one file |
-| `isofix_flow.html` | ~32KB | Landing page animation showing the bidirectional message flow |
-| `camt053_field_mapping.html` | ~25KB | Reference table: Solana fields → camt.053 XML elements |
+| `index.html` | ~165KB | The entire application: HTML + CSS + JS in one file |
+| `flows.html` | ~36KB | Landing page animation showing the bidirectional message flow |
+| `camt053_field_mapping.html` | ~29KB | Reference table: Solana fields → camt.053 XML elements |
+| `field-mapping-faq.html` | ~36KB | FAQ page: 16 questions covering Solana ↔ ISO 20022 mapping decisions |
 | `ISOFIX_ServerSide_Plan.md` | ~12KB | Cloudflare Worker implementation plan and TODO list |
 | `ISOFIX_Project_Knowledge.md` | this file | Project knowledge for future sessions |
+| `hackathon_talking_points.md` | ~9KB | Demo script, talking points, and Q&A for StableHacks 2026 |
+| `roadmap.md` | ~11KB | 5-milestone roadmap |
 
 ---
 
 ## The Three Tabs in Detail
 
-### Tab 1: Generate Reports (camt.053, camt.054, semt.002)
+### Tab 1: Generate Reports (camt.053, camt.054, semt.002, BAI2)
 
 **User flow:**
 1. Connect Solana wallet (Phantom, Solflare, Backpack — or paste address manually)
 2. Verify wallet ownership via `signMessage` (optional but recommended)
-3. Enter IBAN (links the XML to a Bexio bank account) — "Use Demo IBAN" button fills `LI21088100002324013AA`
-4. Select date range
-5. Choose report type: camt.053 (statement), camt.054 (notification), or semt.002 (custody)
-6. Click Generate → app fetches stablecoin transactions from Helius → generates XML
+3. .sol domain reverse lookup — automatically queries `sns-api.bonfida.com/v2/user/domains/{address}` when wallet connects, displays owned domains as clickable badges
+4. Enter IBAN (links the XML to a Bexio bank account) — "Use Demo IBAN" button fills `LI21088100002324013AA`
+5. Account Owner (optional) — structured CBPR+ fields: name, street, building number, postal code, town, country. "Use Demo Name" fills Felix Muster, Hugo street 12, 8050 Zürich, CH. Populates `Acct/Ownr/Nm` and `Acct/Ownr/PstlAdr` in generated XML
+6. Select date range — quick filter buttons: "This month", "2026", "2025", "Last 30 days"
+7. Choose report type: camt.053 (statement), camt.054 (notification), semt.002 (custody), or BAI2 (US bank statement format)
+8. Click Generate → app fetches stablecoin transactions from Helius → generates XML or BAI2 text
 
 **How transaction fetching works:**
 - Calls Helius `getSignaturesForAddress` to get signature list in date range
@@ -107,11 +113,16 @@ Everything runs client-side in the browser. There is no backend yet (a Cloudflar
 
 **Key functions:**
 - `fetchStablecoinTxns()` — Helius RPC calls, pagination, date filtering
-- `generateCamt053()` — builds camt.053.001.04 XML (SPS/1.7)
-- `generateCamt054()` — builds camt.054.001.08 XML (SPS/2.1)
+- `generateCamt053()` — builds camt.053.001.04 XML (SPS/1.7), accepts ownerInfo for structured Ownr/PstlAdr
+- `generateCamt054()` — builds camt.054.001.08 XML (SPS/2.1), accepts ownerInfo
 - `generateSemt002()` — builds semt.002.001.11 XML (custody report of all SPL holdings)
+- `generateBAI2()` — builds BAI2 text file (US bank statement format, amounts in cents, BAI type codes 175/195/475/495)
+- `lookupDomainsForAddress()` — reverse SNS lookup via `sns-api.bonfida.com/v2/user/domains/{address}`
+- `getOwnerInfo()` — reads account owner form fields, returns structured object for XML generators
+- `setDateRange()` — quick date filter presets (thismonth, 2025, 2026, last30)
+- `showXmlModal()` — token-based XML syntax highlighter with BAI2 auto-detection and record-type colorizer
 
-**Report cards** appear below with: View (syntax-highlighted XML modal), Download, Copy, Email buttons.
+**Report cards** appear below with: View (syntax-highlighted XML/BAI2 modal), Download, Copy buttons.
 
 ### Tab 2: Realtime camt.054
 
@@ -153,6 +164,7 @@ Everything runs client-side in the browser. There is no backend yet (a Cloudflar
 | camt.054 | Solana → ERP | BankToCustomerDebitCreditNotification | camt.054.001.08 (SPS 2.1) |
 | semt.002 | Solana → ERP | SecuritiesBalanceCustodyReport | semt.002.001.11 |
 | pain.001 | ERP → Solana | CustomerCreditTransferInitiation | pain.001.001.03 (SPS 2009) |
+| BAI2 | Solana → ERP | Bank Administration Institute v2 (US) | BAI 2005 (non-ISO 20022) |
 
 **Swiss-specific conventions used:**
 - BIC `SOLNCHZZXXX` — synthetic BIC for "Solana Network, Zurich" (not a real SWIFT code)
@@ -186,7 +198,8 @@ VCHF    AhhdRu5Y...            CHF        ── Sole CHF stablecoin
 |------------|-------------|---------|
 | `@solana/web3.js` v1.95.8 | unpkg CDN | Transaction building, PublicKey, Connection |
 | Helius RPC | `mainnet.helius-rpc.com` | Transaction fetching and parsing |
-| Bonfida SNS Proxy | `sns-sdk-proxy.bonfida.workers.dev` | IBAN → Solana address resolution |
+| SNS API (Bonfida) | `sns-api.bonfida.com` | Reverse domain lookup: address → .sol domain names |
+| SNS SDK Proxy | `sdk-proxy.sns.id` | Forward resolution: domain → address, IBAN → Solana via verified-iban.sol |
 | Google Fonts | `fonts.googleapis.com` | Outfit (body), JetBrains Mono (code) |
 
 **No framework.** No React, no Vue, no build step. Everything is vanilla JS in a single HTML file. This is intentional — Roman wants the code to be auditable by bank compliance officers who can read plain JS.
@@ -205,13 +218,39 @@ VCHF    AhhdRu5Y...            CHF        ── Sole CHF stablecoin
 
 ---
 
+## UI Features Added (2026-03-14 Session)
+
+**Light/Dark Theme Toggle:** Light theme is the default. Moon/sun icon button in the header. All colors driven by ~50 CSS custom properties. Persisted in localStorage.
+
+**Demo Highlight (Presentation Mode):** Clicking or focusing any form section (Steps 1-6, Reports) triggers a pulsing amber border (`demoGlow` animation). Only one section is highlighted at a time. CTA cards (Message Flow, Field Mapping, FAQ) get a brief amber flash on click. Purpose: helps observers follow the presenter's actions during live demos.
+
+**Account Owner (CBPR+ Structured):** Step 4 in the form. Optional name + postal address fields. "Use Demo Name" button fills Felix Muster, Hugo street 12, 8050 Zürich, CH. Generates `<Ownr><Nm>` and optional `<PstlAdr>` with `<StrtNm>`, `<BldgNb>`, `<PstCd>`, `<TwnNm>`, `<Ctry>`. Used by camt.053, camt.054, BAI2, and the realtime simulator.
+
+**BAI2 Report Type:** US bank statement format. Combines all currencies into one file. Amounts in cents. Record types: 01 file header, 02 group header, 03 account, 16 transaction, 88 continuation, 49/98/99 trailers. BAI type codes: 195/175 (credits), 495/475 (debits). Custom syntax highlighter in the viewer color-codes record types.
+
+**Quick Date Filters:** "This month", "2026", "2025", "Last 30 days" buttons below the date range inputs.
+
+**Navigation:** All pages have consistent headers: "Gbits.io" → links to gbits.io, "Solana ISO 20022 Message Gateway" → links to iso.gbits.io/index.html. 3-column CTA grid: Message Flow, Field Mapping, FAQ. Footer includes Field Mapping ↗ and FAQ ↗ links.
+
+**pain.001 XML Viewer Fix:** `showPainXml()` now calls `showXmlModal()` (the proper token-based highlighter) instead of the old regex chain that was injecting `<span style>` into the raw XML.
+
+**SNS Domain Lookup:** `.sol` domain reverse lookup on wallet connect. Primary API: `sns-api.bonfida.com/v2/user/domains/{address}` (returns domain names directly). Fallback: `sdk-proxy.sns.id/favourite-domain/{address}`. The old `sns-sdk-proxy.bonfida.workers.dev` URLs are deprecated — all SNS proxy calls now use `sdk-proxy.sns.id`.
+
+**Open Graph / Twitter Card Meta Tags:** Added for social sharing. Image placeholder at `iso.gbits.io/images/og-image.png` (not yet created).
+
+**GitHub Link:** Octocat icon button in the header linking to `github.com/gbits-io/isofix`.
+
+---
+
 ## Known Issues and Gotchas
 
-**File truncation:** The `index.html` is ~130KB. During editing sessions, the file repeatedly gets truncated near the end (inside `sendPainPayment()`). Always verify the file ends with `</script></body></html>` after any edit.
+**File truncation:** The `index.html` is ~165KB. During editing sessions, the file repeatedly gets truncated near the end (inside `sendPainPayment()`). Always verify the file ends with `</script></body></html>` after any edit. The truncation happens at the same spot: `rend` (should be `renderPainTable();`).
 
-**Cloudflare artifacts:** When saving the HTML from the live Cloudflare-served site, Cloudflare injects `email-decode.min.js` (returns 404 locally, blocks JS execution) and obfuscates email addresses with `__cf_email__` spans. Never use a re-download from `iso.gbits.io` as source — always work from the local canonical copy.
+**Cloudflare artifacts:** When saving the HTML from the live Cloudflare-served site, Cloudflare injects `email-decode.min.js` (returns 404 locally, blocks JS execution) and obfuscates email addresses with `__cf_email__` spans. Never use a re-download from `iso.gbits.io` as source — always work from the local canonical copy. The fix: `sed` to remove the script tag and restore `mailto:romanix@gbits.io`.
 
-**Helius API key exposed:** The key `cf479a6e-8fe8-4363-ab5b-8898913fbaff` is in client JS. The planned Cloudflare Worker proxy (`/rpc`) will fix this.
+**SNS API migration:** The old Bonfida proxy at `sns-sdk-proxy.bonfida.workers.dev` is deprecated. Forward resolution uses `sdk-proxy.sns.id/resolve/{domain}`. Reverse lookup (address → domain names) uses `sns-api.bonfida.com/v2/user/domains/{address}`. The `/domains/{owner}` endpoint on the SDK proxy returns public keys of domain accounts (not names) — useless for display.
+
+**Helius API key exposed:** The key is in client JS. The planned Cloudflare Worker proxy (`/rpc`) will fix this.
 
 **Helius public endpoints deprecated:** Solana's public RPC endpoints (`api.mainnet-beta.solana.com`) now return HTTP 403 for browser-origin requests. All RPC calls must go through Helius. This was the migration that prompted the Helius integration.
 
