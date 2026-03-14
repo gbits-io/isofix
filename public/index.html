@@ -1202,44 +1202,32 @@ async function lookupDomainsForAddress(address) {
     const display = document.getElementById('sol-domains-display');
     display.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Looking up .sol domains...</span>';
     try {
-        // Try the Bonfida v2 API: /v2/user/domains/{address}
         let domains = [];
+
+        // Primary: SNS SDK proxy (new URL as of 2025)
         try {
-            const resp = await fetch(`https://sns-api.bonfida.com/v2/user/domains/${address}`);
+            const resp = await fetch(`https://sdk-proxy.sns.id/domains/${address}`);
             if (resp.ok) {
                 const data = await resp.json();
-                if (data.result && Array.isArray(data.result)) {
-                    domains = data.result.map(d => typeof d === 'string' ? d : (d.domain || d)).slice(0, 5);
+                const result = data.result || data;
+                if (Array.isArray(result)) {
+                    domains = result.slice(0, 5);
                 }
             }
         } catch(e) {}
 
-        // Fallback: try the older proxy endpoint
+        // Fallback: favourite-domain endpoint
         if (domains.length === 0) {
             try {
-                const resp2 = await fetch(`https://sns-sdk-proxy.bonfida.workers.dev/domains/${address}`);
+                const resp2 = await fetch(`https://sdk-proxy.sns.id/favourite-domain/${address}`);
                 if (resp2.ok) {
                     const data2 = await resp2.json();
-                    if (data2.result && Array.isArray(data2.result)) {
-                        domains = data2.result.slice(0, 5);
-                    } else if (Array.isArray(data2)) {
-                        domains = data2.slice(0, 5);
+                    const d = data2.result;
+                    if (d) {
+                        domains = [typeof d === 'string' ? d : (d.domain || '')].filter(Boolean);
                     }
                 }
             } catch(e2) {}
-        }
-
-        // Fallback: try favourite-domain endpoint
-        if (domains.length === 0) {
-            try {
-                const resp3 = await fetch(`https://sns-sdk-proxy.bonfida.workers.dev/favourite-domain/${address}`);
-                if (resp3.ok) {
-                    const data3 = await resp3.json();
-                    if (data3.result) {
-                        domains = [typeof data3.result === 'string' ? data3.result : (data3.result.domain || data3.result.stale || '')].filter(Boolean);
-                    }
-                }
-            } catch(e3) {}
         }
 
         if (domains.length === 0) {
@@ -1273,7 +1261,7 @@ async function resolveDomain(val) {
     const domain = val.replace(/\.sol$/i, '');
     document.getElementById('domain-spinner').style.display = 'inline';
     try {
-        const resp = await fetch(`https://sns-sdk-proxy.bonfida.workers.dev/resolve/${domain}`);
+        const resp = await fetch(`https://sdk-proxy.sns.id/resolve/${domain}`);
         if (!resp.ok) throw new Error('Could not resolve domain');
         const data = await resp.json();
         const addr = data.result || data.s === 'ok' && data.result;
@@ -2264,9 +2252,9 @@ function switchTab(tab) {
 function updatePainWalletStatus() {
     const el = document.getElementById('pain-wallet-status');
     if (walletState.connected && walletState.verified) {
-        el.innerHTML = `<div class="connected-badge"><span class="green-dot"></span>${walletState.walletName} · ${shortAddr(walletState.publicKey)}</div><span class="verified-badge" style="margin-left:8px;">✓ Verified</span>`;
+        el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><div class="connected-badge"><span class="green-dot"></span>${walletState.walletName} · ${shortAddr(walletState.publicKey)}</div><span class="verified-badge">✓ Verified</span></div>`;
     } else if (walletState.connected) {
-        el.innerHTML = `<div class="connected-badge"><span class="green-dot"></span>${walletState.walletName} · ${shortAddr(walletState.publicKey)}</div><span style="font-size:12px;color:#F59E0B;margin-left:8px;">Please verify wallet in "Generate Reports" tab</span>`;
+        el.innerHTML = `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><div class="connected-badge"><span class="green-dot"></span>${walletState.walletName} · ${shortAddr(walletState.publicKey)}</div><span style="font-size:12px;color:#F59E0B;">Please verify wallet in "Generate Reports" tab</span></div>`;
     } else {
         el.innerHTML = `<span style="font-size:13px;color:#A0B3C8;">Connect your wallet in the "Generate Reports" tab first.</span>`;
     }
@@ -2888,7 +2876,7 @@ function painSelectCoin(idx, coin) { painPayments[idx].selectedStablecoin = coin
 
 async function resolveIbanToSolana(iban) {
     const normalized = iban.replace(/\s/g, '').toLowerCase();
-    try { const resp = await fetch(`https://sns-sdk-proxy.bonfida.workers.dev/resolve/${normalized}.verified-iban`); if (!resp.ok) return null; const data = await resp.json(); return data.result || null; } catch (e) { return null; }
+    try { const resp = await fetch(`https://sdk-proxy.sns.id/resolve/${normalized}.verified-iban`); if (!resp.ok) return null; const data = await resp.json(); return data.result || null; } catch (e) { return null; }
 }
 
 async function resolveAllIbans() {
