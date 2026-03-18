@@ -213,6 +213,31 @@
     td, th { padding: 7px 8px; }
     h1 { font-size: 20px; }
   }
+  /* ═══ Transform Visual ═══ */
+  .transform-visual { margin-bottom: 32px; background: #0F1629; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+  .transform-header { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 14px 24px; border-bottom: 1px solid var(--border); font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace; font-size: 0.72rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em; }
+  .transform-header .arrow-gw { color: var(--accent-iso); font-size: 1rem; }
+  .transform-cols { display: grid; grid-template-columns: 1fr auto 1fr; min-height: 0; }
+  .transform-col { padding: 20px 22px; overflow-x: auto; }
+  .transform-col-label { font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace; font-size: 0.62rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .transform-col-label .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .label-sol { color: var(--accent-sol); } .label-sol .dot { background: var(--accent-sol); }
+  .label-iso { color: var(--accent-iso); } .label-iso .dot { background: var(--accent-iso); }
+  .transform-col pre { font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace; font-size: 0.68rem; line-height: 1.65; color: var(--text-muted); white-space: pre; margin: 0; }
+  .transform-col pre .key { color: var(--text-muted); }
+  .transform-col pre .val-sol { color: var(--accent-sol); }
+  .transform-col pre .val-iso { color: var(--accent-iso); }
+  .transform-col pre .val-str { color: #22D3EE; }
+  .transform-col pre .val-num { color: var(--accent-logic); }
+  .transform-col pre .tag { color: var(--accent-iso); }
+  .transform-col pre .attr { color: #22D3EE; }
+  .transform-mid { width: 1px; background: var(--border); position: relative; display: flex; align-items: center; justify-content: center; }
+  .transform-mid .gw-badge { position: absolute; background: var(--bg-deep); border: 1px solid rgba(20, 241, 149, 0.25); border-radius: 8px; padding: 6px 8px; font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace; font-size: 0.55rem; font-weight: 700; color: var(--accent-iso); writing-mode: vertical-rl; text-orientation: mixed; letter-spacing: 0.08em; text-transform: uppercase; }
+  @media (max-width: 800px) {
+    .transform-cols { grid-template-columns: 1fr; }
+    .transform-mid { width: 100%; height: 1px; flex-direction: row; }
+    .transform-mid .gw-badge { writing-mode: horizontal-tb; position: static; margin: 8px 0; }
+  }
 </style>
 </head>
 <body>
@@ -220,16 +245,15 @@
 <!-- Navigation Header -->
 <div style="border-bottom:1px solid #2A3F5F;background:rgba(11,17,32,0.95);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);position:sticky;top:0;z-index:100;padding:0 24px;">
   <div style="max-width:1280px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;padding:14px 0;">
-    <a href="index.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;" title="Back to Solana ISO 20022 Message Gateway">
+    <a href="index.html" style="display:flex;align-items:center;gap:12px;text-decoration:none;" title="Back to ISOFIX">
       <svg width="36" height="36" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#0A1628"/><path d="M8 18h6l3-8 4 16 3-8h4" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="28" cy="10" r="3" fill="#22D3EE" opacity="0.6"/></svg>
       <div>
-        <a href="https://gbits.io" target="_blank" style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:#E8EEF4;letter-spacing:-0.02em;text-decoration:none;">Gbits.io</a>
-        <div style="font-size:11px;color:#7B8FA8;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;text-transform:uppercase;margin-top:1px;"><a href="index.html" style="color:inherit;text-decoration:none;">Solana ISO 20022 Message Gateway</a></div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:600;color:#E8EEF4;letter-spacing:-0.02em;">Gbits.io</div>
+        <div style="font-size:11px;color:#7B8FA8;font-family:'JetBrains Mono',monospace;letter-spacing:0.04em;text-transform:uppercase;margin-top:1px;">ISOFIX</div>
       </div>
     </a>
     <div style="display:flex;align-items:center;gap:8px;">
       <a href="flows.html" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#7B8FA8;text-decoration:none;padding:6px 12px;border:1px solid #2A3F5F;border-radius:8px;transition:all 0.2s;" onmouseover="this.style.color='#14F195';this.style.borderColor='rgba(20,241,149,0.3)';this.style.background='rgba(20,241,149,0.05)'" onmouseout="this.style.color='#7B8FA8';this.style.borderColor='#2A3F5F';this.style.background=''">Message Flow</a>
-      <a href="field-mapping-faq.html" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#7B8FA8;text-decoration:none;padding:6px 12px;border:1px solid #2A3F5F;border-radius:8px;transition:all 0.2s;" onmouseover="this.style.color='#14F195';this.style.borderColor='rgba(20,241,149,0.3)';this.style.background='rgba(20,241,149,0.05)'" onmouseout="this.style.color='#7B8FA8';this.style.borderColor='#2A3F5F';this.style.background=''">FAQ</a>
       <a href="index.html" style="font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;color:#7B8FA8;text-decoration:none;padding:6px 12px;border:1px solid #2A3F5F;border-radius:8px;transition:all 0.2s;" onmouseover="this.style.color='#14F195';this.style.borderColor='rgba(20,241,149,0.3)';this.style.background='rgba(20,241,149,0.05)'" onmouseout="this.style.color='#7B8FA8';this.style.borderColor='#2A3F5F';this.style.background=''">Open App</a>
     </div>
   </div>
@@ -247,6 +271,51 @@
     <div class="legend-item"><div class="legend-dot" style="background: var(--accent-logic);"></div>Derived / computed</div>
     <div class="legend-item"><div class="legend-dot" style="background: #A78BFA;"></div>Fixed constant</div>
     <div class="legend-item"><div class="legend-dot iso"></div>camt.053 XML path</div>
+  </div>
+
+  <!-- ═══════ TRANSFORM VISUAL ═══════ -->
+  <div class="transform-visual">
+    <div class="transform-header">
+      <span>Solana Transaction</span>
+      <span class="arrow-gw">──▶</span>
+      <span>Gateway</span>
+      <span class="arrow-gw">──▶</span>
+      <span>ISO 20022 camt.053</span>
+    </div>
+    <div class="transform-cols">
+      <div class="transform-col">
+        <div class="transform-col-label label-sol"><span class="dot"></span> Solana RPC Response</div>
+<pre>{
+  <span class="key">"signature"</span>: <span class="val-sol">"4sGjMW1sU..."</span>,
+  <span class="key">"timestamp"</span>: <span class="val-num">1710892800</span>,
+  <span class="key">"tokenTransfers"</span>: [{
+    <span class="key">"mint"</span>: <span class="val-sol">"AhhdRu5Y...LFHsch"</span>,
+    <span class="key">"tokenAmount"</span>: <span class="val-num">1949.75</span>,
+    <span class="key">"fromUserAccount"</span>: <span class="val-sol">"7xKXtg2C..."</span>,
+    <span class="key">"toUserAccount"</span>: <span class="val-sol">"9mYR4jLe..."</span>
+  }],
+  <span class="key">"memo"</span>: <span class="val-str">"QRR:114908924020000001000000062"</span>
+}</pre>
+      </div>
+      <div class="transform-mid"><span class="gw-badge">Gateway</span></div>
+      <div class="transform-col">
+        <div class="transform-col-label label-iso"><span class="dot"></span> Generated camt.053 XML</div>
+<pre><span class="tag">&lt;BkToCstmrStmt&gt;</span>
+  <span class="tag">&lt;Stmt&gt;</span>
+    <span class="tag">&lt;Acct&gt;&lt;Id&gt;&lt;Othr&gt;&lt;Id&gt;</span><span class="val-sol">9mYR4jLe...</span><span class="tag">&lt;/Id&gt;</span>
+    <span class="tag">&lt;Ntry&gt;</span>
+      <span class="tag">&lt;Amt</span> <span class="attr">Ccy=</span><span class="val-str">"CHF"</span><span class="tag">&gt;</span><span class="val-num">1949.75</span><span class="tag">&lt;/Amt&gt;</span>
+      <span class="tag">&lt;CdtDbtInd&gt;</span>CRDT<span class="tag">&lt;/CdtDbtInd&gt;</span>
+      <span class="tag">&lt;BookgDt&gt;&lt;Dt&gt;</span>2025-03-20<span class="tag">&lt;/Dt&gt;&lt;/BookgDt&gt;</span>
+      <span class="tag">&lt;AcctSvcrRef&gt;</span><span class="val-sol">4sGjMW1sU...</span><span class="tag">&lt;/AcctSvcrRef&gt;</span>
+      <span class="tag">&lt;NtryDtls&gt;&lt;TxDtls&gt;&lt;RmtInf&gt;&lt;Strd&gt;</span>
+        <span class="tag">&lt;CdtrRefInf&gt;&lt;Ref&gt;</span><span class="val-str">114908924020000001000000062</span><span class="tag">&lt;/Ref&gt;</span>
+      <span class="tag">&lt;/Strd&gt;&lt;/RmtInf&gt;&lt;/TxDtls&gt;&lt;/NtryDtls&gt;</span>
+    <span class="tag">&lt;/Ntry&gt;</span>
+  <span class="tag">&lt;/Stmt&gt;</span>
+<span class="tag">&lt;/BkToCstmrStmt&gt;</span></pre>
+      </div>
+    </div>
   </div>
 
   <!-- ═══════ GROUP HEADER ═══════ -->

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Document xmlns="urn:iso:std:iso:20022:tech:xsd:pain.001.001.03" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <CstmrCdtTrfInitn>
+    <GrpHdr>
+      <MsgId>MSG-20260226-001</MsgId>
+      <CreDtTm>2026-02-26T10:15:00Z</CreDtTm>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>0.25</CtrlSum>
+      <InitgPty>
+        <Nm>Joe Doe</Nm>
+      </InitgPty>
+    </GrpHdr>
+    
+    <PmtInf>
+      <PmtInfId>PMT-ID-12345</PmtInfId>
+      <PmtMtd>TRF</PmtMtd>
+      <NbOfTxs>1</NbOfTxs>
+      <CtrlSum>0.25</CtrlSum>
+      <PmtTpInf>
+        <SvcLvl>
+          <Cd>SEPA</Cd>
+        </SvcLvl>
+      </PmtTpInf>
+      <ReqdExctnDt>2026-02-27</ReqdExctnDt>
+      <Dbtr>
+        <Nm>Joe Doe</Nm>
+        <PstlAdr>
+          <Ctry>CH</Ctry>
+          <AdrLine>Musterweg</AdrLine>
+          <AdrLine>4000 Bern</AdrLine>
+        </PstlAdr>
+      </Dbtr>
+      <DbtrAcct>
+        <Id>
+          <IBAN>CH1234567890123456789</IBAN> </Id>
+      </DbtrAcct>
+      <DbtrAgt>
+        <FinInstnId>
+          <BIC>UBSWCHZHXXX</BIC> </FinInstnId>
+      </DbtrAgt>
+      <ChrgBr>SLEV</ChrgBr>
+      
+      <CdtTrfTxInf>
+        <PmtId>
+          <EndToEndId>E2E-987654321</EndToEndId>
+        </PmtId>
+        <Amt>
+          <InstdAmt Ccy="CHF">0.25</InstdAmt>
+        </Amt>
+        <CdtrAgt>
+          <FinInstnId>
+            <ClrSysMmbId>
+              <ClrSysId>
+                <Cd>CHBCC</Cd>
+              </ClrSysId>
+              <MmbId>04835</MmbId> </ClrSysMmbId>
+          </FinInstnId>
+        </CdtrAgt>
+        <Cdtr>
+          <Nm>Max Mustermann</Nm>
+          <PstlAdr>
+            <Ctry>CH</Ctry>
+            <AdrLine>Dortstrasse 123</AdrLine>
+            <AdrLine>9403 Goldach</AdrLine>
+          </PstlAdr>
+        </Cdtr>
+        <CdtrAcct>
+          <Id>
+            <IBAN>CH5204835012345671000</IBAN>
+          </Id>
+        </CdtrAcct>
+        <RmtInf>
+          <Ustrd>63789348738</Ustrd>
+        </RmtInf>
+      </CdtTrfTxInf>
+    </PmtInf>
+  </CstmrCdtTrfInitn>
+</Document>
