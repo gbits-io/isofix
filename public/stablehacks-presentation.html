@@ -188,14 +188,14 @@ body::before {
 
 /* ═══ CALLOUT ═══ */
 .callout {
-  margin-top: 20px; background: rgba(153,69,255,0.06);
-  border: 1px solid rgba(153,69,255,0.15); border-radius: 12px;
-  padding: 18px 22px; font-size: 0.96rem; color: var(--text-mid); line-height: 1.7;
+  margin-top: 20px; background: rgba(20,241,149,0.06);
+  border: 2px solid rgba(20,241,149,0.4); border-radius: 12px;
+  padding: 20px 24px; font-size: 1.05rem; color: var(--text-mid); line-height: 1.7;
 }
 .callout strong { color: var(--text); }
 .callout .label {
   font-family: var(--mono); font-size: 0.6rem; font-weight: 700;
-  color: var(--sol-purple); text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--sol-green); text-transform: uppercase; letter-spacing: 0.1em;
   margin-bottom: 6px; display: block;
 }
 
@@ -219,13 +219,13 @@ body::before {
 .gateway-card > p { font-size: 0.98rem; color: var(--text-mid); line-height: 1.65; margin-bottom: 16px; max-width: 640px; }
 .msg-tags { display: flex; flex-wrap: wrap; gap: 6px; }
 .msg-tag {
-  font-family: var(--mono); font-size: 0.62rem; font-weight: 600;
-  padding: 4px 10px; border-radius: 6px;
+  font-family: var(--mono); font-size: 0.78rem; font-weight: 600;
+  padding: 8px 14px; border-radius: 8px;
   background: rgba(20,241,149,0.08); color: var(--sol-green);
-  border: 1px solid rgba(20,241,149,0.15);
+  border: 1.5px solid rgba(20,241,149,0.35);
 }
-.msg-tag.in { background: rgba(153,69,255,0.08); color: var(--sol-purple); border-color: rgba(153,69,255,0.15); }
-.msg-tag.securities { background: rgba(245,158,11,0.08); color: var(--amber); border-color: rgba(245,158,11,0.15); }
+.msg-tag.in { background: rgba(153,69,255,0.08); color: var(--sol-purple); border-color: rgba(153,69,255,0.35); }
+.msg-tag.securities { background: rgba(245,158,11,0.08); color: var(--amber); border-color: rgba(245,158,11,0.35); }
 
 /* ═══ TRANSFORM VISUAL ═══ */
 .transform-visual { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-top: 20px; }
@@ -315,6 +315,12 @@ body::before {
 .roadmap-card:nth-child(1)::before { background: var(--sol-green); }
 .roadmap-card:nth-child(2)::before { background: var(--sol-blue); }
 .roadmap-card:nth-child(3)::before { background: var(--sol-purple); }
+.roadmap-card.highlight {
+  background: rgba(20,241,149,0.08);
+  border: 2px solid rgba(20,241,149,0.4);
+  box-shadow: 0 0 24px rgba(20,241,149,0.1), inset 0 0 20px rgba(20,241,149,0.03);
+}
+.roadmap-card.highlight::before { height: 3px; }
 .roadmap-phase { font-family: var(--mono); font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
 .roadmap-card:nth-child(1) .roadmap-phase { color: var(--sol-green); }
 .roadmap-card:nth-child(2) .roadmap-phase { color: var(--sol-blue); }
@@ -548,7 +554,7 @@ body::before {
   <h2 class="stagger">ISO 20022 integration is a precondition for institutional stablecoin adoption</h2>
   <p class="stagger slide-sub">Stablecoins are fast and cheap. But companies can't adopt them until their ERP, accounting, and treasury systems understand stablecoin transactions.</p>
   <div class="stagger card-grid card-grid-2">
-    <div class="card"><div class="icon">📊</div><h3>ERP systems don't speak blockchain</h3><p>SAP, Oracle, Bexio, Abacus — they all import ISO 20022 XML. Solana transactions are invisible without a translation layer.</p></div>
+    <div class="card"><div class="icon">📊</div><h3>ERP and Accounting systems don't speak blockchain</h3><p>SAP, Oracle, Bexio, Abacus — they all import ISO 20022 XML. Solana transactions are invisible without a translation layer.</p></div>
     <div class="card"><div class="icon">🔒</div><h3>No open standard exists</h3><p>Ripple claims ISO 20022 alignment but provides no public tooling or message generation. Solana had nothing — until now.</p></div>
     <div class="card"><div class="icon">🧩</div><h3>No reference reconciliation</h3><p>Business payments rely on structured references (QR, SCOR) for automatic matching. Blockchain memos have no standard format.</p></div>
     <div class="card"><div class="icon">🏦</div><h3>TradFi → DeFi transition blocked</h3><p>Without ISO 20022 compatibility, companies face a binary choice: bank rails or crypto rails. The gateway makes them composable.</p></div>
@@ -709,7 +715,7 @@ body::before {
 <div class="slide" data-slide="6">
   <div class="stagger slide-tag">04 — Architecture</div>
   <h2 class="stagger">Single HTML file. Zero dependencies. Fully auditable.</h2>
-  <p class="stagger slide-sub">No React, no Node.js, no build tools. Open the file in a browser and it works.</p>
+  <p class="stagger slide-sub">No React, no Node.js, no build tools. Open the file in a browser and it works.<br>The field mapping is fully documented. It's super easy to modify the field mapping in ChatGPT or Claude Code.</p>
   <div class="stagger arch-box">
 <pre>┌──────────────┐         ┌────────────────────────────┐          ┌──────────────┐
 │  Solana      │ ──RPC──▶│  Solana ISO20022 Gateway   │────XML──▶│  ERP /       │
@@ -747,7 +753,7 @@ body::before {
   <div class="stagger slide-tag">06 — What's Next</div>
   <h2 class="stagger">Roadmap</h2>
   <div class="stagger card-grid card-grid-3" style="margin-top:24px;">
-    <div class="roadmap-card"><div class="roadmap-phase">Now — Hackathon</div><h3>Core Gateway</h3><p>camt.053 / camt.054 / semt.002 / BAI2 generation. pain.001 execution. QR reference reconciliation. Single-file, zero-dependency architecture.</p></div>
+    <div class="roadmap-card highlight"><div class="roadmap-phase">Now — Hackathon</div><h3>Core Gateway</h3><p>camt.053 / camt.054 / semt.002 / BAI2 generation. pain.001 execution. QR reference reconciliation. Single-file, zero-dependency architecture.</p></div>
     <div class="roadmap-card"><div class="roadmap-phase">Next — Q2 2026</div><h3>Production Hardening</h3><p>REST or GraphQL API for accepting pain.001 messages and delivering camt.053 / camt.054 messages. Cloudflare Workers RPC proxy. Webhook-based camt.054 notifications. Support client-specific mapping logic extensions.</p></div>
     <div class="roadmap-card"><div class="roadmap-phase">Future — Q3+ 2026</div><h3>Ecosystem Expansion</h3><p>Support additional ISO 20022 dialects (pacs, acmt). Deep-dive with ERP and accounting experts on integration patterns. Sounding on field mapping with industry experts. Multi-chain ISO 20022 support. Open standard for blockchain ↔ ISO 20022.</p></div>
   </div>
