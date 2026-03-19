@@ -1,0 +1,1122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Solana ISO 20022 Gateway — StableHacks 2026 Presentation</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'><rect width='36' height='36' rx='8' fill='%230A1628'/><path d='M8 18h6l3-8 4 16 3-8h4' stroke='%2322D3EE' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/></svg>" />
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #060D18;
+  --bg-card: rgba(15,26,46,0.9);
+  --bg-surface: #0F1629;
+  --text: #FFFFFF;
+  --text-mid: #D0D8E8;
+  --text-dim: #8090B0;
+  --border: rgba(255,255,255,0.06);
+  --border-light: rgba(255,255,255,0.1);
+  --sol-purple: #9945FF;
+  --sol-green: #14F195;
+  --sol-blue: #00D1FF;
+  --cyan: #22D3EE;
+  --amber: #F59E0B;
+  --font: 'Outfit', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.03;
+}
+
+/* ═══ SLIDE SYSTEM ═══ */
+.slide {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 60px 80px;
+  opacity: 0;
+  transform: translateX(60px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+  pointer-events: none;
+  z-index: 1;
+  overflow-y: auto;
+}
+.slide.active {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+  z-index: 10;
+}
+.slide.exit-left {
+  opacity: 0;
+  transform: translateX(-60px);
+}
+
+/* ═══ SLIDE NUMBER & NAV ═══ */
+.slide-nav {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(15,26,46,0.9);
+  border: 1px solid var(--border-light);
+  border-radius: 40px;
+  padding: 8px 16px;
+  backdrop-filter: blur(16px);
+}
+.slide-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s;
+  padding: 0;
+}
+.slide-dot.active { background: var(--sol-green); width: 24px; border-radius: 4px; }
+.slide-dot:hover { background: var(--text-mid); }
+.slide-counter {
+  font-family: var(--mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  margin-left: 8px;
+  min-width: 36px;
+  text-align: center;
+}
+
+/* ═══ KEYBOARD HINT ═══ */
+.key-hint {
+  position: fixed;
+  bottom: 24px;
+  right: 32px;
+  z-index: 100;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  opacity: 0.5;
+}
+.key-hint kbd {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: var(--mono);
+}
+
+/* ═══ LOGO BAR ═══ */
+.logo-bar {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 32px;
+  background: rgba(6,13,24,0.7);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.logo-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.logo-left a { text-decoration: none; }
+.logo-name { font-family: var(--mono); font-weight: 700; font-size: 1.1rem; color: var(--text); letter-spacing: -0.02em; }
+.logo-sub { font-family: var(--mono); font-size: 0.58rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 1px; }
+.logo-badge {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--sol-green);
+  border: 1px solid rgba(20,241,149,0.25); padding: 5px 14px; border-radius: 100px;
+}
+
+/* ═══ TYPOGRAPHY ═══ */
+.slide-tag {
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.14em;
+  color: var(--sol-purple); margin-bottom: 16px;
+  display: flex; align-items: center; gap: 10px;
+}
+.slide-tag::before { content: ''; width: 20px; height: 1px; background: var(--sol-purple); }
+.slide h1 {
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 800; line-height: 1.1;
+  letter-spacing: -0.04em; margin-bottom: 20px;
+}
+.slide h1 .accent {
+  background: linear-gradient(135deg, var(--sol-green), var(--sol-blue));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.slide h2 {
+  font-size: clamp(1.6rem, 2.8vw, 2.2rem);
+  font-weight: 800; letter-spacing: -0.03em;
+  margin-bottom: 14px; line-height: 1.15;
+}
+.slide-sub {
+  font-size: 1.15rem; color: var(--text-mid);
+  max-width: 700px; line-height: 1.7; margin-bottom: 28px;
+}
+
+/* ═══ CARDS ═══ */
+.card-grid { display: grid; gap: 14px; margin-top: 24px; }
+.card-grid-2 { grid-template-columns: 1fr 1fr; }
+.card-grid-3 { grid-template-columns: 1fr 1fr 1fr; }
+.card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 22px;
+}
+.card .icon { font-size: 1.2rem; margin-bottom: 10px; }
+.card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 5px; }
+.card p { font-size: 0.92rem; color: var(--text-mid); line-height: 1.55; }
+
+/* ═══ CALLOUT ═══ */
+.callout {
+  margin-top: 20px; background: rgba(20,241,149,0.06);
+  border: 2px solid rgba(20,241,149,0.4); border-radius: 12px;
+  padding: 20px 24px; font-size: 1.05rem; color: var(--text-mid); line-height: 1.7;
+}
+.callout strong { color: var(--text); }
+.callout .label {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 700;
+  color: var(--sol-green); text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 6px; display: block;
+}
+
+/* ═══ GATEWAY CARD ═══ */
+.gateway-card {
+  background: var(--bg-card); border: 1px solid rgba(20,241,149,0.2);
+  border-radius: 12px; padding: 28px; position: relative; overflow: hidden;
+}
+.gateway-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0;
+  height: 2px; background: linear-gradient(90deg, var(--sol-green), var(--sol-blue));
+}
+.submission-badge {
+  font-family: var(--mono); font-size: 0.58rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.12em;
+  color: var(--sol-green); background: rgba(20,241,149,0.1);
+  border: 1px solid rgba(20,241,149,0.2); padding: 4px 10px;
+  border-radius: 100px; display: inline-flex; margin-bottom: 12px;
+}
+.gateway-card .url { font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); margin-bottom: 10px; }
+.gateway-card > p { font-size: 0.98rem; color: var(--text-mid); line-height: 1.65; margin-bottom: 16px; max-width: 640px; }
+.msg-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.msg-tag {
+  font-family: var(--mono); font-size: 0.78rem; font-weight: 600;
+  padding: 8px 14px; border-radius: 8px;
+  background: rgba(20,241,149,0.08); color: var(--sol-green);
+  border: 1.5px solid rgba(20,241,149,0.35);
+}
+.msg-tag.in { background: rgba(153,69,255,0.08); color: var(--sol-purple); border-color: rgba(153,69,255,0.35); }
+.msg-tag.securities { background: rgba(245,158,11,0.08); color: var(--amber); border-color: rgba(245,158,11,0.35); }
+
+/* ═══ TRANSFORM VISUAL ═══ */
+.transform-visual { background: var(--bg-surface); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin-top: 20px; }
+.transform-header {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 12px 20px; border-bottom: 1px solid var(--border);
+  font-family: var(--mono); font-size: 0.65rem; font-weight: 600;
+  color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.1em;
+}
+.transform-header .arrow-gw { color: var(--sol-green); font-size: 1rem; }
+.transform-cols { display: grid; grid-template-columns: 1fr auto 1fr; }
+.transform-col { padding: 16px 18px; overflow-x: auto; }
+.transform-col-label {
+  font-family: var(--mono); font-size: 0.56rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.transform-col-label .dot { width: 6px; height: 6px; border-radius: 50%; }
+.label-sol { color: var(--sol-purple); } .label-sol .dot { background: var(--sol-purple); }
+.label-iso { color: var(--sol-green); } .label-iso .dot { background: var(--sol-green); }
+.transform-col pre { font-family: var(--mono); font-size: 0.62rem; line-height: 1.6; color: var(--text-mid); white-space: pre; margin: 0; }
+.transform-col pre .key { color: var(--text-dim); } .transform-col pre .val-sol { color: var(--sol-purple); }
+.transform-col pre .val-str { color: var(--cyan); } .transform-col pre .val-num { color: var(--amber); }
+.transform-col pre .tag { color: var(--sol-green); } .transform-col pre .attr { color: var(--cyan); }
+.transform-mid { width: 1px; background: var(--border); position: relative; display: flex; align-items: center; justify-content: center; }
+.transform-mid .gw-badge {
+  position: absolute; background: var(--bg); border: 1px solid rgba(20,241,149,0.25);
+  border-radius: 8px; padding: 6px 8px; font-family: var(--mono); font-size: 0.5rem;
+  font-weight: 700; color: var(--sol-green); writing-mode: vertical-rl;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+/* ═══ ARCH BOX ═══ */
+.arch-box {
+  background: var(--bg-surface); border: 1px solid var(--border);
+  border-radius: 12px; padding: 24px; overflow-x: auto; margin-top: 20px;
+}
+.arch-box pre { font-family: var(--mono); font-size: 0.72rem; line-height: 1.65; color: var(--text-mid); }
+
+/* ═══ TECH POINTS ═══ */
+.tech-point { background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+.tech-point h4 { font-family: var(--mono); font-size: 0.82rem; font-weight: 700; color: var(--sol-green); margin-bottom: 4px; }
+.tech-point p { font-size: 0.88rem; color: var(--text-mid); line-height: 1.5; }
+
+/* ═══ TRACK CARDS ═══ */
+.track-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; display: flex; align-items: flex-start; gap: 14px;
+}
+.track-icon {
+  width: 38px; height: 38px; border-radius: 10px; display: flex;
+  align-items: center; justify-content: center; font-size: 1rem;
+  flex-shrink: 0; background: rgba(153,69,255,0.1);
+}
+.track-card h3 { font-size: 0.98rem; font-weight: 700; margin-bottom: 3px; }
+.track-card p { font-size: 0.88rem; color: var(--text-dim); line-height: 1.5; }
+
+/* ═══ TEAM ═══ */
+.team-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 22px; text-align: center;
+}
+.team-avatar {
+  width: 48px; height: 48px; border-radius: 12px; margin: 0 auto 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.85rem; font-weight: 800; color: #060D18;
+}
+.team-photo {
+  width: 88px; height: 88px; border-radius: 50%; margin: 0 auto 14px;
+  object-fit: cover; border: 2px solid rgba(255,255,255,0.15);
+  display: block;
+}
+.team-card:nth-child(1) .team-avatar { background: var(--sol-green); }
+.team-card:nth-child(2) .team-avatar { background: var(--sol-blue); }
+.team-card:nth-child(3) .team-avatar { background: var(--sol-purple); color: #fff; }
+.team-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 2px; }
+.team-role { font-family: var(--mono); font-size: 0.74rem; font-weight: 600; color: var(--sol-green); margin-bottom: 2px; }
+.team-loc { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 6px; }
+.team-bio { font-size: 0.88rem; color: var(--text-mid); line-height: 1.5; }
+
+/* ═══ ROADMAP ═══ */
+.roadmap-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 20px; position: relative;
+}
+.roadmap-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; border-radius: 12px 12px 0 0; }
+.roadmap-card:nth-child(1)::before { background: var(--sol-green); }
+.roadmap-card:nth-child(2)::before { background: var(--sol-blue); }
+.roadmap-card:nth-child(3)::before { background: var(--sol-purple); }
+.roadmap-card.highlight {
+  background: rgba(20,241,149,0.08);
+  border: 2px solid rgba(20,241,149,0.4);
+  box-shadow: 0 0 24px rgba(20,241,149,0.1), inset 0 0 20px rgba(20,241,149,0.03);
+}
+.roadmap-card.highlight::before { height: 3px; }
+.roadmap-phase { font-family: var(--mono); font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 6px; }
+.roadmap-card:nth-child(1) .roadmap-phase { color: var(--sol-green); }
+.roadmap-card:nth-child(2) .roadmap-phase { color: var(--sol-blue); }
+.roadmap-card:nth-child(3) .roadmap-phase { color: var(--sol-purple); }
+.roadmap-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 5px; }
+.roadmap-card p { font-size: 0.88rem; color: var(--text-mid); line-height: 1.5; }
+
+/* ═══ BUTTONS ═══ */
+.btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 24px; }
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--sol-green); color: #060D18;
+  padding: 11px 22px; border-radius: 8px; font-weight: 700;
+  font-size: 0.85rem; text-decoration: none; transition: all 0.2s;
+}
+.btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+.btn-outline {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: transparent; color: var(--text-mid);
+  padding: 11px 22px; border-radius: 8px; font-weight: 600;
+  font-size: 0.85rem; border: 1px solid var(--border-light);
+  text-decoration: none; transition: all 0.2s;
+}
+.btn-outline:hover { border-color: var(--sol-green); color: var(--sol-green); }
+
+/* ═══ ORGANIZER PILLS ═══ */
+.organizers { display: flex; gap: 7px; margin-top: 28px; flex-wrap: wrap; }
+.org-pill {
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 700;
+  padding: 6px 16px; border-radius: 100px;
+  border: 1px solid rgba(255,255,255,0.2); color: var(--text);
+  background: rgba(15,26,46,0.7);
+  letter-spacing: 0.02em;
+}
+
+/* ═══ STAGGER ANIMATIONS ═══ */
+.slide.active .stagger { opacity: 0; animation: slideUp 0.5s ease forwards; }
+.slide.active .stagger:nth-child(1) { animation-delay: 0.05s; }
+.slide.active .stagger:nth-child(2) { animation-delay: 0.12s; }
+.slide.active .stagger:nth-child(3) { animation-delay: 0.19s; }
+.slide.active .stagger:nth-child(4) { animation-delay: 0.26s; }
+.slide.active .stagger:nth-child(5) { animation-delay: 0.33s; }
+.slide.active .stagger:nth-child(6) { animation-delay: 0.40s; }
+.slide.active .stagger:nth-child(7) { animation-delay: 0.47s; }
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══ HERO TITLE SLIDE ═══ */
+.hero-title-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  min-height: 100%;
+}
+.hero-track-badge {
+  font-family: var(--mono); font-size: 0.72rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.18em;
+  color: var(--sol-green);
+  border: 1px solid rgba(20,241,149,0.3);
+  padding: 8px 24px; border-radius: 100px;
+  margin-bottom: 32px;
+  background: rgba(20,241,149,0.05);
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.hero-track-badge::before {
+  content: ''; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--sol-green);
+  box-shadow: 0 0 12px rgba(20,241,149,0.6);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+.hero-main-title {
+  font-size: clamp(2.8rem, 5.5vw, 4.5rem);
+  font-weight: 900; line-height: 1.05;
+  letter-spacing: -0.05em; margin-bottom: 24px;
+}
+.hero-main-title .line2 {
+  display: block;
+  background: linear-gradient(135deg, var(--sol-green) 0%, var(--sol-blue) 50%, var(--sol-purple) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.hero-subtitle {
+  font-size: 1.2rem; color: var(--text-mid); max-width: 640px;
+  line-height: 1.65; margin-bottom: 36px;
+}
+.hero-team-line {
+  font-family: var(--mono); font-size: 0.88rem; font-weight: 600;
+  color: var(--text-mid); letter-spacing: 0.04em; margin-bottom: 28px;
+  padding: 10px 28px; border-radius: 100px;
+  background: rgba(15,26,46,0.8); border: 1px solid var(--border-light);
+}
+.hero-team-line strong { color: var(--text); }
+.hero-orb {
+  position: absolute; border-radius: 50%; pointer-events: none; filter: blur(80px);
+}
+.hero-orb-1 { width: 400px; height: 400px; top: -100px; left: -80px; background: rgba(153,69,255,0.12); }
+.hero-orb-2 { width: 350px; height: 350px; bottom: -80px; right: -60px; background: rgba(20,241,149,0.08); }
+.hero-orb-3 { width: 200px; height: 200px; top: 50%; right: 20%; background: rgba(0,209,255,0.06); }
+
+/* ═══ MCKINSEY CONTEXT SLIDE ═══ */
+.context-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 28px 28px 24px; position: relative; overflow: hidden;
+}
+.context-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+}
+.context-card:nth-child(1)::before { background: var(--sol-green); }
+.context-card:nth-child(2)::before { background: var(--sol-blue); }
+.context-card:nth-child(3)::before { background: var(--sol-purple); }
+.context-icon {
+  width: 44px; height: 44px; border-radius: 12px; display: flex;
+  align-items: center; justify-content: center; font-size: 1.3rem;
+  margin-bottom: 16px;
+}
+.context-card:nth-child(1) .context-icon { background: rgba(20,241,149,0.1); }
+.context-card:nth-child(2) .context-icon { background: rgba(0,209,255,0.1); }
+.context-card:nth-child(3) .context-icon { background: rgba(153,69,255,0.1); }
+.context-card h3 {
+  font-size: 1.05rem; font-weight: 800; margin-bottom: 10px; line-height: 1.25;
+}
+.context-card p {
+  font-size: 0.92rem; color: var(--text-mid); line-height: 1.65;
+}
+.context-card .stat-row {
+  display: flex; gap: 16px; margin-top: 16px; padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.stat-block {}
+.stat-num {
+  font-family: var(--mono); font-size: 1.5rem; font-weight: 800;
+  line-height: 1; margin-bottom: 2px;
+}
+.context-card:nth-child(1) .stat-num { color: var(--sol-green); }
+.context-card:nth-child(2) .stat-num { color: var(--sol-blue); }
+.context-card:nth-child(3) .stat-num { color: var(--sol-purple); }
+.stat-label {
+  font-family: var(--mono); font-size: 0.6rem; font-weight: 600;
+  color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em;
+}
+
+/* ═══ WHY COLUMNS ═══ */
+.why-col {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 28px; position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.why-col::before {
+  content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 3px;
+}
+.why-col:nth-child(1)::before { background: var(--sol-green); }
+.why-col:nth-child(2)::before { background: var(--sol-blue); }
+.why-col:nth-child(3)::before { background: var(--sol-purple); }
+.why-col:nth-child(4)::before { background: var(--amber); }
+.why-num {
+  font-family: var(--mono); font-size: 0.62rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 14px;
+}
+.why-col:nth-child(1) .why-num { color: var(--sol-green); }
+.why-col:nth-child(2) .why-num { color: var(--sol-blue); }
+.why-col:nth-child(3) .why-num { color: var(--sol-purple); }
+.why-col:nth-child(4) .why-num { color: var(--amber); }
+.why-col h3 {
+  font-size: 0.98rem; font-weight: 800; margin-bottom: 12px; line-height: 1.2;
+}
+.why-col p {
+  font-size: 0.84rem; color: var(--text-mid); line-height: 1.6; flex: 1;
+}
+.why-col .why-bottom {
+  margin-top: 18px; padding-top: 14px; border-top: 1px solid var(--border);
+  font-family: var(--mono); font-size: 0.68rem; font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.why-col:nth-child(1) .why-bottom { color: var(--sol-green); }
+.why-col:nth-child(2) .why-bottom { color: var(--sol-blue); }
+.why-col:nth-child(3) .why-bottom { color: var(--sol-purple); }
+.why-col:nth-child(4) .why-bottom { color: var(--amber); }
+.slide-takeaway {
+  margin-top: 24px; padding: 16px 22px;
+  background: rgba(20,241,149,0.04); border: 1px solid rgba(20,241,149,0.12);
+  border-radius: 10px; text-align: center;
+  font-size: 1rem; color: var(--text-mid); line-height: 1.6;
+}
+.slide-takeaway strong { color: var(--sol-green); }
+
+/* ═══ PAY CARD ═══ */
+.pay-card {
+  background: var(--bg-card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 22px; position: relative; overflow: hidden; margin-top: 14px;
+}
+.pay-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--sol-purple), var(--sol-blue)); }
+.pay-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 3px; }
+.pay-card .url { font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); margin-bottom: 8px; }
+.pay-card p { font-size: 0.94rem; color: var(--text-mid); line-height: 1.6; }
+
+
+/* ═══ AI PROMPT SLIDE ═══ */
+.ai-prompt-block {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--text-mid);
+}
+.ai-prompt-block .prompt-q {
+  color: var(--text);
+  font-weight: 600;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.04);
+  border-left: 3px solid var(--cyan);
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 18px;
+  font-size: 0.88rem;
+}
+.ai-prompt-block .prompt-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-prompt-block .prompt-label::before {
+  content: '\25B8';
+  color: var(--cyan);
+}
+.ai-tier {
+  margin-top: 14px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.ai-tier-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.ai-tier-1 { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.25); }
+.ai-tier-1 .ai-tier-label { color: var(--amber); }
+.ai-tier-2 { background: rgba(255,255,255,0.02); border-color: var(--border); }
+.ai-tier-2 .ai-tier-label { color: var(--text-dim); }
+.ai-tier .chain-list {
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.8;
+}
+.ai-tier .chain-list span {
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+.ai-no-solana {
+  margin-top: 18px;
+  padding: 14px 20px;
+  background: rgba(239,68,68,0.06);
+  border: 2px solid rgba(239,68,68,0.3);
+  border-radius: 10px;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #F87171;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+.ai-models-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  margin-bottom: 14px;
+}
+.ai-model-pill {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-light);
+  color: var(--text-dim);
+}
+/* ═══ REFLEXIVITY LOOP ═══ */
+.reflex-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  margin-top: 8px;
+}
+.reflex-svg {
+  width: 100%;
+  max-width: 820px;
+  height: auto;
+}
+.reflex-svg text {
+  font-family: var(--font);
+}
+.reflex-svg .node-label {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--text);
+}
+.reflex-svg .node-sub {
+  font-size: 12px;
+  font-weight: 400;
+  fill: #FFFFFF;
+}
+.reflex-svg .loop-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+/* Animated dashes flowing along the loop */
+.reflex-arrow-path {
+  stroke-dasharray: 8 6;
+  animation: dashFlow 1.2s linear infinite;
+}
+@keyframes dashFlow {
+  to { stroke-dashoffset: -14; }
+}
+/* Pulse glow on nodes */
+.reflex-node-glow {
+  animation: nodeGlow 3s ease-in-out infinite;
+}
+@keyframes nodeGlow {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.35; }
+}
+
+
+</style>
+</head>
+<body>
+
+<!-- LOGO BAR -->
+<div class="logo-bar">
+  <div class="logo-left">
+    <svg width="32" height="32" viewBox="0 0 36 36" fill="none"><rect width="36" height="36" rx="8" fill="#0A1628"/><path d="M8 18h6l3-8 4 16 3-8h4" stroke="#22D3EE" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="28" cy="10" r="3" fill="#22D3EE" opacity="0.6"/></svg>
+    <div>
+      <div class="logo-name">Gbits.io</div>
+      <div class="logo-sub">Solana ISO 20022 Message Gateway</div>
+    </div>
+  </div>
+  <div class="logo-badge">StableHacks 2026</div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SLIDE 1: TITLE -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide active" data-slide="0" style="padding:0;justify-content:center;align-items:center;">
+  <img src="./images/title_slide.png" alt="Solana ISO 20022 Message Gateway — Team Gbits.io — StableHacks 2026" style="max-width:96%;max-height:92vh;object-fit:contain;border-radius:8px;">
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SLIDE 2: THE PROBLEM -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="1">
+  <div class="stagger slide-tag">01 — The Missing Piece</div>
+  <h2 class="stagger">ISO 20022 integration is a precondition for institutional stablecoin adoption</h2>
+  <p class="stagger slide-sub">Stablecoins are fast and cheap. But companies can't adopt them until their ERP, accounting, and treasury systems understand stablecoin transactions.</p>
+  <div class="stagger card-grid card-grid-2">
+    <div class="card"><div class="icon">📊</div><h3>ERP and Accounting systems don't speak blockchain</h3><p>SAP, Oracle, Bexio, Abacus — they all import ISO 20022 XML. Solana transactions are invisible without a translation layer.</p></div>
+    <div class="card"><div class="icon">🔒</div><h3>No open standard exists</h3><p>Ripple claims ISO 20022 alignment but provides no public tooling or message generation. Solana had nothing — until now.</p></div>
+    <div class="card"><div class="icon">🧩</div><h3>No reference reconciliation</h3><p>Business payments rely on structured references (QR, SCOR) for automatic matching. Blockchain memos have no standard format.</p></div>
+    <div class="card"><div class="icon">🏦</div><h3>TradFi → DeFi transition blocked</h3><p>Without ISO 20022 compatibility, companies face a binary choice: bank rails or crypto rails. The gateway makes them composable.</p></div>
+  </div>
+  <div class="stagger callout">
+    <span class="label">Why this matters for Solana</span>
+    ISO 20022 support is often cited by Ripple/XRP advocates as a differentiator. <strong>Now Solana has an open-source implementation</strong> — not limited to payments, not limited to one geography. General infrastructure anyone can build on.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SLIDE 3: AI PERCEPTION GAP -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="2">
+  <div class="stagger slide-tag">01a — The Perception Gap</div>
+  <h2 class="stagger">Ask any AI about ISO 20022 blockchains.<br><span class="accent">Solana doesn't exist.</span></h2>
+  <div class="stagger" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px;align-items:start;">
+    <div>
+      <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border-light);position:relative;">
+        <img src="./images/grok-answer-ISO20022.png" alt="Grok answer: ISO 20022 compatible blockchains — no Solana" style="width:100%;display:block;border-radius:12px;">
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 14px;background:linear-gradient(transparent,rgba(6,13,24,0.9));font-family:var(--mono);font-size:0.6rem;color:var(--text-dim);text-align:right;">Grok — March 2026</div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:1.05rem;color:var(--text-mid);line-height:1.7;">AI models and TradFi payment professionals share the same blind spot: when asked about ISO 20022-compatible blockchains, the answer is always Ripple, Stellar, XDC, Algorand, Quant.</div>
+      <div class="ai-no-solana">No mention of Solana.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+        <div style="font-family:var(--mono);font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-dim);">Same answer across</div>
+        <div class="ai-models-row" style="margin:0;">
+          <span class="ai-model-pill">Grok</span>
+          <span class="ai-model-pill">ChatGPT 5.1</span>
+          <span class="ai-model-pill">Gemini</span>
+          <span class="ai-model-pill">Claude Opus 4.6</span>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:6px;">
+        <span class="label">Observation</span>
+        AI and payment professionals have the same opinion. <strong>Solana is not in the conversation</strong> — not because it can't do it, but because no one has built the bridge. Until now.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SLIDE 4: WHAT IS ISO 20022 -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="3">
+  <div class="stagger slide-tag">01b — Context</div>
+  <h2 class="stagger">What is ISO 20022 — and why does it matter?</h2>
+  <p class="stagger slide-sub">ISO 20022 is the universal language of financial messaging. It is not optional infrastructure — it is <em>the</em> infrastructure.</p>
+  <div class="stagger card-grid card-grid-3" style="margin-top:16px;">
+    <div class="context-card">
+      <div class="context-icon">🏦</div>
+      <h3>SWIFT MX &amp; the global banking network</h3>
+      <p>11,000+ banks connected to SWIFT are migrating to ISO 20022 (SWIFT MX). It is becoming the single standard for cross-border and domestic interbank messaging worldwide.</p>
+      <div class="stat-row">
+        <div class="stat-block"><div class="stat-num">11K+</div><div class="stat-label">Banks on SWIFT</div></div>
+        <div class="stat-block"><div class="stat-num">MX</div><div class="stat-label">New standard</div></div>
+      </div>
+    </div>
+    <div class="context-card">
+      <div class="context-icon">🏢</div>
+      <h3>Corporates &amp; institutional clients</h3>
+      <p>Hundreds of thousands of corporates and institutional clients communicate with their banks via ISO 20022 — for payment initiation, cash reporting, and reconciliation.</p>
+      <div class="stat-row">
+        <div class="stat-block"><div class="stat-num">100K+</div><div class="stat-label">Corporate clients</div></div>
+        <div class="stat-block"><div class="stat-num">Daily</div><div class="stat-label">Message exchange</div></div>
+      </div>
+    </div>
+    <div class="context-card">
+      <div class="context-icon">⚙️</div>
+      <h3>ERP &amp; accounting systems</h3>
+      <p>SAP, Oracle, Abacus, bexio, Odoo — every major ERP and accounting system can import camt.053/054 statements and export pain.001 payment orders. But none of them can read blockchain transactions.</p>
+      <div class="stat-row">
+        <div class="stat-block"><div class="stat-num">camt</div><div class="stat-label">Statements in</div></div>
+        <div class="stat-block"><div class="stat-num">pain</div><div class="stat-label">Payments out</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SLIDE 4: REFLEXIVITY -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="4">
+  <div class="stagger slide-tag">01c — Reflexivity</div>
+  <h2 class="stagger">Legitimacy is reflexive. <span class="accent">The Gateway seeds the belief.</span></h2>
+  <div class="stagger callout" style="margin-top:14px;margin-bottom:0;">
+    <span class="label">Core thesis</span>
+    <strong>The Solana ISO 20022 Gateway breaks the equilibrium</strong> — by generating conformant ISO 20022 messages from Solana, it seeds the perception that makes institutional adoption rational.
+  </div>
+  <div class="stagger reflex-wrap">
+    <svg class="reflex-svg" viewBox="0 0 820 290" xmlns="http://www.w3.org/2000/svg">
+      <!-- Glow filters -->
+      <defs>
+        <filter id="glowG"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="glowC"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <filter id="glowP"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+        <marker id="arrG" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#14F195"/></marker>
+        <marker id="arrC" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#00D1FF"/></marker>
+        <marker id="arrP" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 Z" fill="#9945FF"/></marker>
+        <marker id="arrGS" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto"><path d="M0,0 L8,3 L0,6 Z" fill="#14F195" opacity="0.6"/></marker>
+      </defs>
+
+      <!-- ── Node 1: Legitimacy Perception ── -->
+      <!-- Box: x=30 y=55 w=220 h=90  →  right=250, cy=100 -->
+      <rect class="reflex-node-glow" x="30" y="55" width="220" height="90" rx="14" fill="rgba(20,241,149,0.15)" filter="url(#glowG)"/>
+      <rect x="30" y="55" width="220" height="90" rx="14" fill="#0F1629" stroke="rgba(20,241,149,0.5)" stroke-width="1.5"/>
+      <text class="node-label" x="140" y="93" text-anchor="middle">Legitimacy Perception</text>
+      <text class="node-sub" x="140" y="115" text-anchor="middle">"Solana speaks ISO 20022"</text>
+
+      <!-- ── Node 2: Institutional Adoption ── -->
+      <!-- Box: x=310 y=8 w=220 h=90  →  left=310, right=530, cy=53 -->
+      <rect class="reflex-node-glow" x="310" y="8" width="220" height="90" rx="14" fill="rgba(0,209,255,0.15)" filter="url(#glowC)"/>
+      <rect x="310" y="8" width="220" height="90" rx="14" fill="#0F1629" stroke="rgba(0,209,255,0.5)" stroke-width="1.5"/>
+      <text class="node-label" x="420" y="46" text-anchor="middle">Institutional Adoption</text>
+      <text class="node-sub" x="420" y="68" text-anchor="middle">Pilot integrations, real volume</text>
+
+      <!-- ── Node 3: Actual Legitimacy ── -->
+      <!-- Box: x=580 y=55 w=220 h=90  →  left=580, cy=100 -->
+      <rect class="reflex-node-glow" x="580" y="55" width="220" height="90" rx="14" fill="rgba(153,69,255,0.15)" filter="url(#glowP)"/>
+      <rect x="580" y="55" width="220" height="90" rx="14" fill="#0F1629" stroke="rgba(153,69,255,0.5)" stroke-width="1.5"/>
+      <text class="node-label" x="690" y="93" text-anchor="middle">Actual Legitimacy</text>
+      <text class="node-sub" x="690" y="115" text-anchor="middle">Robust rail, proven data</text>
+
+      <!-- ── Arrow: Perception (right edge, top) → Adoption (left edge, center) ── -->
+      <!-- From (250, 75) curving up to (310, 53) -->
+      <path class="reflex-arrow-path" d="M250,75 C275,55 290,50 310,53" fill="none" stroke="#14F195" stroke-width="2.5" marker-end="url(#arrG)"/>
+      <text class="loop-label" x="275" y="42" fill="#14F195" text-anchor="middle">belief shifts</text>
+
+      <!-- ── Arrow: Adoption (right edge, center) → Actual (left edge, top) ── -->
+      <!-- From (530, 53) curving down to (580, 75) -->
+      <path class="reflex-arrow-path" d="M530,53 C550,50 565,55 580,75" fill="none" stroke="#00D1FF" stroke-width="2.5" marker-end="url(#arrC)"/>
+      <text class="loop-label" x="558" y="42" fill="#00D1FF" text-anchor="middle">volume validates</text>
+
+      <!-- ── Arrow: Actual (bottom edge) → Perception (bottom edge) via arch below ── -->
+      <!-- From (690, 145) arching down to (140, 145) -->
+      <path class="reflex-arrow-path" d="M690,145 C690,220 420,240 140,220 C80,216 45,180 40,145" fill="none" stroke="#9945FF" stroke-width="2.5" marker-end="url(#arrP)"/>
+      <text class="loop-label" x="420" y="258" fill="#9945FF" text-anchor="middle">reinforces perception</text>
+
+      <!-- ── Solana ISO 20022 Gateway catalyst (center) ── -->
+      <rect x="295" y="130" width="250" height="52" rx="10" fill="rgba(20,241,149,0.12)" stroke="rgba(20,241,149,0.4)" stroke-width="2"/>
+      <text x="420" y="152" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="11" font-weight="800" fill="#14F195" letter-spacing="0.08em">SOLANA ISO 20022 GATEWAY</text>
+      <text x="420" y="172" text-anchor="middle" font-family="'JetBrains Mono', monospace" font-size="8.5" font-weight="500" fill="#D0D8E8" letter-spacing="0.06em">seeds initial belief state</text>
+      <!-- Dashed line from Gateway to Perception -->
+      <line x1="295" y1="156" x2="254" y2="120" stroke="#14F195" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.6" marker-end="url(#arrGS)"/>
+
+    </svg>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5: THE WHY -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="5">
+  <div class="stagger slide-tag">01d — The Why</div>
+  <h2 class="stagger">Four reasons this gateway had to exist</h2>
+  <div class="stagger card-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-top:20px;">
+    <div class="why-col">
+      <div class="why-num">Reason 01</div>
+      <h3>Internet Capital Markets need ISO 20022</h3>
+      <p>In TradFi, every trade has a security leg and a cash leg. As capital markets move on-chain, the cash leg still needs to settle in the language of banks — ISO 20022. Without it, tokenized assets remain disconnected from institutional settlement infrastructure.</p>
+      <div class="why-bottom">→ Bridging on-chain assets to TradFi settlement</div>
+    </div>
+    <div class="why-col">
+      <div class="why-num">Reason 02</div>
+      <h3>Solana needs ISO 20022 to compete as a payment rail</h3>
+      <p>If Solana and stablecoins want to be taken seriously by institutional finance, they must speak the language banks already use. Ripple played the ISO 20022 card years ago — Solana had no equivalent. Until now.</p>
+      <div class="why-bottom">→ Competitive positioning vs. Ripple/XRP</div>
+    </div>
+    <div class="why-col">
+      <div class="why-num">Reason 03</div>
+      <h3>Stablecoin payments must flow into accounting</h3>
+      <p>A stablecoin payment that cannot be booked is a payment that cannot be adopted. Companies need camt.053 statements and camt.054 notifications to close their books — regardless of the underlying rail.</p>
+      <div class="why-bottom">→ Accounting compliance is non-negotiable</div>
+    </div>
+    <div class="why-col">
+      <div class="why-num">Reason 04</div>
+      <h3>Gbits Pay needed the missing puzzle piece</h3>
+      <p>Gbits Pay lets users scan Swiss QR invoices and pay with stablecoins. But for the receiving business, that payment was invisible to their ERP. The gateway closes this loop.</p>
+      <div class="why-bottom">→ Completing the Gbits Pay round-trip</div>
+    </div>
+  </div>
+  <div class="stagger slide-takeaway">
+    <strong>The takeaway:</strong> ISO 20022 is not a nice-to-have. It is the interface contract between any payment rail and the global financial back-office.
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5: WHAT WE BUILT -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="6">
+  <div class="stagger slide-tag">02a — What We Built</div>
+  <h2 class="stagger">Two products. One payment round-trip.</h2>
+  <div class="stagger gateway-card">
+    <span class="submission-badge">⚡ StableHacks Submission</span>
+    <h3>Solana ISO 20022 Gateway</h3>
+    <div class="url">iso.gbits.io · github.com/gbits-io/isofix</div>
+    <p>Bidirectional message gateway. Reads Solana stablecoin transactions, generates compliant ISO 20022 XML. Or takes an ISO 20022 payment order and executes it as a Solana SPL transfer.</p>
+    <div class="msg-tags">
+      <span class="msg-tag">camt.053 — Bank Statement</span>
+      <span class="msg-tag">camt.054 — Notification</span>
+      <span class="msg-tag securities">semt.002 — Securities Balance</span>
+      <span class="msg-tag in">pain.001 — Payment Order</span>
+    </div>
+  </div>
+  <div class="stagger pay-card">
+    <h3>Gbits Pay</h3>
+    <div class="url">app.gbits.io</div>
+    <p>Scan a Swiss QR invoice and pay with stablecoins. The QR reference is embedded as SPL Memo for downstream reconciliation by the gateway.</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SLIDE 6: TRANSFORM VISUAL -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="7">
+  <div class="stagger slide-tag">02b — The Translation</div>
+  <h2 class="stagger">Solana Transaction → ISO 20022 camt.053</h2>
+  <div class="stagger transform-visual">
+    <div class="transform-header">
+      <span>Solana Transaction</span><span class="arrow-gw">──▶</span><span>Gateway</span><span class="arrow-gw">──▶</span><span>ISO 20022 camt.053</span>
+    </div>
+    <div class="transform-cols">
+      <div class="transform-col">
+        <div class="transform-col-label label-sol"><span class="dot"></span> Solana RPC Response</div>
+<pre>{
+  <span class="key">"signature"</span>: <span class="val-sol">"4sGjMW1sU..."</span>,
+  <span class="key">"timestamp"</span>: <span class="val-num">1710892800</span>,
+  <span class="key">"tokenTransfers"</span>: [{
+    <span class="key">"mint"</span>: <span class="val-sol">"AhhdRu5Y...LFHsch"</span>,
+    <span class="key">"tokenAmount"</span>: <span class="val-num">1949.75</span>,
+    <span class="key">"fromUserAccount"</span>: <span class="val-sol">"7xKXtg2C..."</span>,
+    <span class="key">"toUserAccount"</span>: <span class="val-sol">"9mYR4jLe..."</span>
+  }],
+  <span class="key">"memo"</span>: <span class="val-str">"QRR:21000000000313..."</span>
+}</pre>
+      </div>
+      <div class="transform-mid"><span class="gw-badge">Gateway</span></div>
+      <div class="transform-col">
+        <div class="transform-col-label label-iso"><span class="dot"></span> Generated camt.053 XML</div>
+<pre><span class="tag">&lt;BkToCstmrStmt&gt;</span>
+  <span class="tag">&lt;Stmt&gt;</span>
+    <span class="tag">&lt;Acct&gt;&lt;Id&gt;&lt;Othr&gt;&lt;Id&gt;</span><span class="val-sol">9mYR4jLe...</span><span class="tag">&lt;/Id&gt;</span>
+    <span class="tag">&lt;Ntry&gt;</span>
+      <span class="tag">&lt;Amt</span> <span class="attr">Ccy=</span><span class="val-str">"CHF"</span><span class="tag">&gt;</span><span class="val-num">1949.75</span><span class="tag">&lt;/Amt&gt;</span>
+      <span class="tag">&lt;AcctSvcrRef&gt;</span><span class="val-sol">4sGjMW1sU...</span><span class="tag">&lt;/AcctSvcrRef&gt;</span>
+      <span class="tag">&lt;NtryDtls&gt;&lt;TxDtls&gt;&lt;RmtInf&gt;&lt;Strd&gt;</span>
+        <span class="tag">&lt;CdtrRefInf&gt;&lt;Ref&gt;</span><span class="val-str">21000000000313...</span><span class="tag">&lt;/Ref&gt;</span>
+      <span class="tag">&lt;/Strd&gt;&lt;/RmtInf&gt;&lt;/TxDtls&gt;&lt;/NtryDtls&gt;</span>
+    <span class="tag">&lt;/Ntry&gt;&lt;/Stmt&gt;</span>
+<span class="tag">&lt;/BkToCstmrStmt&gt;</span></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SLIDE 7: ARCHITECTURE -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="8">
+  <div class="stagger slide-tag">04 — Architecture</div>
+  <h2 class="stagger">Single HTML file. Zero dependencies. Fully auditable.</h2>
+  <p class="stagger slide-sub">No React, no Node.js, no build tools. Open the file in a browser and it works.<br>The field mapping is fully documented. It's super easy to modify the field mapping in ChatGPT or Claude Code.</p>
+  <div class="stagger arch-box">
+<pre>┌──────────────┐         ┌────────────────────────────┐          ┌──────────────┐
+│  Solana      │ ──RPC──▶│  Solana ISO20022 Gateway   │────XML──▶│  ERP /       │
+│  Blockchain  │         │  (single HTML file)        │          │  Accounting  │
+└──────────────┘         └────────────────────────────┘          └──────────────┘</pre>
+  </div>
+  <div class="stagger card-grid card-grid-3" style="margin-top:20px;">
+    <div class="tech-point"><h4>QR Reference Reconciliation</h4><p>QRR: prefix in SPL Memo maps to &lt;CdtrRefInf&gt; in camt.053/054. Auto-match in accounting.</p></div>
+    <div class="tech-point"><h4>IBAN → Solana via SNS</h4><p>verified-iban.sol subdomains resolve bank IBANs to Solana addresses.</p></div>
+    <div class="tech-point"><h4>Beyond Payments</h4><p>semt.002 generates securities custody reports. The gateway is not payment-only.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SLIDE 8: TRACK RECORD -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="9">
+  <div class="stagger slide-tag">05 — Track Record & Team</div>
+  <h2 class="stagger">Proven in competition. Built by payment enthusiasts.</h2>
+  <div class="stagger card-grid card-grid-2" style="margin-top:20px;">
+    <div class="track-card"><div class="track-icon">🏆</div><div><h3>Solana FM Track Winner</h3><p>Encode Hackathon 2024, Solana Foundation.</p></div></div>
+    <div class="track-card"><div class="track-icon">🇨🇭</div><div><h3>Blockchain Nation Switzerland</h3><p>Winner 2024 — Innosuisse grant recipient.</p></div></div>
+  </div>
+  <div class="stagger card-grid card-grid-3" style="margin-top:14px;">
+    <div class="team-card"><img class="team-photo" src="./images/roman.png" alt="Roman Bischoff"><h3>Roman Bischoff</h3><div class="team-role">Founder & PM</div><div class="team-loc">Zürich, Switzerland</div><p class="team-bio">20+ years TradFi — FX, equity, payments, DLT.</p></div>
+    <div class="team-card"><img class="team-photo" src="./images/alexander.png" alt="Alexandr Kazakov"><h3>Alexandr Kazakov</h3><div class="team-role">Fullstack Developer</div><div class="team-loc">Dubai</div><p class="team-bio">Web3 and Solana specialist.</p></div>
+    <div class="team-card"><img class="team-photo" src="./images/rosa.png" alt="Rosa Seok"><h3>Rosa Seok</h3><div class="team-role">Business Development</div><div class="team-loc">South Korea & Switzerland</div><p class="team-bio">8 years in crypto. Women in Web3.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SLIDE 9: ROADMAP -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="10">
+  <div class="stagger slide-tag">06 — What's Next</div>
+  <h2 class="stagger">Roadmap</h2>
+  <div class="stagger card-grid card-grid-3" style="margin-top:24px;">
+    <div class="roadmap-card highlight"><div class="roadmap-phase">Now — Hackathon</div><h3>Core Gateway</h3><p>camt.053 / camt.054 / semt.002 / BAI2 generation. pain.001 execution. QR reference reconciliation. Single-file, zero-dependency architecture.</p></div>
+    <div class="roadmap-card"><div class="roadmap-phase">Next — Q2 2026</div><h3>Production Hardening</h3><p>REST or GraphQL API for accepting pain.001 messages and delivering camt.053 / camt.054 messages. Cloudflare Workers RPC proxy. Webhook-based camt.054 notifications. Support client-specific mapping logic extensions.</p></div>
+    <div class="roadmap-card"><div class="roadmap-phase">Future — Q3+ 2026</div><h3>Ecosystem Expansion</h3><p>Support additional ISO 20022 dialects (pacs, acmt). Deep-dive with ERP and accounting experts on integration patterns. Sounding on field mapping with industry experts. Multi-chain ISO 20022 support. Open standard for blockchain ↔ ISO 20022.</p></div>
+  </div>
+  <div class="stagger btn-row" style="margin-top:32px;justify-content:center;">
+    <a href="https://iso.gbits.io/" class="btn-primary" target="_blank">Launch App →</a>
+    <a href="https://github.com/gbits-io/isofix" class="btn-outline" target="_blank"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub ↗</a>
+    <a href="https://dorahacks.io/hackathon/stablehacks/tracks" class="btn-outline" target="_blank">DoraHacks ↗</a>
+  </div>
+  <div class="stagger" style="margin-top:24px;text-align:center;">
+    <p style="font-size:0.8rem;color:var(--text-dim);">© 2026 Roman Bischoff, Zürich · Solana ISO 20022 Message Gateway · StableHacks 2026</p>
+  </div>
+</div>
+
+<!-- ═══ SLIDE NAVIGATION ═══ -->
+<div class="slide-nav">
+  <button class="slide-dot active" data-goto="0"></button>
+  <button class="slide-dot" data-goto="1"></button>
+  <button class="slide-dot" data-goto="2"></button>
+  <button class="slide-dot" data-goto="3"></button>
+  <button class="slide-dot" data-goto="4"></button>
+  <button class="slide-dot" data-goto="5"></button>
+  <button class="slide-dot" data-goto="6"></button>
+  <button class="slide-dot" data-goto="7"></button>
+  <button class="slide-dot" data-goto="8"></button>
+  <button class="slide-dot" data-goto="9"></button>
+  <button class="slide-dot" data-goto="10"></button>
+  <span class="slide-counter">1 / 11</span>
+</div>
+<div class="key-hint"><kbd>←</kbd> <kbd>→</kbd> or click</div>
+
+<script>
+let current = 0;
+let animating = false;
+const slides = document.querySelectorAll('.slide');
+const dots = document.querySelectorAll('.slide-dot');
+const counter = document.querySelector('.slide-counter');
+const total = slides.length;
+
+function goTo(n) {
+  if (n < 0 || n >= total || n === current || animating) return;
+  animating = true;
+  const dir = n > current ? 1 : -1;
+  const prev = current;
+
+  // Remove active from previous slide and set exit direction
+  slides[prev].classList.remove('active');
+  slides[prev].style.transform = dir > 0 ? 'translateX(-60px)' : 'translateX(60px)';
+  slides[prev].style.opacity = '0';
+
+  // Prepare new slide at entry position
+  current = n;
+  slides[current].style.transition = 'none';
+  slides[current].style.transform = dir > 0 ? 'translateX(60px)' : 'translateX(-60px)';
+  slides[current].style.opacity = '0';
+  slides[current].classList.add('active');
+
+  // Animate new slide in
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      slides[current].style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+      slides[current].style.transform = 'translateX(0)';
+      slides[current].style.opacity = '1';
+    });
+  });
+
+  // Clean up previous slide
+  setTimeout(() => {
+    slides[prev].style.transition = 'none';
+    slides[prev].style.transform = '';
+    slides[prev].style.opacity = '';
+    slides[prev].classList.remove('active');
+    slides[current].style.transition = '';
+    slides[current].style.transform = '';
+    slides[current].style.opacity = '';
+    animating = false;
+  }, 550);
+
+  dots.forEach(d => d.classList.remove('active'));
+  dots[current].classList.add('active');
+  counter.textContent = `${current + 1} / ${total}`;
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); goTo(current - 1); }
+  if (e.key === 'Home') { e.preventDefault(); goTo(0); }
+  if (e.key === 'End') { e.preventDefault(); goTo(total - 1); }
+});
+
+dots.forEach(d => d.addEventListener('click', () => goTo(parseInt(d.dataset.goto))));
+
+// Click on left/right half of screen to navigate
+document.addEventListener('click', e => {
+  // Ignore clicks on nav dots, buttons, links
+  if (e.target.closest('.slide-nav, a, button')) return;
+  const x = e.clientX;
+  const w = window.innerWidth;
+  if (x > w * 0.65) goTo(current + 1);
+  else if (x < w * 0.35) goTo(current - 1);
+});
+
+// Touch swipe
+let touchX = 0;
+document.addEventListener('touchstart', e => { touchX = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - touchX;
+  if (Math.abs(dx) > 50) goTo(current + (dx < 0 ? 1 : -1));
+});
+</script>
+
+</body>
+</html>
