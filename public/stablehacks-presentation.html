@@ -523,6 +523,156 @@ body::before {
 .pay-card h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 3px; }
 .pay-card .url { font-family: var(--mono); font-size: 0.7rem; color: var(--text-dim); margin-bottom: 8px; }
 .pay-card p { font-size: 0.94rem; color: var(--text-mid); line-height: 1.6; }
+
+
+/* ═══ AI PROMPT SLIDE ═══ */
+.ai-prompt-block {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 20px 24px;
+  margin-top: 16px;
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  color: var(--text-mid);
+}
+.ai-prompt-block .prompt-q {
+  color: var(--text);
+  font-weight: 600;
+  padding: 10px 16px;
+  background: rgba(255,255,255,0.04);
+  border-left: 3px solid var(--cyan);
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 18px;
+  font-size: 0.88rem;
+}
+.ai-prompt-block .prompt-label {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ai-prompt-block .prompt-label::before {
+  content: '\25B8';
+  color: var(--cyan);
+}
+.ai-tier {
+  margin-top: 14px;
+  padding: 14px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+.ai-tier-label {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 6px;
+}
+.ai-tier-1 { background: rgba(245,158,11,0.06); border-color: rgba(245,158,11,0.25); }
+.ai-tier-1 .ai-tier-label { color: var(--amber); }
+.ai-tier-2 { background: rgba(255,255,255,0.02); border-color: var(--border); }
+.ai-tier-2 .ai-tier-label { color: var(--text-dim); }
+.ai-tier .chain-list {
+  font-family: var(--font);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.8;
+}
+.ai-tier .chain-list span {
+  font-weight: 400;
+  font-size: 0.82rem;
+  color: var(--text-dim);
+}
+.ai-no-solana {
+  margin-top: 18px;
+  padding: 14px 20px;
+  background: rgba(239,68,68,0.06);
+  border: 2px solid rgba(239,68,68,0.3);
+  border-radius: 10px;
+  font-family: var(--font);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #F87171;
+  text-align: center;
+  letter-spacing: 0.01em;
+}
+.ai-models-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+  margin-bottom: 14px;
+}
+.ai-model-pill {
+  font-family: var(--mono);
+  font-size: 0.62rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 100px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid var(--border-light);
+  color: var(--text-dim);
+}
+/* ═══ REFLEXIVITY LOOP ═══ */
+.reflex-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  margin-top: 8px;
+}
+.reflex-svg {
+  width: 100%;
+  max-width: 820px;
+  height: auto;
+}
+.reflex-svg text {
+  font-family: var(--font);
+}
+.reflex-svg .node-label {
+  font-size: 13px;
+  font-weight: 700;
+  fill: var(--text);
+}
+.reflex-svg .node-sub {
+  font-size: 12px;
+  font-weight: 400;
+  fill: #FFFFFF;
+}
+.reflex-svg .loop-label {
+  font-family: var(--mono);
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+/* Animated dashes flowing along the loop */
+.reflex-arrow-path {
+  stroke-dasharray: 8 6;
+  animation: dashFlow 1.2s linear infinite;
+}
+@keyframes dashFlow {
+  to { stroke-dashoffset: -14; }
+}
+/* Pulse glow on nodes */
+.reflex-node-glow {
+  animation: nodeGlow 3s ease-in-out infinite;
+}
+@keyframes nodeGlow {
+  0%, 100% { opacity: 0.15; }
+  50% { opacity: 0.35; }
+}
+
+
 </style>
 </head>
 <body>
@@ -546,32 +696,11 @@ body::before {
   <img src="./images/title_slide.png" alt="Solana ISO 20022 Message Gateway — Team Gbits.io — StableHacks 2026" style="max-width:96%;max-height:92vh;object-fit:contain;border-radius:8px;">
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!-- SLIDE 2: THE PROBLEM -->
+<!-- SLIDE 4: WHAT IS ISO 20022 -->
 <!-- ═══════════════════════════════════════════════════════════ -->
 <div class="slide" data-slide="1">
-  <div class="stagger slide-tag">01 — The Missing Piece</div>
-  <h2 class="stagger">ISO 20022 integration is a precondition for institutional stablecoin adoption</h2>
-  <p class="stagger slide-sub">Stablecoins are fast and cheap. But companies can't adopt them until their ERP, accounting, and treasury systems understand stablecoin transactions.</p>
-  <div class="stagger card-grid card-grid-2">
-    <div class="card"><div class="icon">📊</div><h3>ERP and Accounting systems don't speak blockchain</h3><p>SAP, Oracle, Bexio, Abacus — they all import ISO 20022 XML. Solana transactions are invisible without a translation layer.</p></div>
-    <div class="card"><div class="icon">🔒</div><h3>No open standard exists</h3><p>Ripple claims ISO 20022 alignment but provides no public tooling or message generation. Solana had nothing — until now.</p></div>
-    <div class="card"><div class="icon">🧩</div><h3>No reference reconciliation</h3><p>Business payments rely on structured references (QR, SCOR) for automatic matching. Blockchain memos have no standard format.</p></div>
-    <div class="card"><div class="icon">🏦</div><h3>TradFi → DeFi transition blocked</h3><p>Without ISO 20022 compatibility, companies face a binary choice: bank rails or crypto rails. The gateway makes them composable.</p></div>
-  </div>
-  <div class="stagger callout">
-    <span class="label">Why this matters for Solana</span>
-    ISO 20022 support is often cited by Ripple/XRP advocates as a differentiator. <strong>Now Solana has an open-source implementation</strong> — not limited to payments, not limited to one geography. General infrastructure anyone can build on.
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!-- SLIDE 3: WHAT IS ISO 20022 -->
-<!-- ═══════════════════════════════════════════════════════════ -->
-<div class="slide" data-slide="2">
   <div class="stagger slide-tag">01b — Context</div>
-  <h2 class="stagger">What is ISO 20022 — and why does it matter?</h2>
-  <p class="stagger slide-sub">ISO 20022 is the universal language of financial messaging. It is not optional infrastructure — it is <em>the</em> infrastructure.</p>
+  <h2 class="stagger">ISO 20022 is the universal language of financial messaging.</h2>
   <div class="stagger card-grid card-grid-3" style="margin-top:16px;">
     <div class="context-card">
       <div class="context-icon">🏦</div>
@@ -604,71 +733,42 @@ body::before {
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
-<!-- SLIDE 4: THE WHY -->
+<!-- SLIDE 3: AI PERCEPTION GAP -->
 <!-- ═══════════════════════════════════════════════════════════ -->
-<div class="slide" data-slide="3">
-  <div class="stagger slide-tag">01c — The Why</div>
-  <h2 class="stagger">Four reasons this gateway had to exist</h2>
-  <div class="stagger card-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-top:20px;">
-    <div class="why-col">
-      <div class="why-num">Reason 01</div>
-      <h3>Internet Capital Markets need ISO 20022</h3>
-      <p>In TradFi, every trade has a security leg and a cash leg. As capital markets move on-chain, the cash leg still needs to settle in the language of banks — ISO 20022. Without it, tokenized assets remain disconnected from institutional settlement infrastructure.</p>
-      <div class="why-bottom">→ Bridging on-chain assets to TradFi settlement</div>
+<div class="slide" data-slide="2">
+  <div class="stagger slide-tag">01a — The Perception Gap</div>
+  <h2 class="stagger">Ask any AI about ISO 20022 and blockchains</h2>
+  <div class="stagger" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:18px;align-items:start;">
+    <div>
+      <div style="border-radius:12px;overflow:hidden;border:1px solid var(--border-light);position:relative;">
+        <img src="./images/grok-answer-ISO20022.png" alt="Grok answer: ISO 20022 compatible blockchains — no Solana" style="width:100%;display:block;border-radius:12px;">
+        <div style="position:absolute;bottom:0;left:0;right:0;padding:8px 14px;background:linear-gradient(transparent,rgba(6,13,24,0.9));font-family:var(--mono);font-size:0.6rem;color:var(--text-dim);text-align:right;">Grok — March 2026</div>
+      </div>
     </div>
-    <div class="why-col">
-      <div class="why-num">Reason 02</div>
-      <h3>Solana needs ISO 20022 to compete as a payment rail</h3>
-      <p>If Solana and stablecoins want to be taken seriously by institutional finance, they must speak the language banks already use. Ripple played the ISO 20022 card years ago — Solana had no equivalent. Until now.</p>
-      <div class="why-bottom">→ Competitive positioning vs. Ripple/XRP</div>
+    <div style="display:flex;flex-direction:column;gap:14px;">
+      <div style="font-size:1.05rem;color:var(--text-mid);line-height:1.7;">The answer is always Ripple, Stellar, XDC, Algorand, Quant.</div>
+      <div class="ai-no-solana">No mention of Solana.</div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
+        <div style="font-family:var(--mono);font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-dim);">Same answer across</div>
+        <div class="ai-models-row" style="margin:0;">
+          <span class="ai-model-pill">Grok</span>
+          <span class="ai-model-pill">ChatGPT 5.1</span>
+          <span class="ai-model-pill">Gemini</span>
+          <span class="ai-model-pill">Claude Opus 4.6</span>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:6px;">
+        <span class="label">Observation</span>
+        AI and payment professionals have the same opinion. <strong>Solana is not in the conversation</strong> — not because it can't do it, but because no one has built the bridge. Until now.
+      </div>
     </div>
-    <div class="why-col">
-      <div class="why-num">Reason 03</div>
-      <h3>Stablecoin payments must flow into accounting</h3>
-      <p>A stablecoin payment that cannot be booked is a payment that cannot be adopted. Companies need camt.053 statements and camt.054 notifications to close their books — regardless of the underlying rail.</p>
-      <div class="why-bottom">→ Accounting compliance is non-negotiable</div>
-    </div>
-    <div class="why-col">
-      <div class="why-num">Reason 04</div>
-      <h3>Gbits Pay needed the missing puzzle piece</h3>
-      <p>Gbits Pay lets users scan Swiss QR invoices and pay with stablecoins. But for the receiving business, that payment was invisible to their ERP. The gateway closes this loop.</p>
-      <div class="why-bottom">→ Completing the Gbits Pay round-trip</div>
-    </div>
-  </div>
-  <div class="stagger slide-takeaway">
-    <strong>The takeaway:</strong> ISO 20022 is not a nice-to-have. It is the interface contract between any payment rail and the global financial back-office.
-  </div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════════ -->
-<!-- SLIDE 5: WHAT WE BUILT -->
-<!-- ═══════════════════════════════════════════════════════════ -->
-<div class="slide" data-slide="4">
-  <div class="stagger slide-tag">02a — What We Built</div>
-  <h2 class="stagger">Two products. One payment round-trip.</h2>
-  <div class="stagger gateway-card">
-    <span class="submission-badge">⚡ StableHacks Submission</span>
-    <h3>Solana ISO 20022 Gateway</h3>
-    <div class="url">iso.gbits.io · github.com/gbits-io/isofix</div>
-    <p>Bidirectional message gateway. Reads Solana stablecoin transactions, generates compliant ISO 20022 XML. Or takes an ISO 20022 payment order and executes it as a Solana SPL transfer.</p>
-    <div class="msg-tags">
-      <span class="msg-tag">camt.053 — Bank Statement</span>
-      <span class="msg-tag">camt.054 — Notification</span>
-      <span class="msg-tag securities">semt.002 — Securities Balance</span>
-      <span class="msg-tag in">pain.001 — Payment Order</span>
-    </div>
-  </div>
-  <div class="stagger pay-card">
-    <h3>Gbits Pay</h3>
-    <div class="url">app.gbits.io</div>
-    <p>Scan a Swiss QR invoice and pay with stablecoins. The QR reference is embedded as SPL Memo for downstream reconciliation by the gateway.</p>
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!-- SLIDE 6: TRANSFORM VISUAL -->
 <!-- ═══════════════════════════════════════════════════════════ -->
-<div class="slide" data-slide="5">
+<div class="slide" data-slide="3">
   <div class="stagger slide-tag">02b — The Translation</div>
   <h2 class="stagger">Solana Transaction → ISO 20022 camt.053</h2>
   <div class="stagger transform-visual">
@@ -712,27 +812,64 @@ body::before {
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!-- SLIDE 7: ARCHITECTURE -->
 <!-- ═══════════════════════════════════════════════════════════ -->
-<div class="slide" data-slide="6">
+<div class="slide" data-slide="4">
   <div class="stagger slide-tag">04 — Architecture</div>
-  <h2 class="stagger">Single HTML file. Zero dependencies. Fully auditable.</h2>
+  <h2 class="stagger">Single HTML file. Zero dependencies.</h2>
   <p class="stagger slide-sub">No React, no Node.js, no build tools. Open the file in a browser and it works.<br>The field mapping is fully documented. It's super easy to modify the field mapping in ChatGPT or Claude Code.</p>
   <div class="stagger arch-box">
-<pre>┌──────────────┐         ┌────────────────────────────┐          ┌──────────────┐
-│  Solana      │ ──RPC──▶│  Solana ISO20022 Gateway   │────XML──▶│  ERP /       │
-│  Blockchain  │         │  (single HTML file)        │          │  Accounting  │
-└──────────────┘         └────────────────────────────┘          └──────────────┘</pre>
+<pre>┌──────────────┐         ┌──────────────────────────────────┐         ┌──────────────┐
+│  Solana      │ ──RPC──▶│  Solana ISO20022 Gateway         │──XML──▶ │  ERP /       │
+│  Blockchain  │         │  (single HTML file + RPC)        │         │  Accounting  │
+└──────────────┘         └──────────────────────────────────┘         └──────────────┘</pre>
   </div>
   <div class="stagger card-grid card-grid-3" style="margin-top:20px;">
     <div class="tech-point"><h4>QR Reference Reconciliation</h4><p>QRR: prefix in SPL Memo maps to &lt;CdtrRefInf&gt; in camt.053/054. Auto-match in accounting.</p></div>
-    <div class="tech-point"><h4>IBAN → Solana via SNS</h4><p>verified-iban.sol subdomains resolve bank IBANs to Solana addresses.</p></div>
+    <div class="tech-point"><h4>IBAN → Solana via SNS (Solana Name Service)</h4><p>verified-iban.sol subdomains resolve bank IBANs to Solana addresses.</p></div>
     <div class="tech-point"><h4>Beyond Payments</h4><p>semt.002 generates securities custody reports. The gateway is not payment-only.</p></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SLIDE 5: THE WHY -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+<div class="slide" data-slide="5">
+  <div class="stagger slide-tag">01d — The Why</div>
+  <h2 class="stagger">Four reasons this gateway had to exist</h2>
+  <div class="stagger card-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-top:20px;">
+    <div class="why-col">
+      <div class="why-num">Reason 01</div>
+      <h3>Internet Capital Markets need ISO 20022</h3>
+      <p>In TradFi, every trade has a security leg and a cash leg. As capital markets move on-chain, the <strong>cash leg</strong> still needs to settle in the language of banks — ISO 20022. Without it, tokenized assets remain disconnected from institutional settlement infrastructure.</p>
+      <div class="why-bottom">→ Bridging on-chain assets to TradFi settlement</div>
+    </div>
+    <div class="why-col">
+      <div class="why-num">Reason 02</div>
+      <h3>Solana needs ISO 20022 to compete as a payment rail</h3>
+      <p>If Solana and stablecoins want to be taken seriously by institutional finance, they must speak the language banks already use. Ripple played the ISO 20022 card years ago — Solana had no equivalent. Until now.</p>
+      <div class="why-bottom">→ Competitive positioning vs. Ripple/XRP</div>
+    </div>
+    <div class="why-col">
+      <div class="why-num">Reason 03</div>
+      <h3>Stablecoin payments must flow into accounting</h3>
+      <p>A stablecoin payment that cannot be booked is a payment that cannot be adopted. Companies need camt.053 statements and camt.054 notifications to close their books — regardless of the underlying rail.</p>
+      <div class="why-bottom">→ Accounting compliance is non-negotiable</div>
+    </div>
+    <div class="why-col">
+      <div class="why-num">Reason 04</div>
+      <h3>Gbits Pay needed the missing puzzle piece</h3>
+      <p>Gbits Pay lets users scan Swiss QR invoices and pay with stablecoins. But for the receiving business, that payment was invisible to their ERP. The gateway closes this loop.</p>
+      <div class="why-bottom">→ Completing the Gbits Pay round-trip</div>
+    </div>
+  </div>
+  <div class="stagger slide-takeaway">
+    <strong>The takeaway:</strong> ISO 20022 is not a nice-to-have. It is the interface contract between any payment rail and the global financial back-office.
   </div>
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!-- SLIDE 8: TRACK RECORD -->
 <!-- ═══════════════════════════════════════════════════════════ -->
-<div class="slide" data-slide="7">
+<div class="slide" data-slide="6">
   <div class="stagger slide-tag">05 — Track Record & Team</div>
   <h2 class="stagger">Proven in competition. Built by payment enthusiasts.</h2>
   <div class="stagger card-grid card-grid-2" style="margin-top:20px;">
@@ -740,7 +877,7 @@ body::before {
     <div class="track-card"><div class="track-icon">🇨🇭</div><div><h3>Blockchain Nation Switzerland</h3><p>Winner 2024 — Innosuisse grant recipient.</p></div></div>
   </div>
   <div class="stagger card-grid card-grid-3" style="margin-top:14px;">
-    <div class="team-card"><img class="team-photo" src="./images/roman.png" alt="Roman Bischoff"><h3>Roman Bischoff</h3><div class="team-role">Founder & PM</div><div class="team-loc">Zürich, Switzerland</div><p class="team-bio">20+ years TradFi — FX, equity, payments, DLT.</p></div>
+    <div class="team-card"><img class="team-photo" src="./images/roman.png" alt="Roman Bischoff"><h3>Roman Bischoff</h3><div class="team-role">Founder & PM</div><div class="team-loc">Zürich, Switzerland</div><p class="team-bio">20+ years TradFi — FX, equity, payments, Solana hackathons</p></div>
     <div class="team-card"><img class="team-photo" src="./images/alexander.png" alt="Alexandr Kazakov"><h3>Alexandr Kazakov</h3><div class="team-role">Fullstack Developer</div><div class="team-loc">Dubai</div><p class="team-bio">Web3 and Solana specialist.</p></div>
     <div class="team-card"><img class="team-photo" src="./images/rosa.png" alt="Rosa Seok"><h3>Rosa Seok</h3><div class="team-role">Business Development</div><div class="team-loc">South Korea & Switzerland</div><p class="team-bio">8 years in crypto. Women in Web3.</p></div>
   </div>
@@ -749,13 +886,13 @@ body::before {
 <!-- ═══════════════════════════════════════════════════════════ -->
 <!-- SLIDE 9: ROADMAP -->
 <!-- ═══════════════════════════════════════════════════════════ -->
-<div class="slide" data-slide="8">
+<div class="slide" data-slide="7">
   <div class="stagger slide-tag">06 — What's Next</div>
   <h2 class="stagger">Roadmap</h2>
   <div class="stagger card-grid card-grid-3" style="margin-top:24px;">
     <div class="roadmap-card highlight"><div class="roadmap-phase">Now — Hackathon</div><h3>Core Gateway</h3><p>camt.053 / camt.054 / semt.002 / BAI2 generation. pain.001 execution. QR reference reconciliation. Single-file, zero-dependency architecture.</p></div>
-    <div class="roadmap-card"><div class="roadmap-phase">Next — Q2 2026</div><h3>Production Hardening</h3><p>REST or GraphQL API for accepting pain.001 messages and delivering camt.053 / camt.054 messages. Cloudflare Workers RPC proxy. Webhook-based camt.054 notifications. Support client-specific mapping logic extensions.</p></div>
-    <div class="roadmap-card"><div class="roadmap-phase">Future — Q3+ 2026</div><h3>Ecosystem Expansion</h3><p>Support additional ISO 20022 dialects (pacs, acmt). Deep-dive with ERP and accounting experts on integration patterns. Sounding on field mapping with industry experts. Multi-chain ISO 20022 support. Open standard for blockchain ↔ ISO 20022.</p></div>
+    <div class="roadmap-card"><div class="roadmap-phase">Next — Q2 2026</div><h3>Production Hardening</h3><ul style="margin:0;padding-left:18px;font-size:0.88rem;color:var(--text-mid);line-height:1.7;list-style:disc;"><li>REST or GraphQL API for pain.001 and camt.053 / camt.054</li><li>Cloudflare Workers RPC proxy</li><li>Webhook-based camt.054 notifications</li><li>Client-specific mapping logic extensions</li></ul></div>
+    <div class="roadmap-card"><div class="roadmap-phase">Future — Q3+ 2026</div><h3>Ecosystem Expansion</h3><ul style="margin:0;padding-left:18px;font-size:0.88rem;color:var(--text-mid);line-height:1.7;list-style:disc;"><li>Additional ISO 20022 dialects (pacs, acmt)</li><li>Deep-dive with ERP and accounting experts</li><li>Field mapping sounding with industry experts</li><li>Multi-chain ISO 20022 support</li><li>Open standard for blockchain ↔ ISO 20022</li></ul></div>
   </div>
   <div class="stagger btn-row" style="margin-top:32px;justify-content:center;">
     <a href="https://iso.gbits.io/" class="btn-primary" target="_blank">Launch App →</a>
@@ -777,8 +914,7 @@ body::before {
   <button class="slide-dot" data-goto="5"></button>
   <button class="slide-dot" data-goto="6"></button>
   <button class="slide-dot" data-goto="7"></button>
-  <button class="slide-dot" data-goto="8"></button>
-  <span class="slide-counter">1 / 9</span>
+  <span class="slide-counter">1 / 8</span>
 </div>
 <div class="key-hint"><kbd>←</kbd> <kbd>→</kbd> or click</div>
 

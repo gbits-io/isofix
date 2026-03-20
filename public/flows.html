@@ -52,7 +52,7 @@
 
   .section-header {
     text-align: center;
-    margin-bottom: 48px;
+    margin-bottom: 40px;
   }
   .section-header h2 {
     font-size: 28px;
@@ -71,10 +71,70 @@
     line-height: 1.6;
   }
 
-  .flow-container {
+  /* ═══ TOP-LEVEL DIRECTION TOGGLE ═══ */
+  .direction-toggle {
     display: flex;
-    flex-direction: column;
-    gap: 36px;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  .direction-pills {
+    display: inline-flex;
+    background: rgba(15,26,46,0.7);
+    border: 1px solid var(--border-subtle);
+    border-radius: 14px;
+    padding: 4px;
+    gap: 4px;
+  }
+  .dir-pill {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    padding: 10px 24px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
+    background: transparent;
+    color: var(--text-muted);
+    position: relative;
+  }
+  .dir-pill:hover { color: var(--text-dim); }
+  .dir-pill .pill-arrow {
+    font-size: 15px;
+    opacity: 0.6;
+    transition: opacity 0.3s;
+  }
+  .dir-pill.active .pill-arrow { opacity: 1; }
+
+  .dir-pill.active.pill-inbound {
+    background: var(--cyan-dim);
+    color: var(--cyan);
+    border: 1px solid rgba(34,211,238,0.2);
+    box-shadow: 0 2px 16px rgba(34,211,238,0.08);
+  }
+  .dir-pill.active.pill-outbound {
+    background: var(--purple-dim);
+    color: var(--purple);
+    border: 1px solid rgba(167,139,250,0.2);
+    box-shadow: 0 2px 16px rgba(167,139,250,0.08);
+  }
+  .dir-pill:not(.active) { border: 1px solid transparent; }
+
+  /* ═══ FLOW PANELS ═══ */
+  .direction-panel {
+    display: none;
+  }
+  .direction-panel.active {
+    display: block;
+    animation: panelIn 0.4s ease-out;
+  }
+  @keyframes panelIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
   }
 
   .flow-row {
@@ -126,7 +186,7 @@
   }
   .flow-label .arrow { font-size: 14px; }
 
-  /* ═══ TABS ═══ */
+  /* ═══ SUB-TABS (inbound: on-demand / webhook) ═══ */
   .tab-bar {
     display: flex;
     gap: 0;
@@ -354,7 +414,6 @@
     position: relative;
   }
 
-  /* Shared node column for dual-lane */
   .dual-nodes {
     display: flex;
     align-items: flex-start;
@@ -364,7 +423,6 @@
   }
   .dual-nodes .step { flex: 1; }
 
-  /* Connector area between nodes — holds two lanes */
   .dual-nodes .connector-dual {
     flex: 0 0 68px;
     position: relative;
@@ -394,7 +452,6 @@
     filter: blur(0.5px);
   }
 
-  /* Request lane (top): goes LEFT ← (ISOFIX requests data from Helius/Solana) */
   .lane-request {
     top: calc(50% - 7px);
   }
@@ -420,7 +477,6 @@
     opacity: 0.8;
   }
 
-  /* Response lane (bottom): goes RIGHT → (data flows back to ISOFIX) */
   .lane-response {
     top: calc(50% + 5px);
   }
@@ -446,13 +502,11 @@
     opacity: 0.8;
   }
 
-  /* Stagger the dual-lane connectors */
   .connector-dual:nth-child(2) .lane-request .packet { animation-delay: 0s; }
   .connector-dual:nth-child(2) .lane-response .packet { animation-delay: 0.7s; }
   .connector-dual:nth-child(4) .lane-request .packet { animation-delay: 0.35s; }
   .connector-dual:nth-child(4) .lane-response .packet { animation-delay: 1.05s; }
 
-  /* Single-lane connectors after Helius section use standard animation */
   .dual-nodes .connector {
     flex: 0 0 68px;
     align-self: flex-start;
@@ -505,15 +559,16 @@
   .tab-panel.active .pipeline > :nth-child(9),
   .tab-panel.active .dual-nodes > :nth-child(9) { animation-delay: 0.9s; }
 
-  .flow-row.outbound .pipeline > :nth-child(1) { animation-delay: 0.4s; }
-  .flow-row.outbound .pipeline > :nth-child(2) { animation-delay: 0.5s; }
-  .flow-row.outbound .pipeline > :nth-child(3) { animation-delay: 0.6s; }
-  .flow-row.outbound .pipeline > :nth-child(4) { animation-delay: 0.7s; }
-  .flow-row.outbound .pipeline > :nth-child(5) { animation-delay: 0.8s; }
-  .flow-row.outbound .pipeline > :nth-child(6) { animation-delay: 0.9s; }
-  .flow-row.outbound .pipeline > :nth-child(7) { animation-delay: 1.0s; }
-  .flow-row.outbound .pipeline > :nth-child(8) { animation-delay: 1.1s; }
-  .flow-row.outbound .pipeline > :nth-child(9) { animation-delay: 1.2s; }
+  /* Outbound entrance delays */
+  .direction-panel.active .flow-row.outbound .pipeline > :nth-child(1) { animation-delay: 0.1s; }
+  .direction-panel.active .flow-row.outbound .pipeline > :nth-child(2) { animation-delay: 0.2s; }
+  .direction-panel.active .flow-row.outbound .pipeline > :nth-child(3) { animation-delay: 0.3s; }
+  .direction-panel.active .flow-row.outbound .pipeline > :nth-child(4) { animation-delay: 0.4s; }
+  .direction-panel.active .flow-row.outbound .pipeline > :nth-child(5) { animation-delay: 0.5s; }
+  .direction-panel.active .flow-row.outbound .pipeline > :nth-child(6) { animation-delay: 0.6s; }
+  .direction-panel.active .flow-row.outbound .pipeline > :nth-child(7) { animation-delay: 0.7s; }
+  .direction-panel.active .flow-row.outbound .pipeline > :nth-child(8) { animation-delay: 0.8s; }
+  .direction-panel.active .flow-row.outbound .pipeline > :nth-child(9) { animation-delay: 0.9s; }
 
   @keyframes fadeUp {
     to { opacity: 1; transform: translateY(0); }
@@ -598,6 +653,11 @@
     }
     .flow-row { padding: 20px 16px; }
     .section-header h2 { font-size: 22px; }
+
+    .dir-pill {
+      font-size: 11px;
+      padding: 8px 16px;
+    }
   }
 </style>
 </head>
@@ -635,11 +695,22 @@
     <p>Bridging Solana stablecoin payments and ISO 20022 banking messages — in both directions.</p>
   </div>
 
-  <div class="flow-container">
+  <!-- ═══ TOP-LEVEL DIRECTION TOGGLE ═══ -->
+  <div class="direction-toggle">
+    <div class="direction-pills">
+      <button class="dir-pill pill-inbound active" onclick="switchDirection('inbound', this)">
+        <span class="pill-arrow">→</span> Inbound
+      </button>
+      <button class="dir-pill pill-outbound" onclick="switchDirection('outbound', this)">
+        <span class="pill-arrow">←</span> Outbound
+      </button>
+    </div>
+  </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- INBOUND: Solana (left) → Company/ERP (right) — TABBED                -->
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- INBOUND PANEL                                                         -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="direction-panel active" id="dir-inbound">
     <div class="flow-row inbound">
       <div class="flow-label inbound">
         <span class="arrow">→</span> Inbound — Blockchain to Company/ERP
@@ -829,10 +900,12 @@
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
-    <!-- OUTBOUND: Company/ERP (right) → Solana (left)                        -->
-    <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- OUTBOUND PANEL                                                        -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <div class="direction-panel" id="dir-outbound">
     <div class="flow-row outbound">
       <div class="flow-label outbound">
         <span class="arrow">←</span> Outbound — Company/ERP to Blockchain
@@ -897,11 +970,25 @@
         </div>
       </div>
     </div>
-
   </div>
+
 </section>
 
 <script>
+function switchDirection(dir, btn) {
+  // Deactivate all direction pills
+  document.querySelectorAll('.dir-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+
+  // Hide all direction panels
+  document.querySelectorAll('.direction-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('dir-' + dir);
+  panel.classList.add('active');
+
+  // Re-trigger entrance animations
+  reanimatePanel(panel);
+}
+
 function switchTab(tabId, btn) {
   // Deactivate all tabs and panels within this flow-row
   const row = btn.closest('.flow-row');
@@ -910,10 +997,14 @@ function switchTab(tabId, btn) {
 
   // Activate clicked tab and panel
   btn.classList.add('active');
-  document.getElementById('panel-' + tabId).classList.add('active');
-
-  // Re-trigger entrance animations by cloning nodes
   const panel = document.getElementById('panel-' + tabId);
+  panel.classList.add('active');
+
+  // Re-trigger entrance animations
+  reanimatePanel(panel);
+}
+
+function reanimatePanel(panel) {
   const items = panel.querySelectorAll('.step, .connector, .connector-dual');
   items.forEach(el => {
     el.style.animation = 'none';
