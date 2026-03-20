@@ -746,7 +746,7 @@ body::before {
       </div>
     </div>
     <div style="display:flex;flex-direction:column;gap:14px;">
-      <div style="font-size:1.05rem;color:var(--text-mid);line-height:1.7;">The answer is always Ripple, Stellar, XDC, Algorand, Quant.</div>
+      <div style="font-size:1.05rem;color:var(--text-mid);line-height:1.7;">The answer is always Ripple, Stellar, XDC, Algorand, Quant, Hedera</div>
       <div class="ai-no-solana">No mention of Solana.</div>
       <div style="display:flex;flex-direction:column;gap:8px;margin-top:4px;">
         <div style="font-family:var(--mono);font-size:0.6rem;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-dim);">Same answer across</div>
@@ -807,6 +807,14 @@ body::before {
       </div>
     </div>
   </div>
+
+  <div class="stagger btn-row" style="margin-top:32px;justify-content:center;">
+    
+    <a href="./camt053_field_mapping.html" class="btn-outline" target="_blank">Field Mapping ↗</a>
+    <a href="./camt053_field_mapping.html" class="btn-outline" target="_blank">Field Mapping FAQ ↗</a>
+  </div>
+
+
 </div>
 
 <!-- ═══════════════════════════════════════════════════════════ -->
@@ -822,10 +830,15 @@ body::before {
 │  Blockchain  │         │  (single HTML file + RPC)        │         │  Accounting  │
 └──────────────┘         └──────────────────────────────────┘         └──────────────┘</pre>
   </div>
+  <!--
   <div class="stagger card-grid card-grid-3" style="margin-top:20px;">
     <div class="tech-point"><h4>QR Reference Reconciliation</h4><p>QRR: prefix in SPL Memo maps to &lt;CdtrRefInf&gt; in camt.053/054. Auto-match in accounting.</p></div>
     <div class="tech-point"><h4>IBAN → Solana via SNS (Solana Name Service)</h4><p>verified-iban.sol subdomains resolve bank IBANs to Solana addresses.</p></div>
     <div class="tech-point"><h4>Beyond Payments</h4><p>semt.002 generates securities custody reports. The gateway is not payment-only.</p></div>
+  </div>
+  -->
+  <div class="stagger btn-row" style="margin-top:32px;justify-content:center;">
+    <a href="./flows.html" class="btn-outline" target="_blank">Message Flows ↗</a>
   </div>
 </div>
 
@@ -838,31 +851,38 @@ body::before {
   <div class="stagger card-grid" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-top:20px;">
     <div class="why-col">
       <div class="why-num">Reason 01</div>
-      <h3>Internet Capital Markets need ISO 20022</h3>
+      <h3>(Internet) Capital Markets need ISO 20022</h3>
+      <!--
       <p>In TradFi, every trade has a security leg and a cash leg. As capital markets move on-chain, the <strong>cash leg</strong> still needs to settle in the language of banks — ISO 20022. Without it, tokenized assets remain disconnected from institutional settlement infrastructure.</p>
+   
       <div class="why-bottom">→ Bridging on-chain assets to TradFi settlement</div>
+       -->
     </div>
     <div class="why-col">
       <div class="why-num">Reason 02</div>
       <h3>Solana needs ISO 20022 to compete as a payment rail</h3>
+<!--
       <p>If Solana and stablecoins want to be taken seriously by institutional finance, they must speak the language banks already use. Ripple played the ISO 20022 card years ago — Solana had no equivalent. Until now.</p>
       <div class="why-bottom">→ Competitive positioning vs. Ripple/XRP</div>
+    -->
     </div>
     <div class="why-col">
       <div class="why-num">Reason 03</div>
       <h3>Stablecoin payments must flow into accounting</h3>
-      <p>A stablecoin payment that cannot be booked is a payment that cannot be adopted. Companies need camt.053 statements and camt.054 notifications to close their books — regardless of the underlying rail.</p>
+<!--      <p>A stablecoin payment that cannot be booked is a payment that cannot be adopted. Companies need camt.053 statements and camt.054 notifications to close their books — regardless of the underlying rail.</p>
       <div class="why-bottom">→ Accounting compliance is non-negotiable</div>
+    -->
     </div>
     <div class="why-col">
       <div class="why-num">Reason 04</div>
       <h3>Gbits Pay needed the missing puzzle piece</h3>
-      <p>Gbits Pay lets users scan Swiss QR invoices and pay with stablecoins. But for the receiving business, that payment was invisible to their ERP. The gateway closes this loop.</p>
+<!--      <p>Gbits Pay lets users scan Swiss QR invoices and pay with stablecoins. But for the receiving business, that payment was invisible to their ERP. The gateway closes this loop.</p>
       <div class="why-bottom">→ Completing the Gbits Pay round-trip</div>
+    -->
     </div>
   </div>
   <div class="stagger slide-takeaway">
-    <strong>The takeaway:</strong> ISO 20022 is not a nice-to-have. It is the interface contract between any payment rail and the global financial back-office.
+    <strong>The takeaway:</strong> ISO 20022 is not a nice-to-have. It is the interface contract between any payment rail and the back-office.
   </div>
 </div>
 
@@ -897,8 +917,6 @@ body::before {
   <div class="stagger btn-row" style="margin-top:32px;justify-content:center;">
     <a href="https://iso.gbits.io/" class="btn-primary" target="_blank">Launch App →</a>
     <a href="https://github.com/gbits-io/isofix" class="btn-outline" target="_blank"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg> GitHub ↗</a>
-    <a href="./flows.html" class="btn-outline" target="_blank">Message Flows ↗</a>
-    <a href="./camt053_field_mapping.html" class="btn-outline" target="_blank">Field Mapping ↗</a>
   </div>
   <div class="stagger" style="margin-top:24px;text-align:center;">
     <p style="font-size:0.8rem;color:var(--text-dim);">© 2026 Gbits.io · Solana ISO 20022 Message Gateway · StableHacks 2026</p>
