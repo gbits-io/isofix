@@ -148,7 +148,7 @@ For real-time notifications: switch to the "Realtime" tab, simulate an inbound p
 | Wallet QR code for testing | ✅ Working |
 | Field mapping reference | ✅ Working |
 | Message flow animation | ✅ Working |
-| pain.001 → SPL transfer | ⚠️ Needs paid Helius key |
+| pain.001 → SPL transfer | ✅ Working |
 | Real-time notifications (live) | 🔲 Planned (Cloudflare Worker) |
 | Helius RPC proxy | 🔲 Planned (Cloudflare Worker) |
 | ISOFIX REST API | 🔲 Planned |
