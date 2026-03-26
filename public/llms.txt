@@ -1,0 +1,58 @@
+# ISOFIX — Solana ISO 20022 Gateway
+
+> Open-source, bidirectional message gateway between Solana stablecoin payments and ISO 20022 banking messages. Turns Solana into a Global RTGS — real-time gross settlement at ~$0.001 per message, zero bank permission required. Built by Gbits.io (Zürich, Switzerland). Source-available under BSL 1.1 (Change Date 2028-03-01, then Apache 2.0).
+
+ISOFIX translates Solana blockchain stablecoin transactions into ISO 20022 XML that any ERP or accounting system can import (SAP, Oracle, Bexio, Abacus, QuickBooks). It also accepts ISO 20022 payment orders and executes them as on-chain Solana SPL token transfers.
+
+The gateway runs as a single HTML file (~165KB) with zero dependencies — no React, no Node.js, no build tools. A company can host its own instance on its own server with its own Helius API key and adapt the field mapping for its specific needs. The code is fully auditable by bank compliance officers who can read plain JavaScript.
+
+Supported stablecoins: USDC, USDT, PYUSD (→ USD), EURC, EUROe (→ EUR), VCHF (→ CHF). One report is generated per ISO 4217 currency.
+
+IBAN-to-Solana address resolution uses on-chain SNS (Solana Name Service) subdomains: `{iban}.verified-iban.sol` resolves a bank IBAN to a Solana wallet address. DNS-style attributes on each SNS record can specify token preference, legal entity name, and verification source.
+
+No banks are needed. No KYC, KYB, or Travel Rule obligation applies to this narrow use case of self-custody stablecoin payments between wallets. Companies change the destination from bank SFTP to the gateway, and their ERP exports/imports work as before.
+
+## ISO 20022 Message Types
+
+- [camt.053 — Bank-to-Customer Statement](https://iso.gbits.io/camt053_field_mapping.html): Solana → ERP. Schema: camt.053.001.04 (Swiss Payment Standards 1.7). End-of-day or periodic statement with opening/closing balances and all stablecoin transactions for a wallet.
+- camt.054 — Bank-to-Customer Debit/Credit Notification: Solana → ERP. Schema: camt.054.001.08 (SPS 2.1). Real-time notification when a stablecoin payment arrives. QR reference in SPL Memo maps to `<CdtrRefInf>` for automatic invoice matching.
+- semt.002 — Securities Balance Custody Report: Solana → ERP. Schema: semt.002.001.11. Shows all SPL token holdings — the gateway is not payment-only.
+- pain.001 — Customer Credit Transfer Initiation: ERP → Solana. Schema: pain.001.001.03 (SPS 2009). Upload from ERP, gateway resolves creditor IBANs via SNS, constructs SPL token transfers. UI mode: sign with Phantom/Solflare. REST mode (planned): gateway executes and returns pacs.002 status.
+- pacs.002 — Payment Status Report (planned): Solana → ERP. Returned after REST-mode pain.001 execution with status codes ACCP (accepted), ACSC (settled/finalized), RJCT (rejected). Includes Solana transaction signature in `<TxId>`.
+- BAI2 — US Bank Statement (non-ISO 20022): Solana → ERP. BAI 2005 format. Combines all currencies. Amounts in cents. For QuickBooks, NetSuite, Oracle, SAP.
+
+## Live App & Documentation
+
+- [ISOFIX Gateway — Live App](https://iso.gbits.io/): The full gateway application. Connect a Solana wallet, generate reports, execute payments, receive real-time notifications.
+- [StableHacks Submission Page](https://iso.gbits.io/stablehacks.html): Project overview, problem statement, architecture diagram, team, and roadmap for StableHacks 2026.
+- [Slide Presentation](https://iso.gbits.io/stablehacks-presentation.html): 9-slide deck covering problem, translation visual (Solana ↔ ISO 20022), architecture, why it matters, track record, and roadmap.
+- [Message Flow Diagrams](https://iso.gbits.io/flows.html): Animated inbound/outbound flows showing how Solana transactions become ISO 20022 messages and vice versa, including live and webhook modes.
+- [camt.053 Field Mapping](https://iso.gbits.io/camt053_field_mapping.html): Reference table mapping every Solana RPC field to its corresponding ISO 20022 XPath, with transformation logic.
+- [FAQ](https://iso.gbits.io/field-mapping-faq.html): 16 questions covering ISO 20022 mapping decisions — truncation, BIC, balances, QR references, currency handling, and more.
+
+## Source Code
+
+- [GitHub Repository](https://github.com/gbits-io/isofix): Source-available under BSL 1.1 (Change Date 2028-03-01, then Apache 2.0). Single-file architecture. The entire gateway is `index.html`.
+
+## Key Technical Details
+
+- Swiss-specific conventions: BIC `SOLNCHZZXXX` (synthetic), SPS version tags (`SPS/1.7/PROD`, `SPS/2.1/PROD`), `SubFmlyCd: ESCT` for SEPA compatibility, QR references with `QRR:` prefix in SPL Memo → `Strd/CdtrRefInf`.
+- Account owner fields follow CBPR+ structured format: `Acct/Ownr/Nm` and `Acct/Ownr/PstlAdr` with `StrtNm`, `BldgNb`, `PstCd`, `TwnNm`, `Ctry`.
+- Transaction fetching uses Helius RPC: `getSignaturesForAddress` + `parseTransaction` (DAS API). Results filtered for SPL token transfers matching known stablecoin mints.
+- SNS resolution: forward via `sdk-proxy.sns.id/resolve/{domain}`, reverse via `sns-api.bonfida.com/v2/user/domains/{address}`.
+- External JS dependency: `@solana/web3.js` v1.95.8 from unpkg CDN.
+
+## Roadmap
+
+- **Now (Hackathon complete):** camt.053, camt.054, semt.002, BAI2 generation. pain.001 execution. QR reference reconciliation. Single-file, zero-dependency architecture.
+- **Q2 2026 — Production Hardening:** REST API with pain.001 intake and pacs.002 status response. Webhook-based camt.054 notifications. Squads multi-sig for pain.001 execution. Cloudflare Workers RPC proxy (hides Helius API key). DNS-style SNS attributes (token preference, entity name).
+- **Q3 2026 — Multi-Chain:** Ethereum and Base L2 support. EVM RPC proxy, ERC-20 Transfer event parsing, MetaMask/WalletConnect signing.
+- **Q4 2026 — REST API:** Full programmatic access. API keys, rate limiting, on-demand report generation, webhook subscriptions, OpenAPI spec.
+
+## Company & Team
+
+- [Gbits.io](https://gbits.io): Solana-based stablecoin payments infrastructure. Two live products: Gbits Pay (Swiss QR invoice payments with stablecoins) and ISOFIX (this gateway).
+- [LinkedIn](https://www.linkedin.com/company/gbits-io/): Gbits.io company page.
+- Team: Roman Bischoff (Founder & PM, Zürich — 20+ years TradFi), Alexandr Kazakov (Fullstack Developer, Dubai), Rosa Seok (Business Development, South Korea & Switzerland).
+- Research partner: Prof. Dr. Aleksander Berentsen, Universität Basel.
+- Track record: Solana FM Track Winner (Encode Hackathon 2024), Blockchain Nation Switzerland Winner 2024 (Innosuisse grant recipient).

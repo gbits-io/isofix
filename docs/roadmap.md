@@ -1,6 +1,6 @@
 # ISOFIX Roadmap
 
-**Last updated:** 2026-03-14
+**Last updated:** 2026-03-26
 
 ---
 
@@ -38,6 +38,8 @@
 | 2.4 | Wallet address registration | Browser tells the Worker which wallet address to monitor — Worker filters webhook events accordingly |
 | 2.5 | End-to-end test on devnet | Send a devnet stablecoin transfer → Helius webhook fires → Worker generates camt.054 → browser receives notification |
 | 2.6 | Test camt.054 import in Bexio | Verify that a webhook-generated camt.054 imports correctly into Bexio as a debit/credit notification |
+| 2.7 | Squads multi-sig for pain.001 | For UI-mode pain.001 execution, create a Squads transaction proposal instead of a single-signer tx. Allows CFO + Treasurer approval before settlement |
+| 2.8 | DNS-style SNS attributes | Add metadata to verified-iban.sol subdomains: token preference (USDC, EURC), legal entity name, verification source. Stored as SNS record data, queried at resolution time |
 
 **Depends on:** Milestone 1 deployed and webhook registered
 
@@ -70,14 +72,15 @@
 
 | # | Task | Detail |
 |---|------|--------|
-| 4.1 | API design | RESTful endpoints: `GET /api/v1/reports/camt053?address={addr}&currency={ccy}&from={date}&to={date}`, `GET /api/v1/reports/camt054?address={addr}&since={ts}`, etc. |
+| 4.1 | API design | RESTful endpoints: `POST /api/v1/pain001` (accepts pain.001 XML, returns 202 + UETR), `GET /api/v1/reports/camt053?address={addr}&currency={ccy}&from={date}&to={date}`, `GET /api/v1/reports/camt054?address={addr}&since={ts}`, etc. |
 | 4.2 | Authentication | API key per customer, stored in Worker KV or D1. Rate limiting per key |
-| 4.3 | On-demand camt.053 generation | Port the full `fetchStablecoinTxns()` + `generateCamt053()` pipeline to the Worker. Return XML directly or as a download |
-| 4.4 | On-demand camt.054 generation | Same as camt.053 but for notification format |
-| 4.5 | Webhook subscription API | `POST /api/v1/webhooks` — let companies register a callback URL to receive camt.054 notifications in real time (ISOFIX as a webhook relay: Helius → ISOFIX Worker → customer endpoint) |
-| 4.6 | semt.002 via API | Port custody report generation. Useful for portfolio reporting tools |
-| 4.7 | OpenAPI spec / documentation | Publish API docs so companies can integrate. Host at `api.gbits.io/docs` |
-| 4.8 | Usage dashboard | Simple admin page showing API usage per key, report counts, webhook delivery status |
+| 4.3 | pacs.002 status response | After pain.001 intake: return pacs.002 with ACCP (accepted), ACSC (settled/finalized), or RJCT (simulation failed/dropped). Include Solana tx signature in `<TxId>`. Delivered via webhook POST to customer's registered callback URL |
+| 4.4 | On-demand camt.053 generation | Port the full `fetchStablecoinTxns()` + `generateCamt053()` pipeline to the Worker. Return XML directly or as a download |
+| 4.5 | On-demand camt.054 generation | Same as camt.053 but for notification format |
+| 4.6 | Webhook subscription API | `POST /api/v1/webhooks` — let companies register a callback URL to receive camt.054 notifications and pacs.002 status reports in real time (ISOFIX as a webhook relay: Helius → ISOFIX Worker → customer endpoint). Include `X-ISO-Signature` (HMAC-SHA256) header for verification |
+| 4.7 | semt.002 via API | Port custody report generation. Useful for portfolio reporting tools |
+| 4.8 | OpenAPI spec / documentation | Publish API docs so companies can integrate. Host at `api.gbits.io/docs` |
+| 4.9 | Usage dashboard | Simple admin page showing API usage per key, report counts, webhook delivery status |
 
 **Depends on:** Milestone 1, and a decision on pricing/access model
 
@@ -132,11 +135,13 @@
 ## Timeline (Suggested)
 
 ```
-  2026-Q1 (now)          Q2                    Q3                  Q4
+  2026-Q1 (done)         Q2                    Q3                  Q4
   ─────────────────────────────────────────────────────────────────────
   ████ M1: Worker         ██ M2: Live          ████ M3: EVM        ██ M4: API
-  █ StableHacks            realtime             multi-chain          REST API
-    hackathon              camt.054              Ethereum/Base
+  ✓ StableHacks            realtime             multi-chain          REST API
+    submitted              camt.054              Ethereum/Base
+                           + Squads
+                           + SNS attrs
 
   ───── Ongoing: M5 improvements and hardening ─────────────────────►
 ```
@@ -147,6 +152,13 @@
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-03-26 | Add pacs.002 status response for REST-mode pain.001 | When ERP POSTs pain.001 via API (no human in loop), the gateway must return a machine-readable status. pacs.002 with ACCP/ACSC/RJCT codes maps directly to what ERPs expect. Includes Solana tx signature in `<TxId>` for audit trail |
+| 2026-03-26 | Plan Squads multi-sig for pain.001 execution | Single-key signing is a non-starter for enterprise. Squads creates a transaction proposal requiring multiple approvers (e.g. CFO + Treasurer) before on-chain settlement |
+| 2026-03-26 | DNS-style SNS attributes on verified-iban.sol | Expand each SNS subdomain record to carry metadata: token preference (USDC, EURC), legal entity name, verification source. Turns the registry into a financial discovery layer |
+| 2026-03-26 | Webhook-first for pacs.002 delivery | Webhooks beat WebSockets for ERP integration: stateless, retry-safe, compatible with SAP/NetSuite/Bexio. HMAC-signed headers for verification. WebSockets remain only for the browser UI |
+| 2026-03-26 | RTGS framing for positioning | "Global RTGS at ~$0.001 per message, zero bank permission" — clearer positioning than "ISO 20022 bridge." Added to presentation and landing page |
+| 2026-03-26 | Remove AlpenSign/swiyu from ISOFIX roadmap | These are separate projects. ISOFIX roadmap should focus on gateway features only |
+| 2026-03-26 | Add stablehacks-presentation.html | 9-slide presentation deck covering problem, translation, architecture, and roadmap. Linked from stablehacks.html and gbits.io landing page |
 | 2026-03-14 | Add BAI2 report type | Broadens appeal beyond Swiss/European market. US companies use BAI2 for QuickBooks, NetSuite, Oracle, SAP |
 | 2026-03-14 | Add structured account owner (CBPR+) | Makes camt.053/054 output look professional. Includes PstlAdr with StrtNm/BldgNb/PstCd/TwnNm/Ctry |
 | 2026-03-14 | SNS API migration to sns-api.bonfida.com | Old proxy at sns-sdk-proxy.bonfida.workers.dev deprecated. SDK proxy moved to sdk-proxy.sns.id. Reverse lookup uses SNS API v2 which returns domain names directly |

@@ -5,7 +5,7 @@
 > Part of the Gbits.io ecosystem, built for the **StableHacks 2026** hackathon on DoraHacks.
 
 **Owner:** Roman (romanix@gbits.io), Zürich
-**Last updated:** 2026-03-14
+**Last updated:** 2026-03-26
 **Repository/Deployment:** Hosted on Cloudflare Pages at `iso.gbits.io`, GitHub at `github.com/gbits-io/isofix`
 
 ---
@@ -84,6 +84,8 @@ Everything runs client-side in the browser. There is no backend yet (a Cloudflar
 | `flows.html` | ~36KB | Landing page animation showing the bidirectional message flow |
 | `camt053_field_mapping.html` | ~29KB | Reference table: Solana fields → camt.053 XML elements |
 | `field-mapping-faq.html` | ~36KB | FAQ page: 16 questions covering Solana ↔ ISO 20022 mapping decisions |
+| `stablehacks.html` | ~18KB | StableHacks 2026 submission landing page — project overview, problem statement, architecture, team, roadmap |
+| `stablehacks-presentation.html` | ~50KB | Slide-based presentation deck — 9 slides covering problem, translation visual, architecture, why it matters, track record, roadmap |
 | `ISOFIX_ServerSide_Plan.md` | ~12KB | Cloudflare Worker implementation plan and TODO list |
 | `ISOFIX_Project_Knowledge.md` | this file | Project knowledge for future sessions |
 | `hackathon_talking_points.md` | ~9KB | Demo script, talking points, and Q&A for StableHacks 2026 |
@@ -140,7 +142,11 @@ Everything runs client-side in the browser. There is no backend yet (a Cloudflar
 
 ### Tab 3: Execute Payments (pain.001 → Solana)
 
-**User flow:**
+**Two operational modes:**
+- **UI mode (current):** Upload pain.001 in browser → parse → sign with Phantom/Solflare → human-in-the-loop
+- **REST mode (planned):** ERP POSTs pain.001 to the gateway API → gateway executes → returns pacs.002 status (ACCP/ACSC/RJCT). No human in the loop — requires security hardening (Squads multi-sig, spending limits, IP whitelisting)
+
+**User flow (UI mode):**
 1. Upload a pain.001.001.03 XML file (Swiss SPS 2009 flavor)
 2. App parses creditor list: name, IBAN, amount, currency, memo
 3. For each creditor IBAN, resolves to a Solana address via SNS subdomain: `{iban}.verified-iban.sol` (Roman owns `verified-iban.sol` on SNS)
@@ -154,6 +160,8 @@ Everything runs client-side in the browser. There is no backend yet (a Cloudflar
 
 **SNS resolution pattern:** `ch4308005000065810500.verified-iban.sol` → Solana address
 
+**Planned: DNS-style SNS attributes.** Each verified-iban.sol subdomain could carry additional metadata (like DNS TXT records): token preference (USDC, EURC), legal entity name, verification source. This turns the SNS registry into a financial discovery layer.
+
 ---
 
 ## ISO 20022 Message Types
@@ -164,6 +172,7 @@ Everything runs client-side in the browser. There is no backend yet (a Cloudflar
 | camt.054 | Solana → ERP | BankToCustomerDebitCreditNotification | camt.054.001.08 (SPS 2.1) |
 | semt.002 | Solana → ERP | SecuritiesBalanceCustodyReport | semt.002.001.11 |
 | pain.001 | ERP → Solana | CustomerCreditTransferInitiation | pain.001.001.03 (SPS 2009) |
+| pacs.002 | Solana → ERP | PaymentStatusReport | Planned — returned to ERP after REST-mode pain.001 execution |
 | BAI2 | Solana → ERP | Bank Administration Institute v2 (US) | BAI 2005 (non-ISO 20022) |
 
 **Swiss-specific conventions used:**
@@ -279,6 +288,19 @@ A Cloudflare Worker (`api.gbits.io`) will serve multiple projects:
 ```
 
 Full details in `ISOFIX_ServerSide_Plan.md`.
+
+---
+
+## Strategic Positioning
+
+**"Global RTGS at ~$0.001 per message, zero bank permission required."** The gateway effectively turns Solana into a real-time gross settlement system for companies using self-custody wallets. By supporting the full ISO 20022 lifecycle — pain.001 (initiation) → Solana settlement → camt.053/054 (reconciliation) — it makes the blockchain invisible to the accounting department. The "Pain-to-Chain" round-trip replaces the traditional interbank layer (pacs.008) entirely.
+
+**Key insight:** No banks, no KYC/KYB obligation, no Travel Rule for this narrow use case (self-custody stablecoin payments between wallets). Companies change the destination from bank SFTP to the gateway, and their ERP exports/imports work as before.
+
+**Planned enterprise features:**
+- **Squads multi-sig** for pain.001 execution (CFO + Treasurer approval before on-chain settlement)
+- **Webhook-first status loop** — gateway POSTs pacs.002 to the company's registered endpoint once Solana transaction is finalized
+- **DNS-style SNS attributes** on verified-iban.sol (token preference, legal entity name)
 
 ---
 

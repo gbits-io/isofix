@@ -41,6 +41,8 @@
 </div>
 <div class="topbar-right">
   <a href="index.html" class="topbar-link">Open App</a>
+  <a href="for-companies.html" class="topbar-link">For Companies</a>
+  <a href="stablehacks-presentation.html" class="topbar-link">Presentation</a>
   <a href="flows.html" class="topbar-link">Message Flow</a>
   <a href="field-mapping-faq.html" class="topbar-link">FAQ</a>
   <a href="https://github.com/gbits-io/isofix" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;background:rgba(20,241,149,0.08);border:1px solid rgba(20,241,149,0.15);color:var(--sol-green);transition:all 0.2s;" title="View on GitHub">
@@ -53,7 +55,7 @@
 <section class="hero"><div class="container">
 <div class="hero-tag">Tenity · Amina · Solana · Solstice — StableHacks 2026</div>
 <h1>The <span class="accent">ISO 20022</span> Gateway<br>for Solana Stablecoins</h1>
-<p class="hero-sub">Open-source infrastructure that bridges Solana stablecoin transactions to ISO 20022 — the universal financial messaging standard. Generate bank statements, custody reports, and payment orders. Import into any ERP or accounting system.</p>
+<p class="hero-sub">Open-source infrastructure that turns Solana into a Global RTGS — real-time gross settlement at ~$0.001 per message, zero bank permission required. Generate bank statements, custody reports, and payment orders in ISO 20022 XML. Import into any ERP or accounting system.</p>
 <div class="hero-actions">
 <a href="https://iso.gbits.io/" class="btn-primary">Try Live Demo →</a>
 <a href="https://github.com/gbits-io/isofix" class="btn-outline">Source Code ↗</a>
@@ -93,12 +95,14 @@ ISO 20022 support is often cited by Ripple/XRP advocates as a key differentiator
 <span class="submission-badge">⚡ StableHacks Submission</span>
 <h3>Solana ISO 20022 Gateway</h3>
 <div class="url">iso.gbits.io · github.com/gbits-io/isofix</div>
-<p>Bidirectional message gateway. Reads Solana stablecoin transactions, generates compliant ISO 20022 XML — bank statements, payment notifications, securities custody reports. Or takes an ISO 20022 payment order and executes it as a Solana SPL transfer. Not limited to payments or to any specific geography.</p>
+<p>Bidirectional message gateway. Reads Solana stablecoin transactions, generates compliant ISO 20022 XML — bank statements, payment notifications, securities custody reports. Or takes an ISO 20022 payment order and executes it as a Solana SPL transfer.</p>
+<p style="font-size:0.82rem;color:var(--text-dim);margin-top:8px;line-height:1.6;position:relative;z-index:1;"><strong style="color:var(--text-mid);">UI mode:</strong> Upload pain.001 in browser, sign with Phantom / Solflare. <strong style="color:var(--text-mid);">REST mode:</strong> ERP POSTs pain.001, gateway executes and returns pacs.002 status.</p>
 <div class="msg-tags">
 <span class="msg-tag">camt.053 — Bank Statement</span>
 <span class="msg-tag">camt.054 — Notification</span>
 <span class="msg-tag securities">semt.002 — Securities Balance</span>
 <span class="msg-tag in">pain.001 — Payment Order</span>
+<span class="msg-tag securities">BAI2 — US Bank Statement</span>
 </div>
 </div>
 <div class="pay-card">
@@ -161,8 +165,11 @@ ISO 20022 support is often cited by Ripple/XRP advocates as a key differentiator
 <h2 class="section-title">See exactly how it works</h2>
 <p class="section-desc">Interactive flow diagrams and field-level mapping documentation. Early visitors have told us these pages were the most compelling part of the project.</p>
 <div class="deepdive-grid">
+<a href="stablehacks-presentation.html" class="deepdive-card"><div class="deepdive-icon">📊</div><div class="deepdive-info"><h4>Slide Presentation</h4><p>Full pitch — problem, architecture, live demo, and roadmap</p></div><span class="deepdive-arrow">→</span></a>
 <a href="flows.html" class="deepdive-card"><div class="deepdive-icon">⚡</div><div class="deepdive-info"><h4>Message Flow Diagrams</h4><p>Animated inbound/outbound flows with live &amp; webhook modes</p></div><span class="deepdive-arrow">→</span></a>
 <a href="camt053_field_mapping.html" class="deepdive-card"><div class="deepdive-icon">🗺️</div><div class="deepdive-info"><h4>camt.053 Field Mapping</h4><p>Every Solana field → ISO 20022 XPath, with transformation logic</p></div><span class="deepdive-arrow">→</span></a>
+<a href="field-mapping-faq.html" class="deepdive-card"><div class="deepdive-icon">💬</div><div class="deepdive-info"><h4>FAQ</h4><p>Common questions about the gateway, mapping, and architecture</p></div><span class="deepdive-arrow">→</span></a>
+<a href="for-companies.html" class="deepdive-card"><div class="deepdive-icon">🏢</div><div class="deepdive-info"><h4>For Companies</h4><p>Setup, accounting impact, benefits, and risks</p></div><span class="deepdive-arrow">→</span></a>
 </div>
 </div></section>
 
@@ -172,9 +179,9 @@ ISO 20022 support is often cited by Ripple/XRP advocates as a key differentiator
 <div class="section-num">04 — Demo</div>
 <h2 class="section-title">See it in action</h2>
 <p class="section-desc">Live apps running on Solana mainnet and devnet.</p>
-<div class="demo-placeholder"><div class="ico">▶</div><h3>Demo video — recording in progress</h3><p>Will be embedded here before the March 22 deadline.</p></div>
-<div class="demo-links">
-<a href="https://iso.gbits.io/" class="btn-primary">Solana ISO 20022 Gateway →</a>
+<div class="demo-links" style="margin-top:28px;">
+<a href="https://iso.gbits.io/" class="btn-primary">Launch Gateway →</a>
+<a href="stablehacks-presentation.html" class="btn-outline">View Presentation →</a>
 <a href="https://app.gbits.io/" class="btn-outline">Gbits Pay →</a>
 <a href="https://github.com/gbits-io/isofix" class="btn-outline">Source Code ↗</a>
 </div>
@@ -194,7 +201,7 @@ ISO 20022 support is often cited by Ripple/XRP advocates as a key differentiator
 </div>
 <div class="tech-grid">
 <div class="tech-point"><h4>QR Reference Reconciliation</h4><p>QRR: prefix in SPL Memo maps to &lt;CdtrRefInf&gt; in camt.053/054. Auto-match in accounting software.</p></div>
-<div class="tech-point"><h4>IBAN → Solana via SNS</h4><p>verified-iban.sol Bonfida subdomains resolve bank IBANs to Solana wallet addresses.</p></div>
+<div class="tech-point"><h4>IBAN → Solana via SNS</h4><p>verified-iban.sol Bonfida subdomains resolve bank IBANs to Solana wallet addresses. DNS-style attributes on each record can specify token preference (USDC, EURC), legal entity name, and more.</p></div>
 <div class="tech-point"><h4>Beyond Payments</h4><p>semt.002 generates securities custody reports for SPL token holdings. The gateway is not payment-only infrastructure.</p></div>
 </div>
 </div></section>
@@ -229,15 +236,15 @@ ISO 20022 support is often cited by Ripple/XRP advocates as a key differentiator
 <div class="section-num">08 — What's Next</div>
 <h2 class="section-title">Roadmap</h2>
 <div class="roadmap-grid">
-<div class="roadmap-card"><div class="roadmap-phase">Now — Hackathon</div><h3>Core Gateway</h3><p>camt.053 / camt.054 / semt.002 generation. pain.001 execution. QR reference reconciliation. Single-file, zero-dependency architecture.</p></div>
-<div class="roadmap-card"><div class="roadmap-phase">Next — Q2 2026</div><h3>Production Hardening</h3><p>Cloudflare Workers RPC proxy. Webhook-based camt.054 notifications. swiyu E-ID integration for verified identity attestations.</p></div>
-<div class="roadmap-card"><div class="roadmap-phase">Future — Q3+ 2026</div><h3>Ecosystem Expansion</h3><p>AlpenSign biometric payment sealing. Multi-chain ISO 20022 support. Additional message types (pacs, acmt). Open standard for blockchain ↔ ISO 20022.</p></div>
+<div class="roadmap-card"><div class="roadmap-phase">Now — Hackathon</div><h3>Core Gateway</h3><p>camt.053 / camt.054 / semt.002 / BAI2 generation. pain.001 execution. QR reference reconciliation. Single-file, zero-dependency architecture.</p></div>
+<div class="roadmap-card"><div class="roadmap-phase">Next — Q2 2026</div><h3>Production Hardening</h3><p>REST API: pain.001 intake with pacs.002 status response. Webhook-based camt.054 notifications. Squads multi-sig for pain.001 execution. Cloudflare Workers RPC proxy. DNS-style SNS attributes (token preference, entity name).</p></div>
+<div class="roadmap-card"><div class="roadmap-phase">Future — Q3+ 2026</div><h3>Ecosystem Expansion</h3><p>Additional ISO 20022 dialects (pacs, acmt). Deep-dive with ERP and accounting experts. Multi-chain ISO 20022 support. Open standard for blockchain ↔ ISO 20022.</p></div>
 </div>
 </div></section>
 
 <footer class="page-footer"><div class="container">
 <div class="footer-links">
-<a href="https://gbits.io">gbits.io</a><a href="https://iso.gbits.io">Gateway</a><a href="https://app.gbits.io">Gbits Pay</a><a href="flows.html">Message Flow</a><a href="camt053_field_mapping.html">Field Mapping</a><a href="field-mapping-faq.html">FAQ</a><a href="https://github.com/gbits-io/isofix">GitHub</a><a href="https://dorahacks.io/hackathon/stablehacks/tracks">DoraHacks</a>
+<a href="https://gbits.io">gbits.io</a><a href="https://iso.gbits.io">Gateway</a><a href="https://app.gbits.io">Gbits Pay</a><a href="for-companies.html">For Companies</a><a href="stablehacks-presentation.html">Presentation</a><a href="flows.html">Message Flow</a><a href="camt053_field_mapping.html">Field Mapping</a><a href="field-mapping-faq.html">FAQ</a><a href="https://github.com/gbits-io/isofix">GitHub</a><a href="https://dorahacks.io/hackathon/stablehacks/tracks">DoraHacks</a>
 </div>
 <p class="footer-copy">© 2026 Roman Bischoff, Zürich · Solana ISO 20022 Message Gateway · Built for StableHacks 2026</p>
 </div></footer>
