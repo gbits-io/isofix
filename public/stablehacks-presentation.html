@@ -937,6 +937,11 @@ body::before {
 <div class="slide" data-slide="4">
   <div class="stagger slide-tag">02c — The Reverse Direction</div>
   <h2 class="stagger">ISO 20022 pain.001 → Solana Transaction</h2>
+  <p class="stagger slide-sub" style="margin-top:2px;margin-bottom:12px;font-size:0.88rem;color:var(--text-mid);">
+    <strong style="color:var(--text-light);">UI mode:</strong> Upload pain.001 in browser → sign with Phantom / Solflare.
+    &nbsp;·&nbsp;
+    <strong style="color:var(--text-light);">REST mode:</strong> ERP POSTs pain.001 → gateway executes → returns pacs.002 status.
+  </p>
   <div class="stagger transform-visual">
     <div class="transform-header">
       <span>ISO 20022 pain.001</span><span class="arrow-gw">──▶</span><span>Gateway</span><span class="arrow-gw">──▶</span><span>Solana SPL Token Transfer</span>
@@ -1029,7 +1034,7 @@ body::before {
   </div>
   <div class="stagger card-grid card-grid-3" style="margin-top:20px;">
     <div class="tech-point"><h4>QR Reference Reconciliation</h4><p>QRR: prefix in SPL Memo maps to &lt;CdtrRefInf&gt; in camt.053/054. Auto-match in accounting.</p></div>
-    <div class="tech-point"><h4>IBAN → Solana via SNS (Solana Name Service)</h4><p><a href="https://www.sns.id/domain/verified-iban.sol" target="_blank" style="color:var(--sol-green);text-decoration:none;border-bottom:1px solid rgba(20,241,149,0.3);">verified-iban.sol</a> subdomains resolve bank IBANs to Solana addresses.</p></div>
+    <div class="tech-point"><h4>IBAN → Solana via SNS (Solana Name Service)</h4><p><a href="https://www.sns.id/domain/verified-iban.sol" target="_blank" style="color:var(--sol-green);text-decoration:none;border-bottom:1px solid rgba(20,241,149,0.3);">verified-iban.sol</a> subdomains resolve bank IBANs to Solana addresses. DNS-style attributes on each record can specify token preference (USDC, EURC), legal entity name, and more.</p></div>
     <div class="tech-point"><h4>Beyond Payments</h4><p>semt.002 generates securities custody reports. The gateway is not payment-only.</p></div>
   </div>
   <div class="stagger btn-row" style="margin-top:32px;justify-content:center;">
@@ -1070,7 +1075,7 @@ body::before {
     </div>
   </div>
   <div class="stagger slide-takeaway">
-    <strong>The gateway doesn't change the protocol.</strong> It translates what already exists on Solana into the format that banks, ERPs, and regulators already understand.
+    <strong>The gateway turns Solana into a Global RTGS</strong> — real-time gross settlement at ~$0.001 per message, zero bank permission required. It translates what already exists on Solana into the format that banks, ERPs, and regulators already understand.
   </div>
 </div>
 
@@ -1099,7 +1104,7 @@ body::before {
   <h2 class="stagger">Roadmap</h2>
   <div class="stagger card-grid card-grid-3" style="margin-top:24px;">
     <div class="roadmap-card highlight"><div class="roadmap-phase">Now — Hackathon</div><h3>Solana ISO 20022 Gateway (Core)</h3><p>camt.053 / camt.054 / semt.002 / BAI2 generation. pain.001 execution. QR reference reconciliation. Single-file, zero-dependency architecture.</p></div>
-    <div class="roadmap-card"><div class="roadmap-phase">Next — Q2 2026</div><h3>Production Hardening</h3><ul style="margin:0;padding-left:18px;font-size:0.88rem;color:var(--text-mid);line-height:1.7;list-style:disc;"><li>REST or GraphQL API for pain.001 and camt.053 / camt.054</li><li>Cloudflare Workers RPC proxy</li><li>Webhook-based camt.054 notifications</li><li>Client-specific mapping logic extensions</li></ul></div>
+    <div class="roadmap-card"><div class="roadmap-phase">Next — Q2 2026</div><h3>Production Hardening</h3><ul style="margin:0;padding-left:18px;font-size:0.88rem;color:var(--text-mid);line-height:1.7;list-style:disc;"><li>REST API: pain.001 intake → pacs.002 status response</li><li>Webhook-based camt.054 notifications</li><li>Squads multi-sig support for pain.001 execution</li><li>Cloudflare Workers RPC proxy</li><li>DNS-style SNS attributes (token preference, entity name)</li></ul></div>
     <div class="roadmap-card"><div class="roadmap-phase">Future — Q3+ 2026</div><h3>Ecosystem Expansion</h3><ul style="margin:0;padding-left:18px;font-size:0.88rem;color:var(--text-mid);line-height:1.7;list-style:disc;"><li>Additional ISO 20022 dialects (pacs, acmt)</li><li>Deep-dive with ERP and accounting experts</li><li>Field mapping sounding with industry experts</li><li>Multi-chain ISO 20022 support</li><li>Open standard for blockchain ↔ ISO 20022</li></ul></div>
   </div>
   <div class="stagger btn-row" style="margin-top:32px;justify-content:center;">
