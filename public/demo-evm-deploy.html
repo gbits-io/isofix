@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ISOFIX Demo — Deploy Mock RWA Tokens (Sepolia)</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 36 36'%3E%3Crect width='36' height='36' rx='8' fill='%230A1628'/%3E%3Ctext x='18' y='24' text-anchor='middle' font-family='monospace' font-size='18' font-weight='bold' fill='%2322D3EE'%3EI%3C/text%3E%3C/svg%3E">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            --bg-body: linear-gradient(175deg, #060D18 0%, #0A1628 40%, #0D1B30 100%);
+            --bg-card: linear-gradient(180deg, rgba(15,26,46,0.9), rgba(10,22,40,0.95));
+            --bg-overlay: rgba(0,0,0,0.3);
+            --border-card: rgba(34,211,238,0.08);
+            --border-subtle: rgba(255,255,255,0.06);
+            --text-primary: #DEE5EF;
+            --text-heading: #E8EDF5;
+            --text-secondary: #B8C7D8;
+            --text-muted: #7A8BA0;
+            --text-dim: #6A7B90;
+            --text-faint: #5A6B80;
+            --accent: #22D3EE;
+            --accent-bg: rgba(34,211,238,0.08);
+            --accent-border: rgba(34,211,238,0.2);
+            --green: #34D399;
+            --green-bg: rgba(52,211,153,0.1);
+            --green-border: rgba(52,211,153,0.25);
+            --amber: #F59E0B;
+            --amber-bg: rgba(245,158,11,0.08);
+            --amber-border: rgba(245,158,11,0.25);
+            --amber-text: #F5D78E;
+            --red: #F87171;
+            --red-bg: rgba(248,113,113,0.08);
+            --red-border: rgba(248,113,113,0.25);
+            --purple: #A78BFA;
+
+            font-family: 'Outfit', sans-serif;
+            background: var(--bg-body); color: var(--text-primary);
+            min-height: 100vh;
+        }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .container { max-width: 880px; margin: 0 auto; padding: 32px 24px 64px; }
+
+        h1 { font-size: 24px; font-weight: 600; color: var(--text-heading); margin-bottom: 4px; letter-spacing: -0.02em; }
+        .subtitle { font-size: 13px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; margin-bottom: 24px; }
+
+        .card {
+            background: var(--bg-card); border: 1px solid var(--border-card);
+            border-radius: 14px; padding: 22px; margin-bottom: 18px;
+        }
+        .card-label {
+            font-size: 11px; font-weight: 500; color: var(--accent);
+            text-transform: uppercase; letter-spacing: 0.08em;
+            font-family: 'JetBrains Mono', monospace; margin-bottom: 10px;
+        }
+        .card-title { font-size: 16px; font-weight: 600; color: var(--text-heading); margin-bottom: 12px; }
+
+        .status-line { font-family: 'JetBrains Mono', monospace; font-size: 13px; padding: 8px 0; display: flex; align-items: center; gap: 10px; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .dot-idle  { background: var(--text-dim); }
+        .dot-ok    { background: var(--green); }
+        .dot-warn  { background: var(--amber); }
+        .dot-err   { background: var(--red); }
+        .dot-work  { background: var(--accent); animation: pulse 1s infinite; }
+
+        button {
+            font-family: 'Outfit', sans-serif; font-size: 14px; font-weight: 600;
+            padding: 12px 20px; border-radius: 10px; border: none; cursor: pointer;
+            transition: filter 0.15s, opacity 0.15s;
+        }
+        button:disabled { opacity: 0.45; cursor: not-allowed; }
+        button:not(:disabled):hover { filter: brightness(1.1); }
+
+        .btn-primary { background: linear-gradient(135deg, #22D3EE, #0EA5E9); color: #060D18; }
+        .btn-secondary { background: var(--accent-bg); color: var(--accent); border: 1px solid var(--accent-border); }
+        .btn-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-border); }
+
+        .btn-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px; }
+
+        .token-row {
+            display: grid; grid-template-columns: 130px 1fr 80px 140px;
+            gap: 12px; align-items: center;
+            padding: 10px 0; border-bottom: 1px solid var(--border-subtle);
+            font-family: 'JetBrains Mono', monospace; font-size: 12px;
+        }
+        .token-row:last-child { border-bottom: none; }
+        .token-ticker {
+            color: var(--accent); background: var(--accent-bg);
+            border: 1px solid var(--accent-border); border-radius: 6px;
+            padding: 4px 10px; font-weight: 600; text-align: center;
+        }
+        .token-name { color: var(--text-secondary); }
+        .token-amount { color: var(--text-muted); text-align: right; }
+        .token-status { color: var(--text-dim); font-size: 11px; text-align: right; word-break: break-all; }
+        .status-success { color: var(--green); }
+        .status-error   { color: var(--red); }
+        .status-pending { color: var(--accent); }
+
+        pre {
+            background: var(--bg-overlay); border: 1px solid var(--border-subtle);
+            border-radius: 10px; padding: 16px; overflow-x: auto;
+            font-family: 'JetBrains Mono', monospace; font-size: 12px;
+            color: var(--text-secondary); line-height: 1.5;
+            white-space: pre;
+        }
+
+        .warn-box {
+            background: var(--amber-bg); border: 1px solid var(--amber-border);
+            border-radius: 10px; padding: 12px 14px; font-size: 12px;
+            color: var(--amber-text); font-family: 'JetBrains Mono', monospace;
+            line-height: 1.5; margin-bottom: 16px;
+        }
+
+        .log {
+            font-family: 'JetBrains Mono', monospace; font-size: 11px;
+            color: var(--text-muted); line-height: 1.7;
+            max-height: 280px; overflow-y: auto;
+            background: var(--bg-overlay); border: 1px solid var(--border-subtle);
+            border-radius: 10px; padding: 12px 16px;
+        }
+        .log-entry { white-space: pre-wrap; word-break: break-all; }
+        .log-entry .ts { color: var(--text-faint); }
+        .log-entry .info { color: var(--text-secondary); }
+        .log-entry .ok   { color: var(--green); }
+        .log-entry .warn { color: var(--amber); }
+        .log-entry .err  { color: var(--red); }
+        .log-entry .purple { color: var(--purple); }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <h1>Deploy Mock RWA Tokens</h1>
+    <div class="subtitle">ISOFIX EVM demo — Ethereum Sepolia testnet — signed by MetaMask</div>
+
+    <div class="warn-box">
+        This page deploys four <b>mock ERC-20 tokens</b> to the Sepolia testnet only. The tokens have no monetary value.
+        MetaMask will prompt you to sign 4 deploy transactions + 4 mint transactions (~8 prompts total).
+        Total gas on Sepolia: typically under 0.01 Sepolia-ETH. Get testnet ETH from a faucet first.
+    </div>
+
+    <!-- ── Step 1: Wallet ── -->
+    <div class="card">
+        <div class="card-label">Step 1</div>
+        <div class="card-title">Connect MetaMask on Sepolia</div>
+        <div class="status-line"><span class="status-dot dot-idle" id="wallet-dot"></span><span id="wallet-status" class="mono">Not connected</span></div>
+        <div class="btn-row">
+            <button class="btn-primary" id="btn-connect" onclick="connectWallet()">Connect MetaMask</button>
+            <button class="btn-amber" id="btn-switch" onclick="switchToSepolia()" style="display:none;">Switch to Sepolia</button>
+        </div>
+    </div>
+
+    <!-- ── Step 2: Compile ── -->
+    <div class="card">
+        <div class="card-label">Step 2</div>
+        <div class="card-title">Compile MockRWAToken.sol</div>
+        <div class="status-line"><span class="status-dot dot-idle" id="compile-dot"></span><span id="compile-status" class="mono">Not started</span></div>
+        <div class="btn-row">
+            <button class="btn-secondary" id="btn-compile" onclick="compileContract()" disabled>Compile with solc v0.8.24</button>
+        </div>
+        <div style="font-size:11px;color:var(--text-faint);margin-top:10px;font-family:'JetBrains Mono',monospace;">
+            Loads the solc-js WebAssembly compiler (~5 MB) from binaries.soliditylang.org.
+            The Solidity source is embedded in this page (view below) — canonical copy at
+            <span style="color:var(--text-dim);">demo-evm/MockRWAToken.sol</span>.
+        </div>
+        <details style="margin-top:10px;">
+            <summary style="font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;cursor:pointer;">View Solidity source</summary>
+            <pre id="sol-source-preview" style="margin-top:10px;max-height:300px;overflow-y:auto;"></pre>
+        </details>
+    </div>
+
+    <!-- ── Step 3: Deploy ── -->
+    <div class="card">
+        <div class="card-label">Step 3</div>
+        <div class="card-title">Deploy and mint four tokens</div>
+        <div id="token-list">
+            <!-- populated by JS -->
+        </div>
+        <div class="btn-row">
+            <button class="btn-primary" id="btn-deploy" onclick="deployAll()" disabled>Deploy all 4 tokens</button>
+        </div>
+    </div>
+
+    <!-- ── Step 4: Output ── -->
+    <div class="card" id="output-card" style="display:none;">
+        <div class="card-label">Step 4</div>
+        <div class="card-title">Copy addresses into demo-evm.html</div>
+        <div style="font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-bottom:10px;">
+            Paste the block below into the <code>MOCK_TOKENS</code> array in
+            <code>public/demo-evm.html</code>, then set <code>DEMO_WALLET_ADDRESS</code> to your connected account.
+            Also saved to <code>demo-evm/mock-tokens.json</code> (download button below).
+        </div>
+        <pre id="output-json"></pre>
+        <div class="btn-row">
+            <button class="btn-secondary" onclick="copyOutput()">Copy JSON</button>
+            <button class="btn-secondary" onclick="downloadOutput()">Download mock-tokens.json</button>
+        </div>
+    </div>
+
+    <!-- ── Activity log ── -->
+    <div class="card">
+        <div class="card-label">Log</div>
+        <div class="log" id="log"></div>
+    </div>
+
+</div>
+
+<!-- ethers.js v6 — for wallet provider, ContractFactory, tx signing -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@6.13.2/dist/ethers.umd.min.js"></script>
+
+<!-- solc-js is loaded on demand in compileContract() to avoid a 5MB blocking download on page load -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════════════════════
+// Config
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const SEPOLIA_CHAIN_ID_HEX = '0xaa36a7'; // 11155111
+const SEPOLIA_CHAIN_ID     = 11155111;
+
+// Solidity source embedded inline so this page is fully self-contained.
+// Canonical copy: demo-evm/MockRWAToken.sol — keep them in sync.
+const SOL_SOURCE = `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract MockRWAToken {
+    string  public name;
+    string  public symbol;
+    uint8   public immutable decimals;
+
+    uint256 public totalSupply;
+    mapping(address => uint256)                      public balanceOf;
+    mapping(address => mapping(address => uint256))  public allowance;
+
+    address public owner;
+
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed ownerAddr, address indexed spender, uint256 value);
+    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "MockRWAToken: not owner");
+        _;
+    }
+
+    constructor(string memory name_, string memory symbol_, uint8 decimals_) {
+        name     = name_;
+        symbol   = symbol_;
+        decimals = decimals_;
+        owner    = msg.sender;
+        emit OwnershipTransferred(address(0), msg.sender);
+    }
+
+    function transfer(address to, uint256 value) external returns (bool) {
+        _transfer(msg.sender, to, value);
+        return true;
+    }
+
+    function approve(address spender, uint256 value) external returns (bool) {
+        allowance[msg.sender][spender] = value;
+        emit Approval(msg.sender, spender, value);
+        return true;
+    }
+
+    function transferFrom(address from, address to, uint256 value) external returns (bool) {
+        uint256 allowed = allowance[from][msg.sender];
+        require(allowed >= value, "MockRWAToken: insufficient allowance");
+        if (allowed != type(uint256).max) {
+            allowance[from][msg.sender] = allowed - value;
+        }
+        _transfer(from, to, value);
+        return true;
+    }
+
+    function _transfer(address from, address to, uint256 value) internal {
+        require(to != address(0), "MockRWAToken: transfer to zero");
+        uint256 bal = balanceOf[from];
+        require(bal >= value, "MockRWAToken: insufficient balance");
+        unchecked { balanceOf[from] = bal - value; }
+        balanceOf[to] += value;
+        emit Transfer(from, to, value);
+    }
+
+    function mint(address to, uint256 value) external onlyOwner {
+        require(to != address(0), "MockRWAToken: mint to zero");
+        totalSupply  += value;
+        balanceOf[to] += value;
+        emit Transfer(address(0), to, value);
+    }
+
+    function burn(uint256 value) external {
+        uint256 bal = balanceOf[msg.sender];
+        require(bal >= value, "MockRWAToken: burn exceeds balance");
+        unchecked { balanceOf[msg.sender] = bal - value; }
+        totalSupply -= value;
+        emit Transfer(msg.sender, address(0), value);
+    }
+
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "MockRWAToken: new owner is zero");
+        address old = owner;
+        owner = newOwner;
+        emit OwnershipTransferred(old, newOwner);
+    }
+}
+`;
+
+// Token definitions — match the NAV service tickers in netlify/edge-functions/nav-service.ts.
+// Decimals chosen to match the real tokens on Ethereum mainnet where possible.
+const TOKENS = [
+    { ticker: 'MOCK-BUIDL', name: 'Mock BlackRock USD Institutional Digital Liquidity Fund', decimals: 6,  amount: '10000',  structural_category: 'mmf_perpetual' },
+    { ticker: 'MOCK-USTB',  name: 'Mock Superstate Short Duration US Government Securities Fund', decimals: 6,  amount: '10000',  structural_category: 'tbill_fund' },
+    { ticker: 'MOCK-USDY',  name: 'Mock Ondo US Dollar Yield Token', decimals: 18, amount: '10000',  structural_category: 'yield_note' },
+    { ticker: 'MOCK-USDC',  name: 'Mock USD Coin (demo stablecoin)', decimals: 6,  amount: '50000',  structural_category: 'stablecoin' },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Log helpers
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function log(kind, msg) {
+    const el = document.getElementById('log');
+    const ts = new Date().toTimeString().substring(0, 8);
+    const div = document.createElement('div');
+    div.className = 'log-entry';
+    div.innerHTML = '<span class="ts">[' + ts + ']</span> <span class="' + kind + '">' + escapeHtml(msg) + '</span>';
+    el.appendChild(div);
+    el.scrollTop = el.scrollHeight;
+}
+function escapeHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function setStatus(id, kind, text) {
+    document.getElementById(id + '-dot').className = 'status-dot dot-' + kind;
+    document.getElementById(id + '-status').textContent = text;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// State
+// ═══════════════════════════════════════════════════════════════════════════════
+
+let provider      = null;  // ethers BrowserProvider
+let signer        = null;
+let signerAddress = null;
+let currentChain  = null;
+let solidityBytecode = null;
+let solidityAbi      = null;
+let deployResults    = [];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Step 1 — wallet
+// ═══════════════════════════════════════════════════════════════════════════════
+
+async function connectWallet() {
+    if (!window.ethereum) {
+        setStatus('wallet', 'err', 'MetaMask not detected');
+        log('err', 'window.ethereum not found. Install MetaMask: https://metamask.io');
+        return;
+    }
+    try {
+        setStatus('wallet', 'work', 'Requesting accounts...');
+        provider = new ethers.BrowserProvider(window.ethereum);
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
+        signer = await provider.getSigner();
+        signerAddress = await signer.getAddress();
+        const net = await provider.getNetwork();
+        currentChain = Number(net.chainId);
+
+        log('ok', 'Connected as ' + signerAddress);
+        log('info', 'Chain ID: ' + currentChain + (currentChain === SEPOLIA_CHAIN_ID ? ' (Sepolia)' : ' (NOT Sepolia)'));
+
+        const bal = await provider.getBalance(signerAddress);
+        log('info', 'Balance: ' + ethers.formatEther(bal) + ' ETH');
+
+        if (currentChain !== SEPOLIA_CHAIN_ID) {
+            setStatus('wallet', 'warn', signerAddress.substring(0,10) + '... on chainId ' + currentChain);
+            document.getElementById('btn-switch').style.display = '';
+            document.getElementById('btn-compile').disabled = true;
+            return;
+        }
+
+        setStatus('wallet', 'ok', signerAddress.substring(0,10) + '... on Sepolia');
+        document.getElementById('btn-switch').style.display = 'none';
+        document.getElementById('btn-compile').disabled = false;
+
+        window.ethereum.on('accountsChanged', () => window.location.reload());
+        window.ethereum.on('chainChanged', () => window.location.reload());
+    } catch (e) {
+        setStatus('wallet', 'err', 'Connection failed');
+        log('err', e.message || String(e));
+    }
+}
+
+async function switchToSepolia() {
+    try {
+        await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: SEPOLIA_CHAIN_ID_HEX }],
+        });
+    } catch (e) {
+        if (e.code === 4902) {
+            // Chain not in MetaMask -- add it
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: SEPOLIA_CHAIN_ID_HEX,
+                        chainName: 'Sepolia',
+                        nativeCurrency: { name: 'Sepolia ETH', symbol: 'SEP', decimals: 18 },
+                        rpcUrls: ['https://ethereum-sepolia-rpc.publicnode.com'],
+                        blockExplorerUrls: ['https://sepolia.etherscan.io'],
+                    }],
+                });
+            } catch (addErr) {
+                log('err', 'Failed to add Sepolia: ' + addErr.message);
+            }
+        } else {
+            log('err', 'Switch failed: ' + e.message);
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Step 2 — compile Solidity in-browser via solc-js
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function loadScriptOnce(url) {
+    return new Promise((resolve, reject) => {
+        const existing = document.querySelector('script[data-src="' + url + '"]');
+        if (existing) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = url;
+        s.dataset.src = url;
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('Failed to load ' + url));
+        document.head.appendChild(s);
+    });
+}
+
+async function compileContract() {
+    try {
+        setStatus('compile', 'work', 'Downloading solc-js...');
+        log('info', 'Loading solc v0.8.24 WebAssembly (~5 MB, cached after first run)...');
+
+        // solc-js UMD browser build
+        await loadScriptOnce('https://binaries.soliditylang.org/bin/soljson-v0.8.24+commit.e11b9ed9.js');
+        // solc JS wrapper
+        await loadScriptOnce('https://cdn.jsdelivr.net/npm/solc@0.8.24/wrapper.min.js');
+
+        const source = SOL_SOURCE;
+        log('info', 'Using embedded MockRWAToken.sol (' + source.length + ' bytes)');
+
+        setStatus('compile', 'work', 'Compiling...');
+
+        // solc wrapper is exposed as `wrapper` or on window by the UMD script
+        const wrapperFactory = window.wrapper || window.solcWrapper;
+        if (!wrapperFactory) throw new Error('solc wrapper not found on window');
+        const solc = wrapperFactory(window.Module);
+
+        const input = {
+            language: 'Solidity',
+            sources: { 'MockRWAToken.sol': { content: source } },
+            settings: {
+                optimizer: { enabled: true, runs: 200 },
+                outputSelection: { '*': { '*': ['abi', 'evm.bytecode.object'] } },
+            },
+        };
+
+        const outputStr = solc.compile(JSON.stringify(input));
+        const output = JSON.parse(outputStr);
+
+        if (output.errors) {
+            const fatal = output.errors.filter(e => e.severity === 'error');
+            for (const e of output.errors) {
+                log(e.severity === 'error' ? 'err' : 'warn', '[' + e.severity + '] ' + e.formattedMessage.trim());
+            }
+            if (fatal.length > 0) throw new Error('Compilation failed with ' + fatal.length + ' error(s)');
+        }
+
+        const contract = output.contracts['MockRWAToken.sol'].MockRWAToken;
+        solidityAbi      = contract.abi;
+        solidityBytecode = '0x' + contract.evm.bytecode.object;
+
+        log('ok', 'Compiled. Bytecode: ' + (solidityBytecode.length / 2) + ' bytes. ABI: ' + solidityAbi.length + ' entries.');
+        setStatus('compile', 'ok', 'Compiled successfully');
+        document.getElementById('btn-deploy').disabled = false;
+
+    } catch (e) {
+        setStatus('compile', 'err', 'Compilation failed');
+        log('err', e.message || String(e));
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Step 3 — deploy + mint
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function renderTokenList() {
+    const el = document.getElementById('token-list');
+    el.innerHTML = TOKENS.map((t, i) => `
+        <div class="token-row">
+            <div class="token-ticker">${escapeHtml(t.ticker)}</div>
+            <div class="token-name">${escapeHtml(t.name)}</div>
+            <div class="token-amount">${escapeHtml(t.amount)}</div>
+            <div class="token-status" id="tok-status-${i}">pending</div>
+        </div>`).join('');
+}
+
+function setTokenStatus(i, cls, text) {
+    const el = document.getElementById('tok-status-' + i);
+    if (!el) return;
+    el.className = 'token-status ' + cls;
+    el.textContent = text;
+}
+
+async function deployAll() {
+    if (!signer || !solidityBytecode) {
+        log('err', 'Not ready: connect wallet and compile first.');
+        return;
+    }
+    document.getElementById('btn-deploy').disabled = true;
+    document.getElementById('btn-connect').disabled = true;
+    document.getElementById('btn-compile').disabled = true;
+    deployResults = [];
+
+    const factory = new ethers.ContractFactory(solidityAbi, solidityBytecode, signer);
+
+    for (let i = 0; i < TOKENS.length; i++) {
+        const t = TOKENS[i];
+        try {
+            // ── deploy ──
+            setTokenStatus(i, 'status-pending', 'deploying...');
+            log('info', 'Deploying ' + t.ticker + ' (decimals=' + t.decimals + ')...');
+
+            const contract = await factory.deploy(t.name, t.ticker, t.decimals);
+            log('purple', '  tx: ' + contract.deploymentTransaction().hash);
+            const deployed = await contract.waitForDeployment();
+            const address = await deployed.getAddress();
+            log('ok', '  deployed at ' + address);
+
+            // ── mint ──
+            setTokenStatus(i, 'status-pending', 'minting...');
+            const mintAmount = ethers.parseUnits(t.amount, t.decimals);
+            const mintTx = await deployed.mint(signerAddress, mintAmount);
+            log('purple', '  mint tx: ' + mintTx.hash);
+            await mintTx.wait();
+            log('ok', '  minted ' + t.amount + ' ' + t.ticker + ' to ' + signerAddress);
+
+            setTokenStatus(i, 'status-success', address.substring(0, 10) + '...' + address.substring(address.length - 4));
+            deployResults.push({
+                ticker: t.ticker,
+                contract_address: address,
+                decimals: t.decimals,
+                name: t.name,
+                structural_category: t.structural_category,
+            });
+        } catch (e) {
+            log('err', '  failed: ' + (e.reason || e.message || String(e)));
+            setTokenStatus(i, 'status-error', 'failed');
+            deployResults.push({
+                ticker: t.ticker,
+                contract_address: null,
+                decimals: t.decimals,
+                name: t.name,
+                structural_category: t.structural_category,
+                error: e.reason || e.message || String(e),
+            });
+        }
+    }
+
+    renderOutput();
+    document.getElementById('btn-deploy').disabled = false;
+    document.getElementById('btn-connect').disabled = false;
+    document.getElementById('btn-compile').disabled = false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Step 4 — output
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function outputPayload() {
+    return {
+        network: 'ethereum-sepolia',
+        chain_id: SEPOLIA_CHAIN_ID,
+        deployed_by: signerAddress,
+        deployed_at: new Date().toISOString(),
+        tokens: deployResults,
+    };
+}
+
+function renderOutput() {
+    document.getElementById('output-card').style.display = '';
+    document.getElementById('output-json').textContent = JSON.stringify(outputPayload(), null, 2);
+}
+
+function copyOutput() {
+    navigator.clipboard.writeText(JSON.stringify(outputPayload(), null, 2))
+        .then(() => log('ok', 'Copied JSON to clipboard'))
+        .catch(e => log('err', 'Copy failed: ' + e.message));
+}
+
+function downloadOutput() {
+    const blob = new Blob([JSON.stringify(outputPayload(), null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'mock-tokens.json';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Init
+// ═══════════════════════════════════════════════════════════════════════════════
+
+renderTokenList();
+document.getElementById('sol-source-preview').textContent = SOL_SOURCE;
+log('info', 'Ready. Connect MetaMask to begin.');
+if (window.ethereum) {
+    log('info', 'MetaMask detected.');
+} else {
+    log('warn', 'MetaMask not detected. Install from https://metamask.io');
+}
+</script>
+</body>
+</html>

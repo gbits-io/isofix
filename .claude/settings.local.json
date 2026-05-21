@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(chmod +x \"/Users/romanix/Library/CloudStorage/Dropbox/projects/github_repositories_2026/isofix/scripts/deploy-mock-tokens.sh\")",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(chmod +x 00-gh-issues/gh-create-labels.sh)",
+      "Bash(./00-gh-issues/gh-create-labels.sh)"
+    ]
+  }
+}
