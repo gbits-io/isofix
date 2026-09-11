@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACTUS for Tokens — Tokenized RWAs on Ethereum by Contract Type | bankproducts.info</title>
+    <meta name="description" content="Explore ~$7B of tokenized real-world assets on Ethereum mapped to ACTUS financial contract types. BUIDL, BENJI, USYC, USTB, OUSG, USDY, MONY and more.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'Space Mono', monospace;
+            --max-w: 1100px;
+            --max-w-narrow: 760px;
+            --transition-fast: 0.2s ease;
+            --transition-theme: 0.3s ease;
+            --space-xs: 0.25rem; --space-sm: 0.5rem; --space-md: 1rem; --space-lg: 2rem; --space-xl: 3rem;
+            --fs-sm: 0.875rem; --fs-base: 1rem; --fs-lg: 1.25rem; --fs-xl: 1.75rem; --fs-2xl: 2.5rem;
+        }
+        [data-theme="dark"] {
+            --bg-primary: #0a0a0c; --bg-secondary: #111114; --bg-tertiary: #18181c; --bg-card: #14141a;
+            --text-primary: #f2f2f5; --text-secondary: #c8c8d0; --text-tertiary: #9a9aa6;
+            --accent: #6ab8ff; --accent-dim: rgba(106,184,255,0.14); --accent-hover: #8ec9ff;
+            --border-color: #2a2a33; --footer-bg: #0a0a0c;
+            --success: #4ade80; --warn: #fbbf24;
+        }
+        [data-theme="light"] {
+            --bg-primary: #fbfbfc; --bg-secondary: #f2f2f5; --bg-tertiary: #eaeaef; --bg-card: #ffffff;
+            --text-primary: #0e0e12; --text-secondary: #3a3a44; --text-tertiary: #62626e;
+            --accent: #0066cc; --accent-dim: rgba(0,102,204,0.08); --accent-hover: #0052a3;
+            --border-color: #d0d0d8; --footer-bg: #f2f2f5;
+            --success: #059669; --warn: #d97706;
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { font-family: var(--font-body); font-size: var(--fs-base); line-height: 1.6; color: var(--text-primary); background: var(--bg-primary); -webkit-font-smoothing: antialiased; transition: background var(--transition-theme), color var(--transition-theme); }
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { color: var(--accent-hover); text-decoration: underline; }
+        ::selection { background: var(--accent); color: #fff; }
+
+        .container { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--space-lg); }
+
+        /* Header */
+        .site-header { position: sticky; top: 0; z-index: 100; background: var(--bg-primary); border-bottom: 1px solid var(--border-color); transition: background var(--transition-theme), border-color var(--transition-theme); }
+        .header-inner { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--space-lg); display: flex; align-items: center; justify-content: space-between; height: 56px; }
+        .header-logo { font-family: var(--font-mono); font-size: 1rem; font-weight: 700; color: var(--text-primary); text-decoration: none; }
+        .header-logo:hover { color: var(--accent); text-decoration: none; }
+        .header-nav { display: flex; align-items: center; gap: var(--space-sm); }
+        .header-back { font-size: var(--fs-sm); color: var(--text-secondary); text-decoration: none; }
+        .header-back:hover { color: var(--accent); text-decoration: none; }
+        .toggle-btn { background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-secondary); font-family: var(--font-mono); font-size: 0.8rem; padding: 0.3rem 0.6rem; border-radius: 5px; cursor: pointer; transition: var(--transition-fast); }
+        .toggle-btn:hover { border-color: var(--accent); color: var(--text-primary); }
+
+        /* Sections */
+        .section { padding: var(--space-xl) 0; }
+        .section__label { font-family: var(--font-mono); font-size: 0.8rem; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: var(--space-xs); }
+        .section__heading { font-size: var(--fs-2xl); font-weight: 800; line-height: 1.1; color: var(--text-primary); margin-bottom: var(--space-sm); }
+        .section__text { font-size: var(--fs-lg); color: var(--text-secondary); max-width: 640px; line-height: 1.6; }
+
+        /* Top-line stats */
+        .stats-row { display: flex; gap: var(--space-md); flex-wrap: wrap; margin-top: var(--space-md); }
+        .stat { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 0.7rem 1rem; flex: 1; min-width: 140px; }
+        .stat__label { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.2rem; }
+        .stat__value { font-family: var(--font-mono); font-size: 1.2rem; font-weight: 700; color: var(--text-primary); }
+        .stat__sub { font-size: 0.72rem; color: var(--text-tertiary); margin-top: 0.15rem; }
+
+        /* ACTUS Explorer */
+        .actus-controls { display: flex; align-items: center; gap: var(--space-sm); flex-wrap: wrap; margin-top: var(--space-md); margin-bottom: var(--space-md); }
+        .actus-select { appearance: none; -webkit-appearance: none; background: var(--bg-tertiary) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M3 5l3 3 3-3' fill='none' stroke='%239a9aa6' stroke-width='1.5'/%3E%3C/svg%3E") right 0.7rem center / 12px no-repeat; border: 1px solid var(--border-color); color: var(--text-primary); font-family: var(--font-mono); font-size: 0.85rem; padding: 0.4rem 2rem 0.4rem 0.7rem; border-radius: 6px; cursor: pointer; transition: background var(--transition-fast), border-color var(--transition-fast); }
+        .actus-select:hover, .actus-select:focus { border-color: var(--accent); outline: none; }
+        .actus-tabs { display: flex; gap: 0.4rem; overflow-x: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2px; }
+        .actus-tab { white-space: nowrap; background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-secondary); font-family: var(--font-mono); font-size: 0.78rem; padding: 0.3rem 0.7rem; border-radius: 999px; cursor: pointer; transition: background var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast); user-select: none; }
+        .actus-tab:hover { border-color: var(--accent); color: var(--text-primary); }
+        .actus-tab.active { background: var(--accent); color: #0a0a0c; border-color: var(--accent); font-weight: 700; }
+
+        .actus-panel { margin-top: var(--space-sm); }
+
+        /* Overview bars */
+        .actus-bar-row { display: flex; align-items: center; gap: var(--space-sm); margin-bottom: 0.6rem; }
+        .actus-bar-label { flex: 0 0 280px; font-family: var(--font-mono); font-size: 0.82rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .actus-bar-label strong { color: var(--text-primary); }
+        .actus-bar-label .aum { color: var(--text-tertiary); font-size: 0.72rem; }
+        .actus-bar { flex: 1; display: flex; height: 28px; border-radius: 4px; overflow: hidden; background: var(--bg-tertiary); }
+        .actus-bar__seg { min-width: 2px; height: 100%; transition: opacity var(--transition-fast); cursor: default; position: relative; }
+        .actus-bar__seg:hover { opacity: 0.8; }
+
+        /* Issuer detail groups */
+        .actus-group { border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 0.5rem; overflow: hidden; transition: border-color var(--transition-fast); }
+        .actus-group__hdr { display: flex; align-items: center; gap: 0.6rem; padding: 0.7rem 1rem; cursor: pointer; user-select: none; background: var(--bg-card); transition: background var(--transition-fast); }
+        .actus-group__hdr:hover { background: var(--accent-dim); }
+        .actus-group__dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .actus-group__name { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 600; color: var(--text-primary); flex: 1; }
+        .actus-group__count { font-family: var(--font-mono); font-size: 0.78rem; color: var(--text-tertiary); }
+        .actus-group__chev { color: var(--text-tertiary); transition: transform var(--transition-fast); font-size: 0.75rem; }
+        .actus-group.open .actus-group__chev { transform: rotate(90deg); }
+        .actus-group__body { display: none; padding: 0.5rem 1rem 1rem; }
+        .actus-group.open .actus-group__body { display: block; }
+        .actus-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 0.5rem; }
+        .actus-card { background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 6px; padding: 0.7rem 0.9rem; transition: border-color var(--transition-fast); }
+        .actus-card:hover { border-color: var(--accent); }
+        .actus-card__head { display: flex; align-items: baseline; justify-content: space-between; gap: 0.4rem; margin-bottom: 0.35rem; flex-wrap: wrap; }
+        .actus-card__name { font-size: 0.92rem; font-weight: 700; color: var(--text-primary); }
+        .actus-card__ticker { font-family: var(--font-mono); font-size: 0.72rem; color: var(--accent); background: var(--accent-dim); padding: 0.08rem 0.4rem; border-radius: 4px; }
+        .actus-card__row { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.25rem; }
+        .actus-pill { display: inline-block; font-family: var(--font-mono); font-size: 0.68rem; background: var(--accent-dim); color: var(--accent); padding: 0.1rem 0.45rem; border-radius: 4px; }
+        .actus-cur-badge { display: inline-block; font-family: var(--font-mono); font-size: 0.62rem; font-weight: 600; background: rgba(251,191,36,0.18); color: var(--warn); padding: 0.08rem 0.35rem; border-radius: 3px; vertical-align: middle; }
+        .actus-card__meta { font-family: var(--font-mono); font-size: 0.74rem; color: var(--text-tertiary); }
+        .actus-card__meta strong { color: var(--text-primary); font-weight: 700; }
+        .actus-card__note { font-size: 0.72rem; color: var(--text-tertiary); margin-top: 0.4rem; line-height: 1.4; }
+
+        /* Comparison table */
+        .actus-table { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 0.8rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden; }
+        .actus-table th { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 2px solid var(--border-color); color: var(--accent); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; white-space: nowrap; }
+        .actus-table td { padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); vertical-align: top; }
+        .actus-table tr:last-child td { border-bottom: none; }
+        .actus-table tr:hover td { background: var(--accent-dim); }
+        .actus-table .highlight { color: var(--success); font-weight: 700; }
+        .actus-issuer-link { color: var(--accent); text-decoration: none; cursor: pointer; }
+        .actus-issuer-link:hover { text-decoration: underline; }
+
+        .actus-empty { font-family: var(--font-mono); font-size: 0.85rem; color: var(--text-tertiary); padding: var(--space-md); text-align: center; }
+        .actus-attribution { font-size: 0.72rem; color: var(--text-tertiary); margin-top: var(--space-lg); text-align: center; line-height: 1.6; }
+        .actus-attribution a { color: var(--text-tertiary); text-decoration: underline; }
+
+        /* Reference table */
+        .ref-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); margin-top: var(--space-md); }
+        .ref-table th { text-align: left; padding: 0.55rem 0.8rem; border-bottom: 2px solid var(--border-color); color: var(--accent); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; font-family: var(--font-mono); }
+        .ref-table td { padding: 0.5rem 0.8rem; border-bottom: 1px solid var(--border-color); color: var(--text-secondary); vertical-align: top; }
+        .ref-table tr:last-child td { border-bottom: none; }
+        .ref-table .type-code { font-family: var(--font-mono); font-weight: 700; color: var(--text-primary); white-space: nowrap; }
+        .ref-table .ref-count { text-align: right; font-family: var(--font-mono); color: var(--text-tertiary); }
+
+        /* Callout */
+        .callout { background: var(--bg-card); border: 1px solid var(--border-color); border-left: 3px solid var(--accent); border-radius: 8px; padding: var(--space-md) var(--space-lg); margin-top: var(--space-md); }
+        .callout h3 { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.4rem; font-family: var(--font-mono); }
+        .callout p { font-size: var(--fs-sm); color: var(--text-secondary); line-height: 1.6; }
+        .callout p + p { margin-top: 0.5rem; }
+
+        /* Embed pitch */
+        .embed-pitch { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; padding: var(--space-lg); text-align: center; margin-top: var(--space-xl); }
+        .embed-pitch h3 { font-size: var(--fs-xl); font-weight: 700; color: var(--text-primary); margin-bottom: var(--space-sm); }
+        .embed-pitch p { color: var(--text-secondary); font-size: var(--fs-sm); margin-bottom: var(--space-md); }
+        .embed-pitch .btn { display: inline-block; padding: 0.6rem 1.5rem; background: var(--accent); color: #0a0a0c; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: var(--fs-sm); transition: opacity var(--transition-fast); }
+        .embed-pitch .btn:hover { opacity: 0.9; text-decoration: none; color: #0a0a0c; }
+
+        /* Footer */
+        .site-footer { border-top: 1px solid var(--border-color); padding: var(--space-lg) 0; background: var(--footer-bg); transition: background var(--transition-theme), border-color var(--transition-theme); margin-top: var(--space-xl); }
+        .footer-inner { max-width: var(--max-w); margin: 0 auto; padding: 0 var(--space-lg); display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-sm); color: var(--text-tertiary); }
+        .footer-inner a { color: var(--text-tertiary); }
+        .footer-inner a:hover { color: var(--accent); }
+
+        @media (max-width: 768px) {
+            .actus-bar-label { flex: 0 0 180px; font-size: 0.75rem; }
+            .actus-cards { grid-template-columns: 1fr; }
+            .actus-table { font-size: 0.72rem; }
+            .actus-table th, .actus-table td { padding: 0.4rem 0.5rem; }
+            .section__heading { font-size: var(--fs-xl); }
+            .ref-table { font-size: 0.78rem; }
+            .stats-row .stat { min-width: 100px; }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-inner">
+            <a href="index.html" class="header-logo">bankproducts.info</a>
+            <div class="header-nav">
+                <a href="actus.html" class="header-back">&larr; Swiss banks</a>
+                <button class="toggle-btn" id="themeToggle">☀</button>
+            </div>
+        </div>
+    </header>
+
+    <section class="section">
+        <div class="container">
+            <p class="section__label">ACTUS for Tokens</p>
+            <h2 class="section__heading">~$8.9B of tokenized RWAs. 3 contract types.</h2>
+            <p class="section__text">Every tokenized real-world asset is, at its core, a financial contract. The <a href="https://www.actusfrf.org/" target="_blank">ACTUS</a> standard defines 31 algorithmic contract types. This widget maps the largest tokenized RWAs on Ethereum to the contract types that govern their cash flows — what a <a href="https://www.iso20022.org/" target="_blank">semt.002</a> securities-position report would need to compute from on-chain state.</p>
+
+            <div class="stats-row">
+                <div class="stat">
+                    <div class="stat__label">Total AUM tracked</div>
+                    <div class="stat__value">~$8.9B</div>
+                    <div class="stat__sub">across 13 instruments</div>
+                </div>
+                <div class="stat">
+                    <div class="stat__label">Largest issuer</div>
+                    <div class="stat__value">BlackRock</div>
+                    <div class="stat__sub">$1.78B BUIDL</div>
+                </div>
+                <div class="stat">
+                    <div class="stat__label">Dominant type</div>
+                    <div class="stat__value">UMP</div>
+                    <div class="stat__sub">MMF-share variant</div>
+                </div>
+                <div class="stat">
+                    <div class="stat__label">Settlement venue</div>
+                    <div class="stat__value">Ethereum</div>
+                    <div class="stat__sub">L1, mostly via Securitize</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="explorer" style="background: var(--bg-secondary); transition: background var(--transition-theme);">
+        <div class="container">
+            <div class="actus-controls">
+                <select id="actusIssuer" class="actus-select">
+                    <option value="">All issuers (overview)</option>
+                </select>
+                <div class="actus-tabs" id="actusTabs"></div>
+            </div>
+
+            <div id="actusOverview" class="actus-panel"></div>
+            <div id="actusIssuerDetail" class="actus-panel" hidden></div>
+            <div id="actusComparison" class="actus-panel" hidden></div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container">
+            <div class="callout">
+                <h3>Why UMP and not a money-market type?</h3>
+                <p>ACTUS does not currently define a money-market-fund-share contract as a distinct type. The closest fit for daily-accrual, callable, no-fixed-maturity instruments like BUIDL, USYC, BENJI, USTB and OUSG is <strong>UMP (Undefined Maturity Profile)</strong> — the same type Swiss savings accounts collapse into. A proper MMF type would add NAV state, scheduled distribution events and a defined redemption mechanism, all of which are computable from these tokens' contract state and would be needed for a clean semt.002 mapping.</p>
+                <p>USDY is modeled as <strong>PAM</strong> (Principal At Maturity) since it's structured as a note rather than a fund share, even though it functions as a yield-bearing stablecoin. The pool-based credit products (Centrifuge, Maple, Goldfinch) sit under <strong>LAM</strong> (Loan At Maturity) as compositions of underlying loans.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" style="padding-top: var(--space-md);">
+        <div class="container">
+            <p class="section__label">Reference</p>
+            <h2 class="section__heading" style="font-size: var(--fs-xl);">ACTUS contract types used in tokenized RWAs</h2>
+            <table class="ref-table" id="refTable">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th style="text-align:right;">Tokens</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+
+            <div class="embed-pitch">
+                <h3>Want a semt.002 from your token?</h3>
+                <p>ISOFIX maps Ethereum tokenized RWA state to ISO 20022 securities reports — pain.001, camt.053/054, semt.002 — so ERPs and bank accounting systems can consume them like any other security position.</p>
+                <a href="https://gbits.io" class="btn">Learn more &rarr;</a>
+            </div>
+
+            <p class="actus-attribution">ACTUS contract types reference the <a href="https://www.actusfrf.org/" target="_blank">ACTUS Financial Research Foundation</a> standard (CC-BY-SA-4.0). ACTUS is a trademark of the ACTUS Financial Research Foundation. AUM figures are approximate snapshots from public sources and subject to change daily; treat as orders of magnitude, not live data.</p>
+        </div>
+    </section>
+
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <span>&copy; 2026 bankproducts.info &middot; Data: CC-BY-4.0 &middot; Code: MIT</span>
+            <a href="https://github.com/gbits-io/bankproducts_info" target="_blank">GitHub</a>
+        </div>
+    </footer>
+
+    <script>
+    // Tokenized RWA data — Ethereum tokens mapped to ACTUS types
+    // AUM figures are approximate snapshots; treat as orders of magnitude.
+    window.TOKEN_DATA = {
+        actus_types: {
+            UMP: { name: "Undefined Maturity Profile", desc: "Yield-bearing, callable, no fixed maturity — MMF-share variant", products: 9 },
+            PAM: { name: "Principal At Maturity", desc: "Note structure with principal and continuous yield accrual", products: 1 },
+            LAM: { name: "Loan At Maturity", desc: "Tokenized loan / loan-pool exposures with credit risk", products: 3 }
+        },
+        issuers: {
+            blackrock: { name: "BlackRock / Securitize", type: "asset_manager", country: "US", aum: 1783, products: 1 },
+            circle: { name: "Circle (Hashnote)", type: "stablecoin_issuer", country: "US", aum: 1520, products: 1 },
+            franklin: { name: "Franklin Templeton", type: "asset_manager", country: "US", aum: 750, products: 1 },
+            superstate: { name: "Superstate / Invesco", type: "asset_manager", country: "US", aum: 950, products: 1 },
+            ondo: { name: "Ondo Finance", type: "crypto_native", country: "US", aum: 1400, products: 2 },
+            jpmorgan: { name: "JPMorgan", type: "bank", country: "US", aum: 50, products: 1 },
+            mountain: { name: "Mountain Protocol", type: "crypto_native", country: "BM", aum: 280, products: 1 },
+            wisdomtree: { name: "WisdomTree", type: "asset_manager", country: "US", aum: 700, products: 1 },
+            anemoy: { name: "Janus Henderson / Anemoy", type: "asset_manager", country: "EU", aum: 450, products: 1 },
+            centrifuge: { name: "Centrifuge", type: "crypto_native", country: "CH", aum: 320, products: 1 },
+            maple: { name: "Maple Finance", type: "crypto_native", country: "US", aum: 580, products: 1 },
+            goldfinch: { name: "Goldfinch", type: "crypto_native", country: "US", aum: 110, products: 1 }
+        },
+        // products keyed by issuer, then by ACTUS type, just like the bank version
+        products_by_issuer: {
+            blackrock: {
+                UMP: [{
+                    id: "blackrock:buidl", ticker: "BUIDL",
+                    name: "BlackRock USD Institutional Digital Liquidity Fund",
+                    chain: "Ethereum", venue: "Securitize",
+                    aum_musd: 1783, holders: 110, yield_pct: 4.45, min_usd: 250000,
+                    redemption: "USDC, on-demand",
+                    note: "The canonical case. Daily dividend accrual, perpetual rollover, distribution events. Closest existing ACTUS type is a UMP variant; a proper MMF type would be cleaner."
+                }]
+            },
+            circle: {
+                UMP: [{
+                    id: "circle:usyc", ticker: "USYC",
+                    name: "US Yield Coin",
+                    chain: "Ethereum + Solana", venue: "Circle (acquired Hashnote Jan 2025)",
+                    aum_musd: 1520, holders: null, yield_pct: 4.32, min_usd: null,
+                    redemption: "USDC, on-demand",
+                    note: "Designed for CEX collateral use, so the semt.002 must handle collateral encumbrance state — most tokenized MMFs don't require this."
+                }]
+            },
+            franklin: {
+                UMP: [{
+                    id: "franklin:benji", ticker: "BENJI / FOBXX",
+                    name: "Franklin OnChain U.S. Government Money Fund",
+                    chain: "Ethereum, Stellar, Polygon, Arbitrum, Base, Avalanche, Aptos, Solana",
+                    venue: "Franklin Templeton (own transfer agent)",
+                    aum_musd: 750, holders: null, yield_pct: 4.10, min_usd: 0,
+                    redemption: "Fiat, on-demand",
+                    note: "Different architecture: the on-chain balance IS the registered share. One BENJI token = one share. semt.002 generated from BENJI state has stronger legal standing than one generated from BUIDL."
+                }]
+            },
+            superstate: {
+                UMP: [{
+                    id: "superstate:ustb", ticker: "USTB",
+                    name: "Superstate Short Duration US Government Securities Fund",
+                    chain: "Ethereum, Solana",
+                    venue: "Superstate (to be renamed Invesco SDUSGSF)",
+                    aum_musd: 950, holders: null, yield_pct: 4.28, min_usd: 100000,
+                    redemption: "USDC or fiat, T+0",
+                    note: "Private 3c(7) fund, T-bills only. Cleaner ACTUS mapping than BUIDL because no repo composition."
+                }]
+            },
+            ondo: {
+                UMP: [{
+                    id: "ondo:ousg", ticker: "OUSG",
+                    name: "Ondo Short-Term US Government Bond Fund",
+                    chain: "Ethereum, Polygon, Solana, Sui",
+                    venue: "Ondo Finance",
+                    aum_musd: 650, holders: null, yield_pct: 4.35, min_usd: 100000,
+                    redemption: "USDC, instant (24/7)",
+                    note: "Composite. OUSG holds BUIDL as its reserve — second-order Treasury exposure. First real test of representing composed instruments in ACTUS."
+                }],
+                PAM: [{
+                    id: "ondo:usdy", ticker: "USDY",
+                    name: "Ondo US Dollar Yield Token",
+                    chain: "Ethereum, Solana, Mantle, Aptos, Sui",
+                    venue: "Ondo Finance",
+                    aum_musd: 750, holders: null, yield_pct: 4.80, min_usd: 500,
+                    redemption: "Fiat, T+1",
+                    note: "Tokenized note (not fund share) backed by US Treasuries. Different legal wrapper from MMF tokens — PAM with continuous yield accrual is the more honest mapping."
+                }]
+            },
+            jpmorgan: {
+                UMP: [{
+                    id: "jpmorgan:mony", ticker: "MONY",
+                    name: "JPMorgan Money Market Fund Token",
+                    chain: "Ethereum (public L1)",
+                    venue: "JPMorgan (506(c) private placement)",
+                    aum_musd: 50, holders: null, yield_pct: 4.20, min_usd: null,
+                    redemption: "USD, T+0",
+                    note: "Launched Dec 15, 2025. Notable as a major bank issuing directly on public Ethereum. Same UMP mapping as other MMFs but changes the institutional-adoption conversation."
+                }]
+            },
+            mountain: {
+                UMP: [{
+                    id: "mountain:usdm", ticker: "USDM",
+                    name: "Mountain Protocol USD",
+                    chain: "Ethereum, Polygon, Arbitrum, Optimism, Base",
+                    venue: "Mountain Protocol (Bermuda)",
+                    aum_musd: 280, holders: null, yield_pct: 4.50, min_usd: 0,
+                    redemption: "USDC, on-demand",
+                    note: "Yield-bearing stablecoin, T-bill collateralized. Same conceptual structure as the leaders."
+                }]
+            },
+            wisdomtree: {
+                UMP: [{
+                    id: "wisdomtree:wtgxx", ticker: "WTGXX",
+                    name: "WisdomTree Government Money Market Digital Fund",
+                    chain: "Ethereum, Stellar",
+                    venue: "WisdomTree",
+                    aum_musd: 700, holders: null, yield_pct: 4.05, min_usd: 0,
+                    redemption: "Fiat",
+                    note: "Tokenized registered MMF. Same UMP mapping; included for completeness of the institutional landscape."
+                }]
+            },
+            anemoy: {
+                UMP: [{
+                    id: "anemoy:jaaa", ticker: "JTRSY / JAAA",
+                    name: "Janus Henderson Anemoy Treasury Fund",
+                    chain: "Ethereum, Base, Centrifuge",
+                    venue: "Anemoy / Centrifuge",
+                    aum_musd: 450, holders: null, yield_pct: 4.20, min_usd: 0,
+                    redemption: "USDC",
+                    note: "European-regulated (BVI). ACTUS fit at instrument level is strong, but semt.002 reporting would follow UCITS disclosure rules rather than SEC — adds scope to the mapping."
+                }]
+            },
+            centrifuge: {
+                LAM: [{
+                    id: "centrifuge:pools", ticker: "Centrifuge Pools",
+                    name: "Centrifuge Tinlake / Liquidity Pools",
+                    chain: "Ethereum, Centrifuge",
+                    venue: "Centrifuge",
+                    aum_musd: 320, holders: null, yield_pct: 8.50, min_usd: 0,
+                    redemption: "Per-pool terms",
+                    note: "Pool composition of individual loans. ACTUS-native at the underlying loan level (LAM), but pool wrapper complicates the mapping. semt.002 would need credit-quality reporting."
+                }]
+            },
+            maple: {
+                LAM: [{
+                    id: "maple:syrup", ticker: "syrupUSDC / Maple Pools",
+                    name: "Maple Finance Lending Pools",
+                    chain: "Ethereum, Solana, Base",
+                    venue: "Maple Finance",
+                    aum_musd: 580, holders: null, yield_pct: 9.20, min_usd: 0,
+                    redemption: "Per-pool, with notice period",
+                    note: "Institutional private credit on-chain. LAM composition over collateralized loans. Active credit underwriting per pool."
+                }]
+            },
+            goldfinch: {
+                LAM: [{
+                    id: "goldfinch:senior", ticker: "FIDU / Senior Pool",
+                    name: "Goldfinch Senior Pool & Backer Pools",
+                    chain: "Ethereum",
+                    venue: "Goldfinch Finance",
+                    aum_musd: 110, holders: null, yield_pct: 8.00, min_usd: 0,
+                    redemption: "FIDU withdraw, subject to pool liquidity",
+                    note: "Emerging-market private credit. Tranched (senior/junior) — composition AND tranching complicate the ACTUS mapping further."
+                }]
+            }
+        },
+        // Comparison data for type-filtered table view (UMP, PAM, LAM)
+        comparison: {
+            UMP: {
+                label: "Money-market-fund-share variants",
+                tokens: [
+                    { id: "blackrock:buidl", ticker: "BUIDL", issuer_id: "blackrock", name: "BlackRock BUIDL", aum_musd: 1783, yield_pct: 4.45, min_usd: 250000, redemption: "USDC, on-demand" },
+                    { id: "circle:usyc", ticker: "USYC", issuer_id: "circle", name: "Circle USYC", aum_musd: 1520, yield_pct: 4.32, min_usd: null, redemption: "USDC, on-demand" },
+                    { id: "superstate:ustb", ticker: "USTB", issuer_id: "superstate", name: "Superstate USTB", aum_musd: 950, yield_pct: 4.28, min_usd: 100000, redemption: "USDC or fiat" },
+                    { id: "franklin:benji", ticker: "BENJI", issuer_id: "franklin", name: "Franklin BENJI/FOBXX", aum_musd: 750, yield_pct: 4.10, min_usd: 0, redemption: "Fiat" },
+                    { id: "wisdomtree:wtgxx", ticker: "WTGXX", issuer_id: "wisdomtree", name: "WisdomTree WTGXX", aum_musd: 700, yield_pct: 4.05, min_usd: 0, redemption: "Fiat" },
+                    { id: "ondo:ousg", ticker: "OUSG", issuer_id: "ondo", name: "Ondo OUSG (composite)", aum_musd: 650, yield_pct: 4.35, min_usd: 100000, redemption: "USDC, instant" },
+                    { id: "anemoy:jaaa", ticker: "JTRSY", issuer_id: "anemoy", name: "JH Anemoy Treasury", aum_musd: 450, yield_pct: 4.20, min_usd: 0, redemption: "USDC" },
+                    { id: "mountain:usdm", ticker: "USDM", issuer_id: "mountain", name: "Mountain USDM", aum_musd: 280, yield_pct: 4.50, min_usd: 0, redemption: "USDC, on-demand" },
+                    { id: "jpmorgan:mony", ticker: "MONY", issuer_id: "jpmorgan", name: "JPMorgan MONY", aum_musd: 50, yield_pct: 4.20, min_usd: null, redemption: "USD, T+0" }
+                ]
+            },
+            PAM: {
+                label: "Yield-bearing notes",
+                tokens: [
+                    { id: "ondo:usdy", ticker: "USDY", issuer_id: "ondo", name: "Ondo USDY", aum_musd: 750, yield_pct: 4.80, min_usd: 500, redemption: "Fiat, T+1" }
+                ]
+            },
+            LAM: {
+                label: "Tokenized loan / loan-pool exposures",
+                tokens: [
+                    { id: "maple:syrup", ticker: "syrupUSDC", issuer_id: "maple", name: "Maple Pools", aum_musd: 580, yield_pct: 9.20, min_usd: 0, redemption: "Pool notice period" },
+                    { id: "centrifuge:pools", ticker: "Centrifuge", issuer_id: "centrifuge", name: "Centrifuge Pools", aum_musd: 320, yield_pct: 8.50, min_usd: 0, redemption: "Per-pool terms" },
+                    { id: "goldfinch:senior", ticker: "FIDU", issuer_id: "goldfinch", name: "Goldfinch Senior Pool", aum_musd: 110, yield_pct: 8.00, min_usd: 0, redemption: "Pool liquidity" }
+                ]
+            }
+        }
+    };
+
+    // Build by_type breakdown for each issuer (so overview bars work)
+    (function buildByType() {
+        const TD = window.TOKEN_DATA;
+        Object.entries(TD.products_by_issuer).forEach(([iId, byType]) => {
+            const bt = {};
+            Object.entries(byType).forEach(([t, prods]) => { bt[t] = prods.length; });
+            TD.issuers[iId].by_type = bt;
+            TD.issuers[iId].products = Object.values(bt).reduce((a, b) => a + b, 0);
+        });
+    })();
+
+    const ACTUS_TIPS = {
+        UMP: "Yield-bearing tokens, no fixed maturity, daily NAV accrual, redeemable on demand — MMF-share variant",
+        PAM: "Tokenized note structure with continuous yield accrual — not a fund share",
+        LAM: "Tokenized loan or loan-pool exposure with credit risk and pool-defined redemption"
+    };
+
+    const ACTUS_COLORS = { UMP: 'var(--accent)', PAM: '#fbbf24', LAM: '#a78bfa' };
+
+    (() => {
+        // Theme toggle
+        const root = document.documentElement;
+        function applyTheme(theme) {
+            root.setAttribute('data-theme', theme);
+            document.getElementById('themeToggle').textContent = theme === 'dark' ? '☀' : '☾';
+            localStorage.setItem('bp_theme', theme);
+        }
+        const stored = localStorage.getItem('bp_theme') || 'dark';
+        applyTheme(stored);
+        document.getElementById('themeToggle').addEventListener('click', () => {
+            applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+        });
+    })();
+
+    // Token Explorer
+    (() => {
+        const TD = window.TOKEN_DATA;
+        const issuerSelect = document.getElementById('actusIssuer');
+        const tabsEl = document.getElementById('actusTabs');
+        const overviewEl = document.getElementById('actusOverview');
+        const detailEl = document.getElementById('actusIssuerDetail');
+        const compEl = document.getElementById('actusComparison');
+
+        let state = { issuer: '', actusType: '' };
+
+        const sortedIssuers = Object.entries(TD.issuers).sort((a, b) => (b[1].aum || 0) - (a[1].aum || 0));
+        sortedIssuers.forEach(([id, b]) => {
+            const opt = document.createElement('option');
+            opt.value = id;
+            opt.textContent = b.name + ' ($' + fmtAum(b.aum) + ')';
+            issuerSelect.appendChild(opt);
+        });
+
+        const typeOrder = Object.keys(TD.actus_types);
+
+        function fmtAum(m) {
+            if (m == null) return '—';
+            if (m >= 1000) return (m / 1000).toFixed(2) + 'B';
+            return m.toFixed(0) + 'M';
+        }
+        function fmtMin(v) {
+            if (v == null) return '—';
+            if (v === 0) return 'none';
+            if (v >= 1000) return '$' + (v / 1000).toFixed(0) + 'k';
+            return '$' + v;
+        }
+        function escHtml(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+
+        function buildTabs() {
+            tabsEl.innerHTML = '';
+            typeOrder.forEach(t => {
+                const btn = document.createElement('button');
+                btn.className = 'actus-tab' + (state.actusType === t ? ' active' : '');
+                btn.textContent = t + ' (' + TD.actus_types[t].products + ')';
+                btn.title = ACTUS_TIPS[t] || TD.actus_types[t].name;
+                btn.addEventListener('click', () => {
+                    state.actusType = state.actusType === t ? '' : t;
+                    render();
+                });
+                tabsEl.appendChild(btn);
+            });
+        }
+
+        function renderOverview() {
+            overviewEl.hidden = false; detailEl.hidden = true; compEl.hidden = true;
+            const sorted = Object.entries(TD.issuers).sort((a, b) => (b[1].aum || 0) - (a[1].aum || 0));
+            let html = '';
+            sorted.forEach(([iId, b]) => {
+                const bt = b.by_type;
+                if (!bt) return;
+                const total = b.products;
+                if (!total) return;
+                html += '<div class="actus-bar-row"><div class="actus-bar-label"><a href="#" class="actus-issuer-link" data-issuer="' + iId + '">' + escHtml(b.name) + '</a> <span class="aum">$' + fmtAum(b.aum) + '</span></div><div class="actus-bar">';
+                typeOrder.forEach(t => {
+                    const count = bt[t] || 0;
+                    if (count === 0) return;
+                    const pct = (count / total * 100);
+                    const color = ACTUS_COLORS[t] || '#6b7280';
+                    const label = t + ': ' + count;
+                    html += '<div class="actus-bar__seg" style="width:' + pct.toFixed(1) + '%;background:' + color + ';" title="' + label + '"></div>';
+                });
+                html += '</div></div>';
+            });
+            // Legend
+            html += '<div style="display:flex;gap:1rem;flex-wrap:wrap;margin-top:0.9rem;font-family:var(--font-mono);font-size:0.74rem;color:var(--text-tertiary);">';
+            typeOrder.forEach(t => {
+                const color = ACTUS_COLORS[t] || '#6b7280';
+                html += '<span style="display:inline-flex;align-items:center;gap:0.35rem;"><span style="width:11px;height:11px;border-radius:2px;background:' + color + ';display:inline-block;"></span>' + t + ' — ' + TD.actus_types[t].name + '</span>';
+            });
+            html += '</div>';
+            overviewEl.innerHTML = html;
+        }
+
+        function renderIssuerDetail(issuerId, filterType) {
+            overviewEl.hidden = true; detailEl.hidden = false; compEl.hidden = true;
+            const issuerProds = TD.products_by_issuer[issuerId];
+            if (!issuerProds) { detailEl.innerHTML = '<p class="actus-empty">No products</p>'; return; }
+            const types = filterType ? [filterType] : typeOrder.filter(t => issuerProds[t] && issuerProds[t].length > 0);
+
+            let html = '';
+            types.forEach(t => {
+                const prods = issuerProds[t];
+                if (!prods || prods.length === 0) return;
+                const color = ACTUS_COLORS[t] || '#6b7280';
+                html += '<div class="actus-group open"><div class="actus-group__hdr" onclick="this.parentElement.classList.toggle(\'open\')">';
+                html += '<span class="actus-group__dot" style="background:' + color + ';"></span>';
+                html += '<span class="actus-group__name">' + t + ' — ' + TD.actus_types[t].name + '</span>';
+                html += '<span class="actus-group__count">' + prods.length + '</span><span class="actus-group__chev">&#9654;</span></div>';
+                html += '<div class="actus-group__body"><div class="actus-cards">';
+                prods.forEach(p => {
+                    html += '<div class="actus-card">';
+                    html += '<div class="actus-card__head"><span class="actus-card__name">' + escHtml(p.name) + '</span><span class="actus-card__ticker">' + escHtml(p.ticker) + '</span></div>';
+                    html += '<div class="actus-card__meta">AUM <strong>$' + fmtAum(p.aum_musd) + '</strong> &middot; Yield <strong>' + (p.yield_pct != null ? p.yield_pct.toFixed(2) + '%' : '—') + '</strong></div>';
+                    html += '<div class="actus-card__meta">Min: <strong>' + fmtMin(p.min_usd) + '</strong> &middot; Redeem: ' + escHtml(p.redemption || '—') + '</div>';
+                    html += '<div class="actus-card__row"><span class="actus-pill">' + escHtml(p.chain) + '</span><span class="actus-cur-badge">' + escHtml(p.venue) + '</span></div>';
+                    if (p.note) html += '<div class="actus-card__note">' + escHtml(p.note) + '</div>';
+                    html += '</div>';
+                });
+                html += '</div></div></div>';
+            });
+            if (!html) html = '<p class="actus-empty">No products in this category</p>';
+            detailEl.innerHTML = html;
+        }
+
+        function renderComparison(actusType) {
+            overviewEl.hidden = true; detailEl.hidden = true; compEl.hidden = false;
+            const comp = TD.comparison[actusType];
+            if (!comp || !comp.tokens || comp.tokens.length === 0) {
+                compEl.innerHTML = '<p class="actus-empty">No tokens in this category</p>';
+                return;
+            }
+            let html = '<div style="margin-bottom:0.6rem;font-family:var(--font-mono);font-size:0.78rem;color:var(--text-tertiary);">' + escHtml(comp.label) + ' &middot; sorted by AUM</div>';
+            html += '<div style="overflow-x:auto;"><table class="actus-table">';
+            html += '<thead><tr><th>Token</th><th>Issuer</th><th>AUM</th><th>Yield</th><th>Min</th><th>Redemption</th></tr></thead><tbody>';
+            const sorted = comp.tokens.slice().sort((a, b) => (b.aum_musd || 0) - (a.aum_musd || 0));
+            const maxAum = Math.max.apply(null, sorted.map(t => t.aum_musd || 0));
+            sorted.forEach(t => {
+                const iss = TD.issuers[t.issuer_id];
+                const isLargest = t.aum_musd === maxAum;
+                html += '<tr>';
+                html += '<td><strong style="color:var(--text-primary);">' + escHtml(t.ticker) + '</strong></td>';
+                html += '<td><a href="#" class="actus-issuer-link" data-issuer="' + t.issuer_id + '">' + escHtml(iss ? iss.name : t.issuer_id) + '</a></td>';
+                html += '<td class="' + (isLargest ? 'highlight' : '') + '">$' + fmtAum(t.aum_musd) + '</td>';
+                html += '<td>' + (t.yield_pct != null ? t.yield_pct.toFixed(2) + '%' : '—') + '</td>';
+                html += '<td>' + fmtMin(t.min_usd) + '</td>';
+                html += '<td>' + escHtml(t.redemption || '—') + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table></div>';
+            compEl.innerHTML = html;
+        }
+
+        function render() {
+            buildTabs();
+            if (state.issuer && state.actusType) renderIssuerDetail(state.issuer, state.actusType);
+            else if (state.issuer) renderIssuerDetail(state.issuer, null);
+            else if (state.actusType) renderComparison(state.actusType);
+            else renderOverview();
+        }
+
+        issuerSelect.addEventListener('change', () => { state.issuer = issuerSelect.value; render(); });
+
+        function handleIssuerLinkClick(e) {
+            const link = e.target.closest('.actus-issuer-link');
+            if (!link) return;
+            e.preventDefault();
+            const iId = link.dataset.issuer;
+            if (!iId) return;
+            state.issuer = iId;
+            issuerSelect.value = iId;
+            render();
+        }
+        overviewEl.addEventListener('click', handleIssuerLinkClick);
+        detailEl.addEventListener('click', handleIssuerLinkClick);
+        compEl.addEventListener('click', handleIssuerLinkClick);
+
+        // Reference table
+        const refBody = document.querySelector('#refTable tbody');
+        typeOrder.forEach(t => {
+            const info = TD.actus_types[t];
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td class="type-code">' + t + '</td><td>' + info.name + '</td><td>' + (ACTUS_TIPS[t] || info.desc) + '</td><td class="ref-count">' + info.products + '</td>';
+            refBody.appendChild(tr);
+        });
+
+        render();
+    })();
+    </script>
+</body>
+</html>
