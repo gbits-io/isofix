@@ -854,7 +854,7 @@ const STABLECOIN_CONFIG = {
     USDC: { mint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', decimals: 6, currency: 'USD', label: 'USDC' },
     USDT: { mint: 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB', decimals: 6, currency: 'USD', label: 'USDT' },
     EURC: { mint: 'HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr', decimals: 6, currency: 'EUR', label: 'EURC' },
-    VCHF: { mint: 'AhhdRu5YZdjVkKR3wbnUDaymVQL2ucjMQ63sZ3LFHsch', decimals: 6, currency: 'CHF', label: 'VCHF' },
+    VCHF: { mint: 'AhhdRu5YZdjVkKR3wbnUDaymVQL2ucjMQ63sZ3LFHsch', decimals: 9, currency: 'CHF', label: 'VCHF' },
     PYUSD: { mint: '2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo', decimals: 6, currency: 'USD', label: 'PYUSD' },
     EUROe: { mint: '2VhjJ9WxaGC3EZFwJG9BDUs9KxKCAjQY4vgd1qxgYWVg', decimals: 6, currency: 'EUR', label: 'EUROe' },
 };
@@ -1045,9 +1045,42 @@ function fmtDateTime(d) {
         '.000' + sign + pad(Math.floor(absOff/60)) + ':' + pad(absOff%60);
 }
 function escXml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+    // XML 1.0 forbids these control characters outright, escaped or not; on-chain memos can contain them
+    return String(s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g, '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
 }
 function trunc(s, n) { return (!s) ? '' : s.length > n ? s.substring(0, n) : s; }
+
+const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+function base58Decode(s) {
+    let n = 0n;
+    for (const ch of s) {
+        const digit = BASE58_ALPHABET.indexOf(ch);
+        if (digit < 0) return null;
+        n = n * 58n + BigInt(digit);
+    }
+    const bytes = [];
+    while (n > 0n) { bytes.unshift(Number(n % 256n)); n /= 256n; }
+    for (const ch of s) { if (ch !== '1') break; bytes.unshift(0); }
+    return new Uint8Array(bytes);
+}
+
+// Helius returns instruction data base58-encoded; for the SPL Memo program the decoded bytes are the UTF-8 memo text
+function decodeMemoData(data) {
+    const bytes = base58Decode(data);
+    return bytes ? new TextDecoder().decode(bytes) : '';
+}
+
+// Swiss QR reference: 27 digits, the last a mod-10 recursive check digit. QR-bills print it in groups of five.
+function extractQrReference(memo) {
+    const m = memo.trim();
+    if (!m.startsWith('QRR:')) return '';
+    const ref = m.substring(4).replace(/\s/g, '');
+    if (!/^\d{27}$/.test(ref)) return '';
+    const table = [0, 9, 4, 6, 8, 2, 7, 1, 3, 5];
+    let carry = 0;
+    for (let i = 0; i < 26; i++) carry = table[(carry + Number(ref[i])) % 10];
+    return (10 - carry) % 10 === Number(ref[26]) ? ref : '';
+}
 function shortAddr(a) { return (!a || a.length < 12) ? (a||'') : a.substring(0,6) + '...' + a.substring(a.length-4); }
 
 function showError(id, msg) {
@@ -1286,11 +1319,13 @@ async function fetchStablecoinTxns(address, startDate, endDate) {
     const allTx = [];
     let beforeSig = undefined;
     const startTs = Math.floor(startDate.getTime() / 1000);
-    const endTs = Math.floor(endDate.getTime() / 1000) + 86399;
+    const endTs = Math.floor(endDate.getTime() / 1000); // endDate is already the last second of the end day
     const MAX_PAGES = 50;
 
     for (let page = 0; page < MAX_PAGES; page++) {
-        let url = `https://api-mainnet.helius-rpc.com/v0/addresses/${address}/transactions?api-key=${HELIUS_API_KEY}&type=TRANSFER&limit=100`;
+        // Incoming SPL transfers usually touch only the wallet's token accounts, not the wallet itself;
+        // without token-accounts Helius omits them
+        let url = `https://api-mainnet.helius-rpc.com/v0/addresses/${address}/transactions?api-key=${HELIUS_API_KEY}&type=TRANSFER&token-accounts=balanceChanged&limit=100`;
         if (beforeSig) url += '&before=' + beforeSig;
 
         const resp = await fetch(url);
@@ -1315,7 +1350,7 @@ async function fetchStablecoinTxns(address, startDate, endDate) {
                     if (tx.instructions) {
                         for (const ix of tx.instructions) {
                             if (MEMO_PROGRAMS.includes(ix.programId) && ix.data) {
-                                memo = ix.data;
+                                memo = decodeMemoData(ix.data);
                                 break;
                             }
                         }
@@ -1628,6 +1663,8 @@ async function handleGenerate() {
                 if (!config) return;
                 const amount = typeof tt.tokenAmount === 'number' ? Math.abs(tt.tokenAmount) : parseFloat(tt.tokenAmount) || 0;
                 const isIncoming = (tt.toUserAccount === address || tt.toTokenAccount === address);
+                const isOutgoing = (tt.fromUserAccount === address || tt.fromTokenAccount === address);
+                if (isIncoming === isOutgoing) return; // between other parties, or between this wallet's own accounts
                 const direction = isIncoming ? 'CRDT' : 'DBIT';
                 const counterparty = isIncoming
                     ? (tt.fromUserAccount || tt.fromTokenAccount || 'UNKNOWN')
@@ -1640,10 +1677,15 @@ async function handleGenerate() {
                     tokenLabel: config.label,
                     tokenMint: config.mint,
                     memo: tx.memo || '',
-                    qrRef: (tx.memo && tx.memo.startsWith('QRR:')) ? tx.memo.substring(4).trim() : '',
+                    qrRef: extractQrReference(tx.memo || ''),
                 });
             });
         });
+
+        if (Object.values(byCurrency).every(entries => entries.length === 0)) {
+            showError('error-box', 'No stablecoin transfers to or from this address in the selected date range.');
+            resetGenerateBtn(); return;
+        }
 
         await new Promise(r => setTimeout(r, 200));
 
@@ -1992,6 +2034,7 @@ function viewXml(idx) {
 function generateCamt054(address, currency, entries, startDate, endDate, ntfctnId, iban, ownerInfo) {
     const now = new Date();
     const creationDateTime = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
+    const msgId = ('GBITS054' + currency + fmtDate(startDate).replace(/-/g, '') + Date.now()).substring(0, 35);
     const useIban = iban.replace(/\s/g, '') || 'CH0000000000000000000';
     const ownr = ownerInfo || { name: trunc(address, 70), hasAddress: false };
     const totalCredit = entries.filter(e => e.direction === 'CRDT').reduce((s, e) => s + e.amount, 0);
@@ -2008,10 +2051,10 @@ function generateCamt054(address, currency, entries, startDate, endDate, ntfctnI
         let rmtInfXml = '';
         if (entry.qrRef) {
             rmtInfXml = `
-                            <RmtInf><Strd><CdtrRefInf><Tp><CdOrPrtry><Prtry>QRR</Prtry></CdOrPrtry></Tp><Ref>${entry.qrRef}</Ref></CdtrRefInf></Strd></RmtInf>`;
+                            <RmtInf><Strd><CdtrRefInf><Tp><CdOrPrtry><Prtry>QRR</Prtry></CdOrPrtry></Tp><Ref>${escXml(entry.qrRef)}</Ref></CdtrRefInf></Strd></RmtInf>`;
         } else if (entry.memo) {
             rmtInfXml = `
-                            <RmtInf><Ustrd>${entry.memo.substring(0, 140).replace(/[<>&]/g, '')}</Ustrd></RmtInf>`;
+                            <RmtInf><Ustrd>${escXml(trunc(entry.memo, 140))}</Ustrd></RmtInf>`;
         }
 
         return `
@@ -2021,7 +2064,7 @@ function generateCamt054(address, currency, entries, startDate, endDate, ntfctnI
                 <Sts><Cd>BOOK</Cd></Sts>
                 <BookgDt><DtTm>${dateTimeStr}</DtTm></BookgDt>
                 <ValDt><Dt>${dateStr}</Dt></ValDt>
-                <AcctSvcrRef>${entry.signature}</AcctSvcrRef>
+                <AcctSvcrRef>${entry.signature.substring(0, 35)}</AcctSvcrRef>
                 <BkTxCd>
                     <Domn><Cd>PMNT</Cd><Fmly><Cd>${cdtDbt === 'CRDT' ? 'RCDT' : 'ICDT'}</Cd><SubFmlyCd>ESCT</SubFmlyCd></Fmly></Domn>
                 </BkTxCd>
@@ -2035,6 +2078,7 @@ function generateCamt054(address, currency, entries, startDate, endDate, ntfctnI
                                 : `<Cdtr><Pty><Nm>${entry.counterparty.substring(0, 35)}</Nm></Pty></Cdtr>`
                             }
                         </RltdPties>${rmtInfXml}
+                        <AddtlTxInf>${escXml('SOL-' + entry.tokenLabel + ' ' + entry.signature)}</AddtlTxInf>
                     </TxDtls>
                 </NtryDtls>
             </Ntry>`;
@@ -2044,13 +2088,13 @@ function generateCamt054(address, currency, entries, startDate, endDate, ntfctnI
 <Document xmlns="urn:iso:std:iso:20022:tech:xsd:camt.054.001.08" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:iso:std:iso:20022:tech:xsd:camt.054.001.08 camt.054.001.08.ch.02.xsd">
     <BkToCstmrDbtCdtNtfctn>
         <GrpHdr>
-            <MsgId>${ntfctnId}</MsgId>
+            <MsgId>${escXml(msgId)}</MsgId>
             <CreDtTm>${creationDateTime}</CreDtTm>
             <MsgPgntn><PgNb>1</PgNb><LastPgInd>true</LastPgInd></MsgPgntn>
             <AddtlInf>SPS/2.1/PROD</AddtlInf>
         </GrpHdr>
         <Ntfctn>
-            <Id>${ntfctnId}</Id>
+            <Id>${escXml(trunc(ntfctnId, 35))}</Id>
             <CreDtTm>${creationDateTime}</CreDtTm>
             <FrToDt>
                 <FrDtTm>${startDate.toISOString().replace(/\.\d{3}Z$/, 'Z')}</FrDtTm>
@@ -2221,7 +2265,7 @@ function generateBAI2(address, entries, startDate, endDate, iban, ownerInfo) {
         if (e.qrRef) {
             lines.push(`88,QRR: ${e.qrRef}/`);
         } else if (e.memo) {
-            lines.push(`88,Memo: ${trunc(e.memo, 60)}/`);
+            lines.push(`88,Memo: ${trunc(e.memo.replace(/[\x00-\x1F\x7F]/g, ' '), 60)}/`); // a line break would split the record
         }
     });
 
@@ -2804,21 +2848,24 @@ async function handlePainFile(file) {
         const qText = (parent, tag) => { const el = qOne(parent, tag); return el ? el.textContent.trim() : ''; };
         const txInfos = qAll(doc, 'CdtTrfTxInf');
         if (txInfos.length === 0) throw new Error('No payment orders (CdtTrfTxInf) found.');
-        painPayments = [];
+        const parsed = [];
         for (let i = 0; i < txInfos.length; i++) {
             const tx = txInfos[i];
             const instdAmtEl = qOne(tx, 'InstdAmt');
             const amount = instdAmtEl ? parseFloat(instdAmtEl.textContent) : 0;
-            const currency = instdAmtEl ? (instdAmtEl.getAttribute('Ccy') || 'CHF') : 'CHF';
+            const currency = instdAmtEl ? instdAmtEl.getAttribute('Ccy') : '';
+            if (!(amount > 0)) throw new Error(`Payment ${i + 1}: no positive instructed amount (InstdAmt).`);
+            const candidates = CURRENCY_TO_STABLECOINS[currency];
+            if (!candidates) throw new Error(`Payment ${i + 1}: currency ${currency || '(none)'} is not supported; only ${Object.keys(CURRENCY_TO_STABLECOINS).join(', ')} can be paid.`);
             const endToEndId = qText(tx, 'EndToEndId');
             const cdtrNm = qText(tx, 'Nm');
             const iban = qText(tx, 'IBAN');
             let memo = qText(tx, 'Ustrd');
             const qrRef = qText(tx, 'Ref');
             if (qrRef) memo = 'QRR:' + qrRef;
-            const candidates = CURRENCY_TO_STABLECOINS[currency] || CURRENCY_TO_STABLECOINS['CHF'];
-            painPayments.push({ index: i, endToEndId, creditorName: cdtrNm, iban: iban.replace(/\s/g, ''), amount, currency, memo: memo.substring(0, 140), selectedStablecoin: candidates[0], candidates, solanaAddress: '', resolveStatus: 'pending', sendStatus: 'waiting', txSignature: '' });
+            parsed.push({ index: i, endToEndId, creditorName: cdtrNm, iban: iban.replace(/\s/g, ''), amount, currency, memo: memo.substring(0, 140), selectedStablecoin: candidates[0], candidates, solanaAddress: '', resolveStatus: 'pending', sendStatus: 'waiting', txSignature: '' });
         }
+        painPayments = parsed;
         dropZone.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" style="margin-bottom:4px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div style="font-size:14px;color:#34D399;font-weight:500;">${file.name}</div><div style="font-size:12px;color:#B8C7D8;margin-top:2px;">${painPayments.length} payment order${painPayments.length !== 1 ? 's' : ''} parsed</div><div style="font-size:11px;color:#7A8BA0;margin-top:8px;cursor:pointer;" onclick="event.stopPropagation();resetPainUpload();">Upload a different file</div>`;
         document.getElementById('pain-results').style.display = 'block';
         document.getElementById('btn-view-xml').style.display = 'inline-flex';
@@ -2852,7 +2899,7 @@ function renderPainSummary() {
     el.innerHTML = html;
 }
 
-function trunc(str, len) { return str.length > len ? str.substring(0, len) + '…' : str; }
+function truncDisplay(str, len) { return str.length > len ? str.substring(0, len) + '…' : str; }
 
 function renderPainTable() {
     const tbody = document.getElementById('pain-table-body');
@@ -2871,7 +2918,7 @@ function renderPainTable() {
         const coinOpts = p.candidates.map(c => `<option value="${c}" ${c === p.selectedStablecoin ? 'selected' : ''}>${c}</option>`).join('');
         const canSend = (p.resolveStatus === 'resolved' || p.solanaAddress) && p.sendStatus !== 'sent' && p.sendStatus !== 'sending';
         let actionHtml = p.sendStatus === 'sent' ? `<a href="https://solscan.io/tx/${p.txSignature}" target="_blank" style="color:#22D3EE;font-size:11px;">View TX</a>` : `<button class="pain-send-btn" onclick="sendPainPayment(${idx})" ${canSend ? '' : 'disabled'}>Send</button>`;
-        return `<tr><td>${statusHtml}</td><td title="${p.creditorName}">${trunc(p.creditorName, 20)}</td><td title="${p.iban}" style="font-size:11px;">${p.iban ? p.iban.substring(0,4) + '…' + p.iban.substring(p.iban.length-4) : '—'}</td><td>${addrHtml}</td><td><strong>${p.amount.toFixed(2)}</strong> <span style="color:#A0B3C8;">${p.currency}</span></td><td><select class="pain-stablecoin-select" onchange="painSelectCoin(${idx},this.value)">${coinOpts}</select></td><td title="${p.memo}" style="font-size:11px;max-width:120px;">${trunc(p.memo, 18)}</td><td>${actionHtml}</td></tr>`;
+        return `<tr><td>${statusHtml}</td><td title="${p.creditorName}">${truncDisplay(p.creditorName, 20)}</td><td title="${p.iban}" style="font-size:11px;">${p.iban ? p.iban.substring(0,4) + '…' + p.iban.substring(p.iban.length-4) : '—'}</td><td>${addrHtml}</td><td><strong>${p.amount.toFixed(2)}</strong> <span style="color:#A0B3C8;">${p.currency}</span></td><td><select class="pain-stablecoin-select" onchange="painSelectCoin(${idx},this.value)">${coinOpts}</select></td><td title="${p.memo}" style="font-size:11px;max-width:120px;">${truncDisplay(p.memo, 18)}</td><td>${actionHtml}</td></tr>`;
     }).join('');
 }
 
@@ -2928,9 +2975,10 @@ async function sendPainPayment(idx) {
             const bh = await conn.getLatestBlockhash('finalized');
             blockhash = bh.blockhash;
         }
-        const transferData = new Uint8Array(9); transferData[0] = 3;
+        // TransferChecked (12): the token program rejects the transfer if `decimals` doesn't match the mint
+        const transferData = new Uint8Array(10); transferData[0] = 12; transferData[9] = config.decimals;
         const view = new DataView(transferData.buffer); view.setUint32(1, amountLamports & 0xFFFFFFFF, true); view.setUint32(5, Math.floor(amountLamports / 0x100000000), true);
-        const transferIx = new TransactionInstruction({ programId: tokenProgramId, keys: [{ pubkey: new PublicKey(senderAta), isSigner: false, isWritable: true }, { pubkey: new PublicKey(recipientAta), isSigner: false, isWritable: true }, { pubkey: senderPk, isSigner: true, isWritable: false }], data: transferData });
+        const transferIx = new TransactionInstruction({ programId: tokenProgramId, keys: [{ pubkey: new PublicKey(senderAta), isSigner: false, isWritable: true }, { pubkey: mintPk, isSigner: false, isWritable: false }, { pubkey: new PublicKey(recipientAta), isSigner: false, isWritable: true }, { pubkey: senderPk, isSigner: true, isWritable: false }], data: transferData });
         const memoText = p.memo || `SOL-${p.selectedStablecoin} ${p.endToEndId}`;
         const memoIx = new TransactionInstruction({ programId: memoProgramId, keys: [{ pubkey: senderPk, isSigner: true, isWritable: false }], data: new TextEncoder().encode(memoText.substring(0, 140)) });
         const tx = new Transaction({ recentBlockhash: blockhash, feePayer: senderPk }); tx.add(transferIx); tx.add(memoIx);
