@@ -1,6 +1,6 @@
 # ISOFIX Roadmap
 
-**Last updated:** 2026-09-28
+**Last updated:** 2026-09-29
 
 ---
 
@@ -207,6 +207,38 @@ Alternative: wait for Milestone 1 and enforce proposer/approver roles on the ser
 
 ---
 
+## Milestone 6 — Custodian Support (Hosted Wallets)
+
+> Let companies whose stablecoins sit with a custodian (a hosted wallet) use isofix.
+> Receiving is mostly there: isofix reads public chain data, so a custodial address can already be entered by hand. What's missing is proof that the address belongs to the company without a browser wallet.
+> Sending is harder: isofix can't sign, so it has to hand each payment to the custodian.
+
+| # | Task | Detail |
+|---|------|--------|
+| 6.1 | Ownership verification module | One module that proves control of an address, shared with 5.21 (supplier wallets) and 2.8 (`verified-iban.sol` onboarding). Methods in 6.2–6.4. Store the proof with the address so auditors can re-check it |
+| 6.2 | Signed challenge | The wallet or custodian signs a message tying the address to the company's legal ID (UID or LEI), a one-time code and a date. Verify the Ed25519 signature for real — today's `verifyWallet()` only checks that the wallet returned something. Many custody platforms support message signing, often only after an admin enables it |
+| 6.3 | Micro-payment test | isofix shows a unique amount (e.g. 0.013742 USDC) to send from the address to an isofix verification address within 48 hours, then watches the chain. Works with any custodian that can send the token; no API or memo needed, because the amount is the one-time code. Swiss crypto providers use the same method to check that a customer controls an external wallet |
+| 6.4 | Custodian confirmation | Read-only API access, or a written confirmation from the custodian listing the company's addresses. The strongest proof for auditors, because a regulated institution vouches for it |
+| 6.5 | Accounts made of several addresses | One statement covering all of a company's deposit addresses at a custodian |
+| 6.6 | Sweeps as internal transfers | Let users tag their own addresses, so custodian sweeps into a main wallet are booked as internal transfers, not payments |
+| 6.7 | Custodian as account servicer | Name the custodian (BIC or LEI) in `Acct/Svcr` of camt.053/054 and `AcctSvcr` of semt.002, instead of the synthetic `SOLNCHZZXXX` and "Self-Custody" |
+| 6.8 | Payments via export file | Turn a pain.001 into the custodian's bulk-payment upload format; the customer uploads it. Cheapest route, and isofix holds no credentials |
+| 6.9 | Payments via custodian API | One adapter per custodian: pain.001 → transfer API, custodian status → pain.002 (4.3). isofix's credentials may only *propose* transfers; approval and address allow-lists stay in the custodian's own controls |
+| 6.10 | Squads multi-sig as the alternative | See 2.7: institutional approval controls without a custodian and without per-custodian adapters |
+
+**Constraints:**
+
+- **Dedicated addresses only.** Exchanges and some custodians pool many customers in one address (omnibus), so the chain can't show whose money is whose. Pooled accounts would need the custodian's own ledger (via 6.9) instead of chain data.
+- **Memo support is a must for sending.** If a custodian's Solana transfer API can't attach a memo, the QR reference never reaches the chain and the creditor can only match payments by amount. Check this before choosing a custodian for 6.8 or 6.9.
+- **Legal check.** Confirm with a Swiss lawyer that propose-only credentials keep isofix from having power over client funds under anti-money-laundering rules.
+- **Advantage to keep:** isofix reads the chain, so QR references in incoming memos stay visible even if the custodian's own reports drop them.
+
+**Suggested order:** 6.1–6.3 first (statements for dedicated custodial addresses; small, no integrations), then 6.5–6.7, then sending: 6.8, followed by 6.9 for the custodian the first customers actually use, or 6.10.
+
+**Depends on:** nothing for 6.1–6.8. 6.9 needs 4.3 (pain.002) and a chosen first custodian.
+
+---
+
 ## Timeline (Suggested)
 
 ```
@@ -227,6 +259,7 @@ Alternative: wait for Milestone 1 and enforce proposer/approver roles on the ser
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
+| 2026-09-29 | Plan custodian support (Milestone 6) | Companies with hosted wallets can't verify ownership or sign through a browser wallet. Statements come first (read-only; only proof of ownership is needed); payments follow via export files, then custodian API adapters with propose-only credentials, or Squads |
 | 2026-09-28 | Status reports for pain.001 use pain.002, not pacs.002 (corrected in 4.3, 4.6 and the 2026-03-26 entries) | pacs.002 is the bank-to-bank status report; the customer-facing report for a pain.001 is pain.002, which is what ERPs such as SAP import. pain.002 has no `<TxId>`, so the Solana transaction is referenced in `<AcctSvcrRef>` |
 | 2026-09-28 | Plan supplier wallet registry with four-eyes approval (5.21) | Borrowed from SAP Digital Currency Hub: pay only wallets a second person has activated. Defends against changed-payment-details fraud, which irreversible on-chain payments can't recall. Approvals are two wallet signatures, so it works without a backend |
 | 2026-03-26 | Add pain.002 status response for REST-mode pain.001 | When ERP POSTs pain.001 via API (no human in loop), the gateway must return a machine-readable status. pain.002 with ACCP/ACSC/RJCT codes maps directly to what ERPs expect. References the Solana transaction in `<AcctSvcrRef>` for audit trail |
