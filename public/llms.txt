@@ -1,34 +1,34 @@
 # ISOFIX — Solana ISO 20022 Gateway
 
-> Open-source, bidirectional message gateway between Solana stablecoin payments and ISO 20022 banking messages. Turns Solana into a Global RTGS — real-time gross settlement at ~$0.001 per message, zero bank permission required. Built by Gbits.io (Zürich, Switzerland). Source-available under BSL 1.1 (Change Date 2028-03-01, then Apache 2.0).
+> Bidirectional message gateway between Solana stablecoin payments and ISO 20022 banking messages. Turns Solana into a Global RTGS — real-time gross settlement at ~$0.001 per message, zero bank permission required. Built by Gbits.io (Zürich, Switzerland). Source-available under BSL 1.1 (Change Date 2028-03-01, then Apache 2.0).
 
-ISOFIX translates Solana blockchain stablecoin transactions into ISO 20022 XML that any ERP or accounting system can import (SAP, Oracle, Bexio, Abacus, QuickBooks). It also accepts ISO 20022 payment orders and executes them as on-chain Solana SPL token transfers.
+ISOFIX translates Solana blockchain stablecoin transactions into ISO 20022 XML for ERP and accounting systems such as SAP, Oracle, Bexio and Abacus (import tested with Bexio). It also accepts ISO 20022 payment orders and executes them as on-chain Solana SPL token transfers.
 
-The gateway runs as a single HTML file (~165KB) with zero dependencies — no React, no Node.js, no build tools. A company can host its own instance on its own server with its own Helius API key and adapt the field mapping for its specific needs. The code is fully auditable by bank compliance officers who can read plain JavaScript.
+The gateway runs as a single HTML file (~170 KB) with no build step — no React, no Node.js, no bundler. Its one external library is `@solana/web3.js`, loaded from a CDN. A company can host its own instance on its own server with its own Helius API key and adapt the field mapping for its specific needs. The code is fully auditable by bank compliance officers who can read plain JavaScript.
 
-Supported stablecoins: USDC, USDT, PYUSD (→ USD), EURC, EUROe (→ EUR), VCHF (→ CHF). One report is generated per ISO 4217 currency.
+Supported stablecoins: USDC, USDT, PYUSD (→ USD), EURC, EUROe (→ EUR), VCHF (→ CHF). One camt report is generated per ISO 4217 currency. VCHF was discontinued by its issuer, VNX; its past transactions still appear in statements. PYUSD is a Token-2022 token: it appears in statements but not yet in custody reports or payment execution.
 
-IBAN-to-Solana address resolution uses on-chain SNS (Solana Name Service) subdomains: `{iban}.verified-iban.sol` resolves a bank IBAN to a Solana wallet address. DNS-style attributes on each SNS record can specify token preference, legal entity name, and verification source.
+IBAN-to-Solana address resolution uses on-chain SNS (Solana Name Service) subdomains: `{iban}.verified-iban.sol` resolves a bank IBAN to a Solana wallet address. Planned: DNS-style attributes on each SNS record for token preference, legal entity name, and verification source.
 
 No banks are needed. No KYC, KYB, or Travel Rule obligation applies to this narrow use case of self-custody stablecoin payments between wallets. Companies change the destination from bank SFTP to the gateway, and their ERP exports/imports work as before.
 
 ## ISO 20022 Message Types
 
-- [camt.053 — Bank-to-Customer Statement](https://iso.gbits.io/camt053_field_mapping.html): Solana → ERP. Schema: camt.053.001.04 (Swiss Payment Standards 1.7). End-of-day or periodic statement with opening/closing balances and all stablecoin transactions for a wallet.
-- camt.054 — Bank-to-Customer Debit/Credit Notification: Solana → ERP. Schema: camt.054.001.08 (SPS 2.1). Real-time notification when a stablecoin payment arrives. QR reference in SPL Memo maps to `<CdtrRefInf>` for automatic invoice matching.
-- semt.002 — Securities Balance Custody Report: Solana → ERP. Schema: semt.002.001.11. Shows all SPL token holdings — the gateway is not payment-only.
-- pain.001 — Customer Credit Transfer Initiation: ERP → Solana. Schema: pain.001.001.03 (SPS 2009). Upload from ERP, gateway resolves creditor IBANs via SNS, constructs SPL token transfers. UI mode: sign with Phantom/Solflare. REST mode (planned): gateway executes and returns pacs.002 status.
-- pacs.002 — Payment Status Report (planned): Solana → ERP. Returned after REST-mode pain.001 execution with status codes ACCP (accepted), ACSC (settled/finalized), RJCT (rejected). Includes Solana transaction signature in `<TxId>`.
-- BAI2 — US Bank Statement (non-ISO 20022): Solana → ERP. BAI 2005 format. Combines all currencies. Amounts in cents. For QuickBooks, NetSuite, Oracle, SAP.
+- [camt.053 — Bank-to-Customer Statement](https://iso.gbits.io/camt053_field_mapping.html): Solana → ERP. Schema: camt.053.001.04 (Swiss Payment Standards 1.7). Periodic statement with every stablecoin transfer to or from a wallet; validates against the ISO 20022 schema. QR reference in the SPL memo maps to `<CdtrRefInf>` for automatic invoice matching. The opening balance is currently reported as 0.00, so the closing balance equals the period's net flow.
+- camt.054 — Bank-to-Customer Debit/Credit Notification: Solana → ERP. Schema: camt.054.001.08 (SPS 2.1). Debit/credit notifications for a chosen period; validates against the ISO 20022 schema. The app's Realtime tab simulates live notifications (live delivery via Helius webhooks is planned). QR reference in SPL Memo maps to `<CdtrRefInf>` for automatic invoice matching.
+- semt.002 — Securities Balance Custody Report: Solana → ERP. Schema: semt.002.001.11. Snapshot of all token holdings in the wallet from the SPL Token program (Token-2022 tokens not yet included) — the gateway is not payment-only.
+- pain.001 — Customer Credit Transfer Initiation: ERP → Solana. Schema: pain.001.001.03 (SPS 2009). Upload from ERP; the gateway resolves creditor IBANs via SNS and builds SPL token transfers (`TransferChecked`) that carry the payment reference in the memo. Only USD, EUR and CHF orders are accepted. UI mode: sign with Phantom/Solflare. REST mode (planned): gateway executes and returns pain.002 status.
+- pain.002 — Customer Payment Status Report (planned): Solana → ERP. Returned after REST-mode pain.001 execution with status codes ACCP (accepted), ACSC (settled/finalized), RJCT (rejected). References the Solana transaction in `<AcctSvcrRef>`, using the same per-transfer reference as the camt statements.
+- BAI2 — US Bank Statement (non-ISO 20022): Solana → ERP. BAI 2005 format. All entries go into a single USD account record, so it suits USD stablecoins. Amounts in cents. For QuickBooks, NetSuite, Oracle, SAP.
 
 ## Live App & Documentation
 
-- [ISOFIX Gateway — Live App](https://iso.gbits.io/): The full gateway application. Connect a Solana wallet, generate reports, execute payments, receive real-time notifications.
-- [StableHacks Submission Page](https://iso.gbits.io/stablehacks.html): Project overview, problem statement, architecture diagram, team, and roadmap for StableHacks 2026.
-- [Slide Presentation](https://iso.gbits.io/stablehacks-presentation.html): 9-slide deck covering problem, translation visual (Solana ↔ ISO 20022), architecture, why it matters, track record, and roadmap.
+- [ISOFIX Gateway — Live App](https://iso.gbits.io/): The full gateway application. Connect a Solana wallet, generate reports, execute payments, simulate real-time notifications.
+- [For Companies](https://iso.gbits.io/for-companies.html): Plain-language guide for finance teams on accepting stablecoin payments while keeping the existing accounting workflow — how it works, what changes, what it means for the accounting team, and what to consider.
+- [Slide Presentation](https://iso.gbits.io/stablehacks-presentation_after.html): 11-slide StableHacks 2026 deck covering ISO 20022, Solana → camt.053/camt.054 and pain.001 → Solana, the single-file architecture, why Solana needs an ISO 20022 gateway, track record, the offer for companies, and roadmap.
 - [Message Flow Diagrams](https://iso.gbits.io/flows.html): Animated inbound/outbound flows showing how Solana transactions become ISO 20022 messages and vice versa, including live and webhook modes.
 - [camt.053 Field Mapping](https://iso.gbits.io/camt053_field_mapping.html): Reference table mapping every Solana RPC field to its corresponding ISO 20022 XPath, with transformation logic.
-- [FAQ](https://iso.gbits.io/field-mapping-faq.html): 16 questions covering ISO 20022 mapping decisions — truncation, BIC, balances, QR references, currency handling, and more.
+- [FAQ](https://iso.gbits.io/field-mapping-faq.html): 20 questions covering ISO 20022 mapping decisions — truncation, BIC, balances, QR references, currency handling, and more.
 
 ## Source Code
 
@@ -36,18 +36,19 @@ No banks are needed. No KYC, KYB, or Travel Rule obligation applies to this narr
 
 ## Key Technical Details
 
-- Swiss-specific conventions: BIC `SOLNCHZZXXX` (synthetic), SPS version tags (`SPS/1.7/PROD`, `SPS/2.1/PROD`), `SubFmlyCd: ESCT` for SEPA compatibility, QR references with `QRR:` prefix in SPL Memo → `Strd/CdtrRefInf`.
+- Swiss-specific conventions: BIC `SOLNCHZZXXX` (synthetic), SPS version tags (`SPS/1.7/PROD`, `SPS/2.1/PROD`), bank transaction codes `PMNT/RCDT` (credits) and `PMNT/ICDT` (debits) with sub-family `ESCT`, modeled on a Swiss bank's camt.053 that Bexio imports.
+- QR references: the SPL memo carries `QRR:` plus the 27-digit reference. Spaces are removed and the check digit is validated before the reference goes into `Strd/CdtrRefInf`; anything else is not treated as a QR reference.
 - Account owner fields follow CBPR+ structured format: `Acct/Ownr/Nm` and `Acct/Ownr/PstlAdr` with `StrtNm`, `BldgNb`, `PstCd`, `TwnNm`, `Ctry`.
-- Transaction fetching uses Helius RPC: `getSignaturesForAddress` + `parseTransaction` (DAS API). Results filtered for SPL token transfers matching known stablecoin mints.
+- Transaction history comes from the Helius Enhanced Transactions API: `GET /v0/addresses/{address}/transactions` with `type=TRANSFER` and `token-accounts=balanceChanged`, so payments into the wallet's token accounts are included. Only transfers of known stablecoin mints that the wallet sends or receives are booked. SPL Memo instruction data is base58-decoded to read references.
 - SNS resolution: forward via `sdk-proxy.sns.id/resolve/{domain}`, reverse via `sns-api.bonfida.com/v2/user/domains/{address}`.
 - External JS dependency: `@solana/web3.js` v1.95.8 from unpkg CDN.
 
 ## Roadmap
 
-- **Now (Hackathon complete):** camt.053, camt.054, semt.002, BAI2 generation. pain.001 execution. QR reference reconciliation. Single-file, zero-dependency architecture.
-- **Q2 2026 — Production Hardening:** REST API with pain.001 intake and pacs.002 status response. Webhook-based camt.054 notifications. Squads multi-sig for pain.001 execution. Cloudflare Workers RPC proxy (hides Helius API key). DNS-style SNS attributes (token preference, entity name).
-- **Q3 2026 — Multi-Chain:** Ethereum and Base L2 support. EVM RPC proxy, ERC-20 Transfer event parsing, MetaMask/WalletConnect signing.
-- **Q4 2026 — REST API:** Full programmatic access. API keys, rate limiting, on-demand report generation, webhook subscriptions, OpenAPI spec.
+- **Now (Hackathon complete):** camt.053, camt.054, semt.002, BAI2 generation. pain.001 execution. QR reference reconciliation. Single HTML file, no build step.
+- **Next — Production Hardening:** Cloudflare Workers RPC proxy (hides Helius API key). Webhook-based camt.054 notifications. Supplier wallet registry with four-eyes approval for pain.001 payouts. Squads multi-sig for pain.001 execution. DNS-style SNS attributes (token preference, entity name).
+- **Later — Multi-Chain:** Ethereum and Base L2 support. EVM RPC proxy, ERC-20 Transfer event parsing, MetaMask/WalletConnect signing.
+- **Later — REST API:** Full programmatic access. pain.001 intake with pain.002 status response, API keys, rate limiting, on-demand report generation, webhook subscriptions, OpenAPI spec.
 
 ## Company & Team
 

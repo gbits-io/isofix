@@ -1,6 +1,6 @@
 # ISOFIX Roadmap
 
-**Last updated:** 2026-03-26
+**Last updated:** 2026-09-28
 
 ---
 
@@ -74,10 +74,10 @@
 |---|------|--------|
 | 4.1 | API design | RESTful endpoints: `POST /api/v1/pain001` (accepts pain.001 XML, returns 202 + UETR), `GET /api/v1/reports/camt053?address={addr}&currency={ccy}&from={date}&to={date}`, `GET /api/v1/reports/camt054?address={addr}&since={ts}`, etc. |
 | 4.2 | Authentication | API key per customer, stored in Worker KV or D1. Rate limiting per key |
-| 4.3 | pacs.002 status response | After pain.001 intake: return pacs.002 with ACCP (accepted), ACSC (settled/finalized), or RJCT (simulation failed/dropped). Include Solana tx signature in `<TxId>`. Delivered via webhook POST to customer's registered callback URL |
+| 4.3 | pain.002 status response | After pain.001 intake: return pain.002 with ACCP (accepted), ACSC (settled/finalized), or RJCT (simulation failed/dropped). Reference the Solana transaction in `<AcctSvcrRef>` (max. 35 characters, so use the same per-transfer reference as the camt statements; the full signature doesn't fit). Delivered via webhook POST to customer's registered callback URL |
 | 4.4 | On-demand camt.053 generation | Port the full `fetchStablecoinTxns()` + `generateCamt053()` pipeline to the Worker. Return XML directly or as a download |
 | 4.5 | On-demand camt.054 generation | Same as camt.053 but for notification format |
-| 4.6 | Webhook subscription API | `POST /api/v1/webhooks` — let companies register a callback URL to receive camt.054 notifications and pacs.002 status reports in real time (ISOFIX as a webhook relay: Helius → ISOFIX Worker → customer endpoint). Include `X-ISO-Signature` (HMAC-SHA256) header for verification |
+| 4.6 | Webhook subscription API | `POST /api/v1/webhooks` — let companies register a callback URL to receive camt.054 notifications and pain.002 status reports in real time (ISOFIX as a webhook relay: Helius → ISOFIX Worker → customer endpoint). Include `X-ISO-Signature` (HMAC-SHA256) header for verification |
 | 4.7 | semt.002 via API | Port custody report generation. Useful for portfolio reporting tools |
 | 4.8 | OpenAPI spec / documentation | Publish API docs so companies can integrate. Host at `api.gbits.io/docs` |
 | 4.9 | Usage dashboard | Simple admin page showing API usage per key, report counts, webhook delivery status |
@@ -98,6 +98,7 @@
 | 5.2 | **Webhook signature verification** | The Helius webhook endpoint must verify the `x-helius-signature` header to prevent spoofed notifications |
 | 5.3 | **CORS lockdown** | The Worker proxy must only allow requests from known origins (`iso.gbits.io`, `app.gbits.io`, AlpenSign) |
 | 5.4 | **Input validation on IBAN** | Currently accepts any string. Add IBAN checksum validation (mod-97) before generating XML to catch typos |
+| 5.21 | **Supplier wallet registry with four-eyes approval** | The pain.001 executor pays any SNS-resolved or pasted address, with no second person involved. Pay only wallets that a second approver has activated (idea from SAP Digital Currency Hub). Spec: *TODO 5.21* section below |
 
 ### Reliability
 
@@ -132,6 +133,80 @@
 
 ---
 
+## TODO 5.21 — Supplier Wallet Registry with Four-Eyes Approval
+
+> **Status:** planned 2026-09-28, not started.
+> The pain.001 executor should pay only supplier wallets that a second person has approved.
+> Idea borrowed from SAP Digital Currency Hub.
+
+### Problem
+
+Today one person can send a payment to any address, and nothing checks that the address belongs to the supplier:
+
+- `resolveIbanToSolana()` turns the creditor IBAN into an address through the `<iban>.verified-iban` SNS lookup, via a third-party HTTP proxy (`sdk-proxy.sns.id`).
+- `painManualAddr()` accepts any pasted string of 32 or more characters as "resolved".
+- `sendPainPayment()` pays `p.solanaAddress` without further checks.
+
+A tampered pain.001 file, a compromised proxy, or one person pasting a wrong or fraudulent address sends the money elsewhere. "Our payment details have changed" fraud is one of the most common B2B payment frauds, and an on-chain payment can't be recalled.
+
+### What SAP does
+
+- One role enters a supplier's wallet address; a separate reviewer role must activate it. SAP forbids one user holding both roles.
+- Payments go only to addresses assigned to a business partner.
+- SAP advises validating a new address with a very small test payment.
+
+### Target behaviour
+
+- **Pay only active registry entries.** `sendPainPayment()` refuses unless the (IBAN, wallet, token) combination matches an active entry. SNS results and pasted addresses become *proposals*; they are never payable directly.
+- **Four-eyes activation.** An entry becomes active only when a second approver, different from the proposer, approves it.
+- **Changes need fresh approval.** A new wallet for a known IBAN creates a pending version. Payments to the new wallet stay blocked until it's approved, and the old wallet remains active until someone revokes it.
+- **Fast to block, slow to add.** Any single approver can revoke an entry, effective immediately.
+- **Proof of control before the first payment.** At least one of these:
+  - the supplier signs a challenge message with the wallet;
+  - the supplier confirms receipt of a small test transfer.
+
+  The approver also records how the request was confirmed outside the app, for example by calling the supplier back on a known number.
+- **Audit log** of proposals, approvals, revocations and proofs, exportable with their signatures.
+- **UI:** each payment row shows the registry status (Approved / Pending approval / Not registered / Wallet changed), plus a registry view.
+
+### Design constraint: no backend
+
+isofix has no server and no user accounts, so "a different person" can't be enforced with server-side roles. Proposal: make approvals cryptographic.
+
+- **Approvers are wallets** on a company approver list. Proposing and approving are both `signMessage` signatures over a canonical entry payload: IBAN, wallet, token mint, supplier name, version and timestamp.
+- **Checked at payment time.** Before paying, the executor verifies both signatures and checks that the two signers are different and both on the approver list.
+- **The approver list needs a root of trust.** For example, the paying (treasury) wallet signs it once at setup, and changing it later needs two existing approvers.
+- **Storage can be untrusted.** Because every entry is signed, localStorage plus an export/import JSON file is enough to start, and the Worker from Milestone 1 can take over later. Editing a stored entry breaks its signature and blocks payment.
+- **Signatures must be verified cryptographically** (Ed25519, available in browsers through WebCrypto). Today's `verifyWallet()` only checks that the wallet returned *something* and has a mobile bypass. Neither is acceptable here.
+
+Alternative: wait for Milestone 1 and enforce proposer/approver roles on the server. The approval flow is simpler that way, but it needs user accounts and a server you have to trust.
+
+### Acceptance criteria
+
+- A pain.001 payment to an IBAN without an active registry entry can't be sent, including through a pasted address.
+- The same approver can't both propose and approve an entry.
+- A new wallet for a known IBAN is blocked until it's approved.
+- Editing a stored entry by hand invalidates it.
+- One person alone can't change the approver list.
+- Revoking an entry blocks the next payment immediately.
+- The audit log exports every event with its signatures.
+
+### Open questions
+
+- Should proof of control be mandatory, or configurable per company?
+- Does an entry cover one token mint or a whole currency (for example USDC and PYUSD for USD)?
+- Is the registry kept per paying wallet or per company, for companies with several treasury wallets?
+- Should app.gbits.io share the same registry?
+
+### Related
+
+- **2.7 Squads multi-sig** adds four-eyes to each *payment*; this item adds four-eyes to the *wallet master data*. They complement each other.
+- **2.8 SNS attributes:** SNS stays a source of suggestions for proposals, not the authority.
+- **5.4 / 5.7 IBAN validation:** a prerequisite. Validate the IBAN before it can be proposed.
+- **Sanctions screening** (also from the SAP comparison): screen the wallet when it's proposed, once screening exists.
+
+---
+
 ## Timeline (Suggested)
 
 ```
@@ -152,10 +227,12 @@
 
 | Date | Decision | Rationale |
 |------|----------|-----------|
-| 2026-03-26 | Add pacs.002 status response for REST-mode pain.001 | When ERP POSTs pain.001 via API (no human in loop), the gateway must return a machine-readable status. pacs.002 with ACCP/ACSC/RJCT codes maps directly to what ERPs expect. Includes Solana tx signature in `<TxId>` for audit trail |
+| 2026-09-28 | Status reports for pain.001 use pain.002, not pacs.002 (corrected in 4.3, 4.6 and the 2026-03-26 entries) | pacs.002 is the bank-to-bank status report; the customer-facing report for a pain.001 is pain.002, which is what ERPs such as SAP import. pain.002 has no `<TxId>`, so the Solana transaction is referenced in `<AcctSvcrRef>` |
+| 2026-09-28 | Plan supplier wallet registry with four-eyes approval (5.21) | Borrowed from SAP Digital Currency Hub: pay only wallets a second person has activated. Defends against changed-payment-details fraud, which irreversible on-chain payments can't recall. Approvals are two wallet signatures, so it works without a backend |
+| 2026-03-26 | Add pain.002 status response for REST-mode pain.001 | When ERP POSTs pain.001 via API (no human in loop), the gateway must return a machine-readable status. pain.002 with ACCP/ACSC/RJCT codes maps directly to what ERPs expect. References the Solana transaction in `<AcctSvcrRef>` for audit trail |
 | 2026-03-26 | Plan Squads multi-sig for pain.001 execution | Single-key signing is a non-starter for enterprise. Squads creates a transaction proposal requiring multiple approvers (e.g. CFO + Treasurer) before on-chain settlement |
 | 2026-03-26 | DNS-style SNS attributes on verified-iban.sol | Expand each SNS subdomain record to carry metadata: token preference (USDC, EURC), legal entity name, verification source. Turns the registry into a financial discovery layer |
-| 2026-03-26 | Webhook-first for pacs.002 delivery | Webhooks beat WebSockets for ERP integration: stateless, retry-safe, compatible with SAP/NetSuite/Bexio. HMAC-signed headers for verification. WebSockets remain only for the browser UI |
+| 2026-03-26 | Webhook-first for pain.002 delivery | Webhooks beat WebSockets for ERP integration: stateless, retry-safe, compatible with SAP/NetSuite/Bexio. HMAC-signed headers for verification. WebSockets remain only for the browser UI |
 | 2026-03-26 | RTGS framing for positioning | "Global RTGS at ~$0.001 per message, zero bank permission" — clearer positioning than "ISO 20022 bridge." Added to presentation and landing page |
 | 2026-03-26 | Remove AlpenSign/swiyu from ISOFIX roadmap | These are separate projects. ISOFIX roadmap should focus on gateway features only |
 | 2026-03-26 | Add stablehacks-presentation.html | 9-slide presentation deck covering problem, translation, architecture, and roadmap. Linked from stablehacks.html and gbits.io landing page |
