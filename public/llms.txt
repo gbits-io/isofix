@@ -28,7 +28,7 @@ No banks are needed. No KYC, KYB, or Travel Rule obligation applies to this narr
 - [Slide Presentation](https://iso.gbits.io/stablehacks-presentation_after.html): 11-slide StableHacks 2026 deck covering ISO 20022, Solana → camt.053/camt.054 and pain.001 → Solana, the single-file architecture, why Solana needs an ISO 20022 gateway, track record, the offer for companies, and roadmap.
 - [Message Flow Diagrams](https://iso.gbits.io/flows.html): Animated inbound/outbound flows showing how Solana transactions become ISO 20022 messages and vice versa, including live and webhook modes.
 - [camt.053 Field Mapping](https://iso.gbits.io/camt053_field_mapping.html): Reference table mapping every Solana RPC field to its corresponding ISO 20022 XPath, with transformation logic.
-- [FAQ](https://iso.gbits.io/field-mapping-faq.html): 20 questions covering ISO 20022 mapping decisions — truncation, BIC, balances, QR references, currency handling, and more.
+- [FAQ](https://iso.gbits.io/field-mapping-faq.html): 21 questions covering ISO 20022 mapping decisions — truncation, BIC, balances, QR references, currency handling, and more.
 
 ## Source Code
 
