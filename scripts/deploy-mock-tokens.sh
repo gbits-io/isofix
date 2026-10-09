@@ -51,10 +51,7 @@ fail()  { echo -e "${RED}[FAIL]${RESET}  $*"; exit 1; }
 CLUSTER_URL=$(solana config get 2>/dev/null | grep "RPC URL" | awk '{print $3}')
 
 if echo "$CLUSTER_URL" | grep -qi "mainnet"; then
-    fail "Refusing to deploy mock tokens to mainnet."
-    echo "  Switch to devnet first:"
-    echo "    solana config set --url https://api.devnet.solana.com"
-    exit 1
+    fail "Refusing to deploy mock tokens to mainnet.\n  Switch to devnet first:\n    solana config set --url https://api.devnet.solana.com"
 fi
 
 info "Cluster: $CLUSTER_URL"

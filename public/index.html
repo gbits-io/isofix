@@ -1114,10 +1114,6 @@ function isMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-function isInWalletBrowser() {
-    return !!getProvider();
-}
-
 async function connectWallet() {
     hideError('wallet-error');
     try {
@@ -1281,36 +1277,6 @@ async function lookupDomainsForAddress(address) {
         }).join('');
     } catch (e) {
         display.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Could not look up domains</span>';
-    }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// .SOL DOMAIN RESOLUTION
-// ═══════════════════════════════════════════════════════════════════════════════
-
-let domainTimeout = null;
-
-function handleDomainInput(val) {
-    hideError('domain-error');
-    if (domainTimeout) clearTimeout(domainTimeout);
-    if (!val || val.length < 2) return;
-    domainTimeout = setTimeout(() => resolveDomain(val), 600);
-}
-
-async function resolveDomain(val) {
-    const domain = val.replace(/\.sol$/i, '');
-    document.getElementById('domain-spinner').style.display = 'inline';
-    try {
-        const resp = await fetch(`https://sdk-proxy.sns.id/resolve/${domain}`);
-        if (!resp.ok) throw new Error('Could not resolve domain');
-        const data = await resp.json();
-        const addr = data.result || data.s === 'ok' && data.result;
-        if (!addr) throw new Error('Could not resolve ' + domain + '.sol');
-        document.getElementById('sol-address').value = addr;
-    } catch (e) {
-        showError('domain-error', e.message);
-    } finally {
-        document.getElementById('domain-spinner').style.display = 'none';
     }
 }
 
@@ -2040,8 +2006,6 @@ function generateCamt054(address, currency, entries, startDate, endDate, ntfctnI
     const msgId = ('GBITS054' + currency + fmtDate(startDate).replace(/-/g, '') + Date.now()).substring(0, 35);
     const useIban = iban.replace(/\s/g, '') || 'CH0000000000000000000';
     const ownr = ownerInfo || { name: trunc(address, 70), hasAddress: false };
-    const totalCredit = entries.filter(e => e.direction === 'CRDT').reduce((s, e) => s + e.amount, 0);
-    const totalDebit = entries.filter(e => e.direction === 'DBIT').reduce((s, e) => s + e.amount, 0);
 
     const entriesXml = entries.map(entry => {
         const dt = new Date(entry.timestamp * 1000);
@@ -2160,7 +2124,6 @@ function generateSemt002(address, holdings, reportDate) {
     holdings.forEach(h => {
         const config = MINT_TO_CONFIG[h.mint];
         const label = config ? config.label : h.mint.substring(0, 8) + '…';
-        const currency = config ? config.currency : 'USD';
         const desc = config ? `${config.label} (${config.currency}) — SPL Token` : `SPL Token ${h.mint.substring(0, 12)}…`;
         balBlocks += `
         <BalForAcct>
