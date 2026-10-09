@@ -12,7 +12,10 @@
 // Endpoints:
 //   GET  /nav/:ticker          — current NAV / yield state
 //   GET  /nav/:ticker/history  — synthetic historical NAV (query: ?days=N)
-//   POST /nav/:ticker/set      — override values for live demo moments
+//   POST /nav/:ticker/set      — override values for live demo moments. Requires the
+//                                X-Nav-Admin-Token header to match the NAV_ADMIN_TOKEN
+//                                env var, and is disabled while that var is unset.
+//                                Accepts only existing fields with their current types.
 //
 // Every response includes _mock: true and a disclaimer.
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -113,7 +116,7 @@ function jsonResponse(data: unknown, status = 200): Response {
       'Content-Type': 'application/json',
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, X-Nav-Admin-Token',
     },
   });
 }
@@ -174,7 +177,7 @@ export default async function handler(request: Request): Promise<Response> {
       headers: {
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Nav-Admin-Token',
       },
     });
   }
@@ -236,15 +239,25 @@ export default async function handler(request: Request): Promise<Response> {
   // ── POST /nav/:ticker/set ─────────────────────────────────────────────
 
   if (request.method === 'POST' && subpath === '/set') {
+    // Overrides are shown to every visitor, so only someone holding the token may set them
+    const adminToken = Deno.env.get('NAV_ADMIN_TOKEN');
+    if (!adminToken || request.headers.get('X-Nav-Admin-Token') !== adminToken) {
+      return errorResponse('Forbidden', 403);
+    }
     try {
       const body = await request.json();
-      const current = navState[ticker];
+      const current = navState[ticker] as unknown as Record<string, unknown>;
+
+      const updates = Object.entries(body).filter(([key]) => key !== 'ticker' && key !== 'structural_category'); // immutable
+      const rejected = updates.filter(([key, value]) =>
+        !Object.hasOwn(current, key) || typeof value !== typeof current[key] ||
+        (typeof value === 'number' && !Number.isFinite(value)));
+      if (rejected.length > 0) {
+        return errorResponse(`Unknown field or wrong type: ${rejected.map(([key]) => key).join(', ')}`, 400);
+      }
 
       // Merge provided fields into current state (shallow)
-      for (const [key, value] of Object.entries(body)) {
-        if (key === 'ticker' || key === 'structural_category') continue; // immutable
-        (current as Record<string, unknown>)[key] = value;
-      }
+      for (const [key, value] of updates) current[key] = value;
 
       console.log(`[${ts}]   -> Updated ${ticker}: ${JSON.stringify(body)}`);
 
