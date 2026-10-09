@@ -1048,6 +1048,9 @@ function escXml(s) {
     // XML 1.0 forbids these control characters outright, escaped or not; on-chain memos can contain them
     return String(s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\uFFFE\uFFFF]/g, '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
 }
+function escHtml(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
 function trunc(s, n) { return (!s) ? '' : s.length > n ? s.substring(0, n) : s; }
 
 const BASE58_ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
@@ -1274,7 +1277,7 @@ async function lookupDomainsForAddress(address) {
 
         display.innerHTML = domains.map(d => {
             const name = d.endsWith('.sol') ? d : d + '.sol';
-            return `<a href="https://www.sns.id/domain/${name}" target="_blank" style="font-size:12px;color:var(--accent);background:var(--accent-bg2);border:1px solid var(--accent-border);border-radius:6px;padding:4px 10px;text-decoration:none;font-family:'JetBrains Mono',monospace;transition:all 0.2s;" onmouseover="this.style.background='var(--accent-bg3)'" onmouseout="this.style.background='var(--accent-bg2)'">${name}</a>`;
+            return `<a href="https://www.sns.id/domain/${encodeURIComponent(name)}" target="_blank" style="font-size:12px;color:var(--accent);background:var(--accent-bg2);border:1px solid var(--accent-border);border-radius:6px;padding:4px 10px;text-decoration:none;font-family:'JetBrains Mono',monospace;transition:all 0.2s;" onmouseover="this.style.background='var(--accent-bg3)'" onmouseout="this.style.background='var(--accent-bg2)'">${escHtml(name)}</a>`;
         }).join('');
     } catch (e) {
         display.innerHTML = '<span style="font-size:12px;color:var(--text-muted);">Could not look up domains</span>';
@@ -2011,7 +2014,7 @@ function showXmlModal(xml, filename) {
                     <pre style="padding:16px;margin:0;flex:1;font-family:'JetBrains Mono',monospace;font-size:11px;line-height:1.7;color:#DEE5EF;overflow-x:auto;white-space:pre;">${highlighted}</pre>
                 </div>
             </div>
-            <textarea id="xml-modal-raw" style="position:absolute;left:-9999px;">${xml.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</textarea>
+            <textarea id="xml-modal-raw" style="position:absolute;left:-9999px;">${escHtml(xml)}</textarea>
         </div>`;
     document.body.appendChild(modal);
 
@@ -2866,7 +2869,7 @@ async function handlePainFile(file) {
             parsed.push({ index: i, endToEndId, creditorName: cdtrNm, iban: iban.replace(/\s/g, ''), amount, currency, memo: memo.substring(0, 140), selectedStablecoin: candidates[0], candidates, solanaAddress: '', resolveStatus: 'pending', sendStatus: 'waiting', txSignature: '' });
         }
         painPayments = parsed;
-        dropZone.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" style="margin-bottom:4px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div style="font-size:14px;color:#34D399;font-weight:500;">${file.name}</div><div style="font-size:12px;color:#B8C7D8;margin-top:2px;">${painPayments.length} payment order${painPayments.length !== 1 ? 's' : ''} parsed</div><div style="font-size:11px;color:#7A8BA0;margin-top:8px;cursor:pointer;" onclick="event.stopPropagation();resetPainUpload();">Upload a different file</div>`;
+        dropZone.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#34D399" stroke-width="2" style="margin-bottom:4px"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><div style="font-size:14px;color:#34D399;font-weight:500;">${escHtml(file.name)}</div><div style="font-size:12px;color:#B8C7D8;margin-top:2px;">${painPayments.length} payment order${painPayments.length !== 1 ? 's' : ''} parsed</div><div style="font-size:11px;color:#7A8BA0;margin-top:8px;cursor:pointer;" onclick="event.stopPropagation();resetPainUpload();">Upload a different file</div>`;
         document.getElementById('pain-results').style.display = 'block';
         document.getElementById('btn-view-xml').style.display = 'inline-flex';
         renderPainSummary(); renderPainTable(); resolveAllIbans();
@@ -2910,30 +2913,44 @@ function renderPainTable() {
         else if (p.sendStatus === 'error') statusHtml = `<span class="pain-status pain-status-failed">✗ Error</span>`;
         else if (p.resolveStatus === 'resolved') statusHtml = `<span class="pain-status pain-status-resolved">✓ Ready</span>`;
         else if (p.resolveStatus === 'failed') statusHtml = `<span class="pain-status pain-status-failed">✗ No SNS</span>`;
+        else if (p.resolveStatus === 'invalid') statusHtml = `<span class="pain-status pain-status-failed">✗ Invalid IBAN</span>`;
         else statusHtml = `<span class="pain-status pain-status-pending">… Resolving</span>`;
         let addrHtml = '';
-        if (p.resolveStatus === 'resolved' && p.solanaAddress) addrHtml = `<span title="${p.solanaAddress}">${shortAddr(p.solanaAddress)}</span>`;
-        else if (p.resolveStatus === 'failed') addrHtml = `<input class="pain-addr-input" placeholder="Paste address" value="${p.solanaAddress}" onchange="painManualAddr(${idx},this.value)" />`;
+        if (p.resolveStatus === 'resolved' && p.solanaAddress) addrHtml = `<span title="${escHtml(p.solanaAddress)}">${escHtml(shortAddr(p.solanaAddress))}</span>`;
+        else if (p.resolveStatus === 'failed') addrHtml = `<input class="pain-addr-input" placeholder="Paste address" value="${escHtml(p.solanaAddress)}" onchange="painManualAddr(${idx},this.value)" />`;
+        else if (p.resolveStatus === 'invalid') addrHtml = `<span style="color:#A0B3C8;">—</span>`;
         else addrHtml = `<span style="color:#A0B3C8;">…</span>`;
         const coinOpts = p.candidates.map(c => `<option value="${c}" ${c === p.selectedStablecoin ? 'selected' : ''}>${c}</option>`).join('');
         const canSend = (p.resolveStatus === 'resolved' || p.solanaAddress) && p.sendStatus !== 'sent' && p.sendStatus !== 'sending';
-        let actionHtml = p.sendStatus === 'sent' ? `<a href="https://solscan.io/tx/${p.txSignature}" target="_blank" style="color:#22D3EE;font-size:11px;">View TX</a>` : `<button class="pain-send-btn" onclick="sendPainPayment(${idx})" ${canSend ? '' : 'disabled'}>Send</button>`;
-        return `<tr><td>${statusHtml}</td><td title="${p.creditorName}">${truncDisplay(p.creditorName, 20)}</td><td title="${p.iban}" style="font-size:11px;">${p.iban ? p.iban.substring(0,4) + '…' + p.iban.substring(p.iban.length-4) : '—'}</td><td>${addrHtml}</td><td><strong>${p.amount.toFixed(2)}</strong> <span style="color:#A0B3C8;">${p.currency}</span></td><td><select class="pain-stablecoin-select" onchange="painSelectCoin(${idx},this.value)">${coinOpts}</select></td><td title="${p.memo}" style="font-size:11px;max-width:120px;">${truncDisplay(p.memo, 18)}</td><td>${actionHtml}</td></tr>`;
+        let actionHtml = p.sendStatus === 'sent' ? `<a href="https://solscan.io/tx/${encodeURIComponent(p.txSignature)}" target="_blank" style="color:#22D3EE;font-size:11px;">View TX</a>` : `<button class="pain-send-btn" onclick="sendPainPayment(${idx})" ${canSend ? '' : 'disabled'}>Send</button>`;
+        return `<tr><td>${statusHtml}</td><td title="${escHtml(p.creditorName)}">${escHtml(truncDisplay(p.creditorName, 20))}</td><td title="${escHtml(p.iban)}" style="font-size:11px;">${p.iban ? escHtml(p.iban.substring(0,4) + '…' + p.iban.substring(p.iban.length-4)) : '—'}</td><td>${addrHtml}</td><td><strong>${p.amount.toFixed(2)}</strong> <span style="color:#A0B3C8;">${p.currency}</span></td><td><select class="pain-stablecoin-select" onchange="painSelectCoin(${idx},this.value)">${coinOpts}</select></td><td title="${escHtml(p.memo)}" style="font-size:11px;max-width:120px;">${escHtml(truncDisplay(p.memo, 18))}</td><td>${actionHtml}</td></tr>`;
     }).join('');
 }
 
 function painManualAddr(idx, addr) { painPayments[idx].solanaAddress = addr.trim(); if (addr.trim().length >= 32) painPayments[idx].resolveStatus = 'resolved'; renderPainTable(); renderPainSummary(); }
 function painSelectCoin(idx, coin) { painPayments[idx].selectedStablecoin = coin; }
 
+// ISO 13616: country code, two check digits, up to 30 letters/digits; valid when the mod-97 remainder is 1
+function isValidIban(iban) {
+    const s = String(iban).replace(/\s/g, '').toUpperCase();
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]{1,30}$/.test(s)) return false;
+    const digits = (s.slice(4) + s.slice(0, 4)).replace(/[A-Z]/g, c => String(c.charCodeAt(0) - 55));
+    let rem = 0;
+    for (const d of digits) rem = (rem * 10 + Number(d)) % 97;
+    return rem === 1;
+}
+
 async function resolveIbanToSolana(iban) {
+    if (!isValidIban(iban)) return null; // the IBAN comes from the uploaded file and becomes part of the lookup URL
     const normalized = iban.replace(/\s/g, '').toLowerCase();
-    try { const resp = await fetch(`https://sdk-proxy.sns.id/resolve/${normalized}.verified-iban`); if (!resp.ok) return null; const data = await resp.json(); return data.result || null; } catch (e) { return null; }
+    try { const resp = await fetch(`https://sdk-proxy.sns.id/resolve/${encodeURIComponent(normalized)}.verified-iban`); if (!resp.ok) return null; const data = await resp.json(); return data.result || null; } catch (e) { return null; }
 }
 
 async function resolveAllIbans() {
     for (let i = 0; i < painPayments.length; i++) {
         const p = painPayments[i];
         if (!p.iban) { p.resolveStatus = 'failed'; renderPainTable(); continue; }
+        if (!isValidIban(p.iban)) { p.resolveStatus = 'invalid'; renderPainTable(); continue; }
         try { const addr = await resolveIbanToSolana(p.iban); if (addr) { p.solanaAddress = addr; p.resolveStatus = 'resolved'; } else { p.resolveStatus = 'failed'; } } catch (e) { p.resolveStatus = 'failed'; }
         renderPainTable(); renderPainSummary(); await new Promise(r => setTimeout(r, 300));
     }
